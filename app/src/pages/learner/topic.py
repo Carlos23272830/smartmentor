@@ -153,16 +153,6 @@ with st.container(key="card-quiz-entry"):
         f"{min(attempts.used + 1, total)} de {total}."
     )
     st.caption("Durante el quiz no verás el video ni la explicación. Respóndelo sin ayuda de IA.")
-    action = enrollment.next_action
-    open_attempt = (
-        action.attempt_id
-        if action.type == "continue_attempt" and action.step_id == step_id
-        else None
-    )
-    if open_attempt is not None and st.button(
-        "Continuar quiz", type="primary", key="topic-continue-quiz"
-    ):
-        state.step_id, state.attempt_id, state.quiz_job_id = step_id, open_attempt, None
     if open_attempt_id is not None:
         if st.button("Continuar quiz", type="primary", key="topic-continue-quiz"):
             state.step_id, state.attempt_id, state.quiz_job_id = step_id, open_attempt_id, None
