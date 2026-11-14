@@ -27,6 +27,8 @@ from app.domains.content.constants import (
     RUBRIC_MIN_CRITERIA,
     RUBRIC_POINTS_TOLERANCE,
     VIDEO_QUALITY_MIN_RATINGS,
+    VIDEO_QUALITY_OBSERVATION,
+    VIDEO_QUALITY_RECOMMENDED,
     ContentJobType,
     ItemType,
     ResourceKind,
@@ -393,6 +395,19 @@ class VideoQualityRow:
     useful_rate: float | None
     quality_index: float | None
     measuring: bool
+    status: str = "measuring"
+    """`measuring`, `recommended`, `observation` o `under_review` (D5f)."""
+
+
+def quality_status(quality_index: float | None) -> str:
+    """Estado del video según su índice; sin índice (pocas calificaciones) está midiéndose."""
+    if quality_index is None:
+        return "measuring"
+    if quality_index >= VIDEO_QUALITY_RECOMMENDED:
+        return "recommended"
+    if quality_index >= VIDEO_QUALITY_OBSERVATION:
+        return "observation"
+    return "under_review"
 
 
 def bayesian_quality(
@@ -426,6 +441,9 @@ class VideoService:
         videos = await self._videos.list_for_topic(topic_id)
         judged = await self._videos.judgments_of(user.id, [require_id(v) for v in videos])
         return [VideoView(v, judged.get(require_id(v))) for v in videos]
+
+    async def topic_name(self, user: CurrentUser, topic_id: int) -> str:
+        return (await load_topic(self._topics, self._courses, user, topic_id)).name
 
     async def _load(self, user: CurrentUser, video_id: int) -> tuple[VideoCandidate, Topic]:
         video = await self._videos.get(video_id)
@@ -541,6 +559,7 @@ def _quality_row(
     total = sum(by_rating.values())
     useful = by_rating.get("useful", 0)
     measuring = total < VIDEO_QUALITY_MIN_RATINGS
+    quality_index = None if measuring else round(bayesian_quality(useful, total), 4)
     return VideoQualityRow(
         video=video,
         topic_name=topic_name,
@@ -548,8 +567,9 @@ def _quality_row(
         by_rating=by_rating,
         watched_fully=summary.watched_fully if summary else 0,
         useful_rate=(useful / total) if total else None,
-        quality_index=None if measuring else round(bayesian_quality(useful, total), 4),
+        quality_index=quality_index,
         measuring=measuring,
+        status=quality_status(quality_index),
     )
 
 

@@ -11,7 +11,7 @@ from support import FIXTURES_DIR
 from clients.api import ApiClient
 from clients.base import ApiError
 from clients.jobs import is_done, next_poll_delay, wait_for_job
-from clients.models import Job
+from clients.models import Attempt, Job, JobAccepted
 
 BASE = "http://api.test"
 
@@ -133,6 +133,20 @@ def test_idempotent_operations_send_the_key(client: ApiClient) -> None:
 
 
 @respx.mock
+def test_create_final_attempt_returns_attempt_or_job(client: ApiClient) -> None:
+    """B-011: un reintento sin preguntas no vistas responde 202 mientras se generan."""
+    url = f"{BASE}/api/v1/me/enrollments/7/final-attempts"
+    respx.post(url).mock(
+        side_effect=[
+            httpx.Response(201, json=fixture("attempt")),
+            httpx.Response(202, json=fixture("job_accepted")),
+        ]
+    )
+    assert isinstance(client.create_final_attempt(7, idempotency_key="f1"), Attempt)
+    assert isinstance(client.create_final_attempt(7, idempotency_key="f2"), JobAccepted)
+
+
+@respx.mock
 def test_create_attempt_returns_attempt_or_job(client: ApiClient) -> None:
     url = f"{BASE}/api/v1/me/enrollments/7/steps/812/attempts"
     respx.post(url).mock(
@@ -216,3 +230,26 @@ def test_wait_for_job_times_out() -> None:
         wait_for_job(ScriptedJobs([_job()]), "job-1", timeout=5, sleep=lambda _: None)  # type: ignore[arg-type]
     assert caught.value.code == "JOB_TIMEOUT"
     assert caught.value.retryable
+
+
+@respx.mock
+def test_set_objective_sends_only_the_fields_of_objective_update(client: ApiClient) -> None:
+    """B-020: `ObjectiveUpdate` no admite campos de más; `origin` hacía que la API diera 422."""
+    from clients.models import Objective
+
+    enrollment = json.loads((FIXTURES_DIR / "enrollment_in_path.json").read_text("utf-8"))
+    route = respx.put(f"{BASE}/api/v1/me/enrollments/7/objective").mock(
+        return_value=httpx.Response(200, json=enrollment)
+    )
+    client.set_objective(
+        7,
+        Objective(
+            statement="Construir flujos con al menos 80 %.",
+            bloom_verb="Construir",
+            content="flujos",
+            criterion="con al menos 80 %",
+            origin="llm_proposed",
+        ),
+    )
+    sent = json.loads(route.calls.last.request.content)
+    assert set(sent) == {"statement", "bloom_verb", "content", "criterion"}

@@ -53,8 +53,8 @@ def test_d5_matches_figma_with_documented_differences() -> None:
         at,
         "D5",
         accepted=(
-            # Las pestañas «Recursos (3)» y «Preguntas (12)» son títulos de sección, y el total
-            # de preguntas sale de los datos.
+            # «Recursos (3)» y «Preguntas (12)» son contadores; el total de preguntas sale de los
+            # datos.
             "Preguntas (12)",
             # Las acciones de cada fila son botones separados, no un solo texto.
             "Editar · Regenerar",
@@ -92,6 +92,26 @@ def test_d5d_edit_text_resource() -> None:
     at = click(at, "Guardar y aprobar")
     assert_no_exception(at)
     assert "Editar la explicación del tema" not in page_texts(at)
+
+
+def test_d5_regenerating_twice_asks_for_two_regenerations_b029() -> None:
+    at = _open(REVIEW)
+    client = at.session_state["app_session"].fixtures_client
+    original = client.regenerate_resource
+    keys: list[str] = []
+
+    def spy(resource_id: int, *, idempotency_key: str) -> object:
+        keys.append(idempotency_key)
+        return original(resource_id, idempotency_key=idempotency_key)
+
+    client.regenerate_resource = spy
+    for _ in range(2):
+        regen = next(b for b in at.button if b.label == "Regenerar")
+        at = regen.click().run()
+        assert_no_exception(at)
+        assert any(s.value.startswith("Regenerando «") for s in at.success)
+    assert len(keys) == 2
+    assert keys[0] != keys[1]
 
 
 def test_d5_edit_question_returns_to_review() -> None:
@@ -146,9 +166,15 @@ def test_d5c_human_grading_hides_the_llm_grade_until_saved() -> None:
     assert "Tu nota: 3 de 3" in page_texts(at)
     at = click(at, "Guardar y siguiente")
     texts = page_texts(at)
+    # Como la API, la cola ya no trae la respuesta calificada; la pantalla la sigue mostrando
+    # con la nota del LLM hasta «Siguiente».
+    assert "Respuesta #A-0417 · Regresión logística" in texts
+    assert "Muestra aleatoria · 13 de 30" in " ".join(texts)
     assert "Coincide con tu nota" in texts
     assert any("Relaciona el umbral con el costo" in t for t in texts)
     assert "Siguiente" in [b.label for b in at.button]
+    at = click(at, "Siguiente")
+    assert any("No hay respuestas pendientes" in t for t in page_texts(at))
 
 
 def test_d5c_empty_queue() -> None:
@@ -164,6 +190,20 @@ def test_d5e_matches_figma() -> None:
         # El triángulo de «reproducir» es un ícono de Material, no texto.
         accepted=("▶", "▶", "▶"),
     )
+
+
+def test_d5e_videos_open_on_youtube_with_their_thumbnail() -> None:
+    at = _open(VIDEOS)
+    assert_no_exception(at)
+    texts = " ".join(m.value for m in at.markdown)
+    # Candidato en uso: portada y título enlazados a YouTube.
+    assert "https://i.ytimg.com/vi/EXAMPLE0001/mqdefault.jpg" in texts
+    assert (
+        "[Regresión logística explicada paso a paso](https://www.youtube.com/watch?v=EXAMPLE0001)"
+        in texts
+    )
+    # Video de respaldo: el título también abre el video.
+    assert "(https://www.youtube.com/watch?v=EXAMPLE0004)" in texts
 
 
 def test_d5e_use_this_video_and_pertinence() -> None:

@@ -257,7 +257,8 @@ class ApiClient(LearnerApiOps, StaffApiOps):
         response = self._request(
             "PUT",
             f"/me/enrollments/{enrollment_id}/objective",
-            json=objective.model_dump(mode="json"),
+            # `ObjectiveUpdate` no admite campos de más: `origin` lo pone la API (B-020).
+            json=objective.model_dump(mode="json", exclude={"origin"}),
         )
         return self._model(Enrollment, response)
 
@@ -319,12 +320,16 @@ class ApiClient(LearnerApiOps, StaffApiOps):
         )
         return int(_json(response)["alert_id"])
 
-    def create_final_attempt(self, enrollment_id: int, *, idempotency_key: str) -> Attempt:
+    def create_final_attempt(
+        self, enrollment_id: int, *, idempotency_key: str
+    ) -> Attempt | JobAccepted:
         response = self._request(
             "POST",
             f"/me/enrollments/{enrollment_id}/final-attempts",
             idempotency_key=idempotency_key,
         )
+        if response.status_code == 202:  # reintento sin preguntas no vistas (B-011)
+            return self._model(JobAccepted, response)
         return self._model(Attempt, response)
 
     def get_review_plan(self, enrollment_id: int) -> ReviewPlan:

@@ -18,8 +18,32 @@ from typing import Any
 import httpx
 from pydantic import BaseModel, ValidationError
 
+from clients.admin_adapter import (
+    DEFAULT_PILOT_ID,
+    admin_enrollment_from_api,
+    admin_enrollments_page_from_api,
+    admin_user_from_api,
+    fixed_path_preview_from_api,
+    is_api_pilot,
+    llm_logs_page_from_api,
+    llm_summary_from_api,
+    metrics_from_api,
+    pilot_from_api,
+    pilot_to_show,
+)
 from clients.base import ApiError
-from clients.models import Job, JobAccepted, Page, Role
+from clients.content_adapter import item_from_api, item_patch_for_api, resource_from_api
+from clients.dashboard_adapter import dashboard_from_api, is_api_dashboard
+from clients.evaluation_adapter import (
+    annotation_queue_from_api,
+    grading_queue_from_api,
+    grading_result_from_api,
+    topic_videos_from_api,
+    video_from_api,
+    video_quality_from_api,
+)
+from clients.learner_detail_adapter import is_api_learner_detail, learner_detail_from_api
+from clients.models import ROLES, Job, JobAccepted, Page, Role
 from clients.models_staff import (
     AdminEnrollment,
     AdminUser,
@@ -65,6 +89,10 @@ STAFF_SCENARIOS = ("default", "empty", "forbidden", "error", "loading", "no_text
 
 
 # --- Cliente HTTP -----------------------------------------------------------------------------
+
+
+_MAX_PAGE = 100
+"""Tope de `limit` de los listados de la API."""
 
 
 def _json(response: httpx.Response) -> Any:
@@ -205,7 +233,10 @@ class StaffApiOps:
     # Instructor: ruta, avance y aprendices
 
     def get_dashboard(self, path_id: int) -> Dashboard:
-        return self._get(Dashboard, f"/learning-paths/{path_id}/dashboard")
+        data = _json(self._request("GET", f"/learning-paths/{path_id}/dashboard"))
+        if is_api_dashboard(data):
+            data = dashboard_from_api(data)
+        return _parse(Dashboard, data)
 
     def update_path_settings(self, path_id: int, body: PathSettingsModel) -> PathSettingsModel:
         return self._send(
@@ -216,7 +247,11 @@ class StaffApiOps:
         )
 
     def get_learner_detail(self, path_id: int, enrollment_id: int) -> LearnerDetail:
-        return self._get(LearnerDetail, f"/learning-paths/{path_id}/learners/{enrollment_id}")
+        url = f"/learning-paths/{path_id}/learners/{enrollment_id}"
+        data = _json(self._request("GET", url))
+        if is_api_learner_detail(data):
+            data = learner_detail_from_api(data, path_id)
+        return _parse(LearnerDetail, data)
 
     def grant_step_attempts(self, step_id: int, attempts: int, note: str | None) -> AttemptGrant:
         body = {"attempts": attempts, "note": note}
@@ -233,14 +268,16 @@ class StaffApiOps:
 
     def list_topic_resources(self, topic_id: int) -> list[Resource]:
         data = _json(self._request("GET", f"/topics/{topic_id}/resources"))
-        return [_parse(Resource, item) for item in data]
+        return [_parse(Resource, resource_from_api(item)) for item in data]
 
     def review_resource(self, resource_id: int, review_status: str) -> Resource:
         body = {"review_status": review_status}
-        return self._send(Resource, "PATCH", f"/resources/{resource_id}/review", body)
+        response = self._request("PATCH", f"/resources/{resource_id}/review", json=body)
+        return _parse(Resource, resource_from_api(_json(response)))
 
     def update_resource_content(self, resource_id: int, content: dict[str, Any]) -> Resource:
-        return self._send(Resource, "PUT", f"/resources/{resource_id}/content", content)
+        response = self._request("PUT", f"/resources/{resource_id}/content", json=content)
+        return _parse(Resource, resource_from_api(_json(response)))
 
     def regenerate_resource(self, resource_id: int, *, idempotency_key: str) -> JobAccepted:
         return self._send(
@@ -249,14 +286,19 @@ class StaffApiOps:
 
     def list_topic_items(self, topic_id: int) -> Page[ReviewItem]:
         response = self._request("GET", f"/topics/{topic_id}/items", params={"limit": 100})
-        return _page(ReviewItem, _json(response))
+        page = _json(response)
+        if isinstance(page, dict):
+            page = {**page, "items": [item_from_api(i) for i in page.get("items") or []]}
+        return _page(ReviewItem, page)
 
     def update_item(self, item_id: int, patch: ItemPatch) -> ReviewItem:
-        body = patch.model_dump(mode="json", exclude_none=True)
-        return self._send(ReviewItem, "PATCH", f"/items/{item_id}", body)
+        body = item_patch_for_api(patch.model_dump(mode="json", exclude_none=True))
+        response = self._request("PATCH", f"/items/{item_id}", json=body)
+        return _parse(ReviewItem, item_from_api(_json(response)))
 
     def list_video_candidates(self, topic_id: int) -> TopicVideos:
-        return self._get(TopicVideos, f"/topics/{topic_id}/video-candidates")
+        data = _json(self._request("GET", f"/topics/{topic_id}/video-candidates"))
+        return _parse(TopicVideos, topic_videos_from_api(data))
 
     def update_video_candidate(
         self, candidate_id: int, *, status: VideoStatus | None, is_relevant: bool | None
@@ -264,38 +306,107 @@ class StaffApiOps:
         body = {
             k: v for k, v in {"status": status, "is_relevant": is_relevant}.items() if v is not None
         }
-        return self._send(VideoCandidate, "PATCH", f"/video-candidates/{candidate_id}", body)
+        response = self._request("PATCH", f"/video-candidates/{candidate_id}", json=body)
+        return _parse(VideoCandidate, video_from_api(_json(response)))
 
     def add_video_candidate(
         self, topic_id: int, youtube_video_id: str, title: str
     ) -> VideoCandidate:
         body = {"youtube_video_id": youtube_video_id, "title": title}
-        return self._send(VideoCandidate, "POST", f"/topics/{topic_id}/video-candidates", body)
+        response = self._request("POST", f"/topics/{topic_id}/video-candidates", json=body)
+        return _parse(VideoCandidate, video_from_api(_json(response)))
 
     def get_video_quality(self, path_id: int) -> VideoQuality:
-        return self._get(VideoQuality, f"/learning-paths/{path_id}/video-quality")
+        response = self._request("GET", f"/learning-paths/{path_id}/video-quality")
+        return _parse(VideoQuality, video_quality_from_api(_json(response)))
 
     def get_annotation_queue(self, course_id: int) -> AnnotationQueue:
-        return self._get(AnnotationQueue, "/evaluation/annotation-queue", course_id=course_id)
+        params = {"course_id": course_id}
+        response = self._request("GET", "/evaluation/annotation-queue", params=params)
+        return _parse(AnnotationQueue, annotation_queue_from_api(_json(response)))
 
     def annotate_item(self, item_id: int, body: AnnotationBody) -> None:
         self._request("POST", f"/items/{item_id}/annotations", json=body.model_dump(mode="json"))
 
     def get_grading_queue(self, sample: SampleType) -> GradingQueue:
-        return self._get(GradingQueue, "/evaluation/grading-queue", sample=sample)
+        response = self._request("GET", "/evaluation/grading-queue", params={"sample": sample})
+        return _parse(GradingQueue, grading_queue_from_api(_json(response), sample))
 
     def grade_answer(self, attempt_answer_id: int, body: HumanGradingBody) -> HumanGradingResult:
         path = f"/attempt-answers/{attempt_answer_id}/human-gradings"
-        return self._send(HumanGradingResult, "POST", path, body.model_dump(mode="json"))
+        response = self._request("POST", path, json=body.model_dump(mode="json"))
+        return _parse(HumanGradingResult, grading_result_from_api(_json(response)))
 
     # Administrador
 
+    # AD1. La API publica los usuarios con el CRUD genérico (`/users`, sin roles y solo activos
+    # por defecto) y los roles aparte (`/roles`, `/user-roles`, `/users/{id}/roles`). La pantalla
+    # quiere cada usuario con sus roles, activos e inactivos: se arma aquí sin cambiar la API.
+
+    def _users(self, *, active: bool, limit: int, offset: int) -> tuple[list[Any], int]:
+        params = {"active": active, "limit": limit, "offset": offset}
+        data = _json(self._request("GET", "/users", params=params))
+        return list(data.get("items") or []), int(data.get("total", 0))
+
+    def _all_pages(self, path: str, **params: Any) -> list[Any]:
+        items: list[Any] = []
+        while True:
+            query = {**params, "limit": _MAX_PAGE, "offset": len(items)}
+            data = _json(self._request("GET", path, params=query))
+            batch = list(data.get("items") or [])
+            items.extend(batch)
+            if not batch or len(items) >= int(data.get("total", 0)):
+                return items
+
+    def _roles_by_user(self) -> dict[int, list[Role]]:
+        # Solo los roles que la interfaz conoce; otro código de la base no se muestra.
+        codes: dict[int, Role] = {
+            int(r["id"]): r["code"] for r in self._all_pages("/roles") if r.get("code") in ROLES
+        }
+        roles: dict[int, list[Role]] = {}
+        for link in self._all_pages("/user-roles"):
+            code = codes.get(int(link["role_id"]))
+            if code is not None:
+                roles.setdefault(int(link["user_id"]), []).append(code)
+        return {user_id: sorted(found, key=ROLES.index) for user_id, found in roles.items()}
+
+    def _user_roles(self, user_id: int) -> list[Role]:
+        data = _json(self._request("GET", f"/users/{user_id}/roles"))
+        return [code for code in data.get("roles") or [] if code in ROLES]
+
     def list_users(self, *, limit: int = 100, offset: int = 0) -> Page[AdminUser]:
-        response = self._request("GET", "/users", params={"limit": limit, "offset": offset})
-        return _page(AdminUser, _json(response))
+        active, active_total = self._users(active=True, limit=limit, offset=offset)
+        inactive: list[Any] = []
+        inactive_total = 0
+        if len(active) < limit:
+            # Los inactivos van después de los activos, para poder reactivarlos.
+            start = max(0, offset - active_total)
+            inactive, inactive_total = self._users(
+                active=False, limit=limit - len(active), offset=start
+            )
+        else:
+            _, inactive_total = self._users(active=False, limit=1, offset=0)
+        roles = self._roles_by_user()
+        items = [
+            admin_user_from_api(user, roles.get(int(user["id"]), []))
+            for user in [*active, *inactive]
+        ]
+        return _page(
+            AdminUser,
+            {
+                "items": items,
+                "total": active_total + inactive_total,
+                "limit": limit,
+                "offset": offset,
+            },
+        )
 
     def create_user(self, body: UserCreate) -> AdminUser:
-        return self._send(AdminUser, "POST", "/users", body.model_dump(mode="json"))
+        user = _json(
+            self._request("POST", "/users", json={"email": body.email, "full_name": body.full_name})
+        )
+        roles = self.set_user_roles(int(user["id"]), body.roles) if body.roles else []
+        return _parse(AdminUser, admin_user_from_api(user, roles))
 
     def set_user_roles(self, user_id: int, roles: Sequence[Role]) -> list[Role]:
         response = self._request("PUT", f"/users/{user_id}/roles", json={"roles": list(roles)})
@@ -303,56 +414,75 @@ class StaffApiOps:
         return roles_out
 
     def set_user_active(self, user_id: int, active: bool) -> AdminUser:
-        return self._send(AdminUser, "PATCH", f"/users/{user_id}", {"active": active})
+        action = "activate" if active else "deactivate"
+        user = _json(self._request("PATCH", f"/users/{user_id}/{action}"))
+        return _parse(AdminUser, admin_user_from_api(user, self._user_roles(user_id)))
 
     def get_llm_summary(self) -> LlmSummary:
-        return self._get(LlmSummary, "/llm-call-logs/summary")
+        response = self._request("GET", "/llm-call-logs/summary")
+        return _parse(LlmSummary, llm_summary_from_api(_json(response)))
 
     def list_llm_logs(self, *, limit: int = 50, offset: int = 0) -> Page[LlmCallLog]:
         response = self._request("GET", "/llm-call-logs", params={"limit": limit, "offset": offset})
-        return _page(LlmCallLog, _json(response))
+        return _page(LlmCallLog, llm_logs_page_from_api(_json(response)))
 
     def get_evaluation_metrics(self, learning_path_id: int | None = None) -> MetricsEvaluation:
-        if learning_path_id is None:
-            return self._get(MetricsEvaluation, "/metrics/evaluation")
-        return self._get(
-            MetricsEvaluation, "/metrics/evaluation", learning_path_id=learning_path_id
-        )
+        params = None if learning_path_id is None else {"learning_path_id": learning_path_id}
+        response = self._request("GET", "/metrics/evaluation", params=params)
+        return _parse(MetricsEvaluation, metrics_from_api(_json(response)))
+
+    # AD4. El piloto de la API trae los brazos y la ruta; los consentimientos y los temas con
+    # ítems salen de `readiness`, que ya los calcula. Ver `admin_adapter.pilot_from_api`.
+
+    def find_pilot_id(self) -> int | None:
+        pilots = self._all_pages("/pilots")
+        return pilot_to_show(pilots)
+
+    def _pilot(self, data: Any) -> Pilot:
+        if not is_api_pilot(data):
+            return _parse(Pilot, data)
+        readiness = _json(self._request("GET", f"/pilots/{int(data['id'])}/readiness"))
+        return _parse(Pilot, pilot_from_api(data, readiness))
 
     def get_pilot(self, pilot_id: int) -> Pilot:
-        return self._get(Pilot, f"/pilots/{pilot_id}")
+        return self._pilot(_json(self._request("GET", f"/pilots/{pilot_id}")))
 
     def update_pilot(self, pilot_id: int, body: PilotUpdate) -> Pilot:
-        return self._send(Pilot, "PUT", f"/pilots/{pilot_id}", body.model_dump(mode="json"))
+        response = self._request("PUT", f"/pilots/{pilot_id}", json=body.model_dump(mode="json"))
+        return self._pilot(_json(response))
 
     def randomize_pilot(self, pilot_id: int) -> RandomizeResult:
         return self._send(RandomizeResult, "POST", f"/pilots/{pilot_id}/randomize")
 
     def start_pilot(self, pilot_id: int) -> Pilot:
-        return self._send(Pilot, "POST", f"/pilots/{pilot_id}/start")
+        return self._pilot(_json(self._request("POST", f"/pilots/{pilot_id}/start")))
 
     def get_pilot_readiness(self, pilot_id: int) -> PilotReadiness:
         return self._get(PilotReadiness, f"/pilots/{pilot_id}/readiness")
 
     def get_fixed_path_preview(self, pilot_id: int) -> FixedPathPreview:
-        return self._get(FixedPathPreview, f"/pilots/{pilot_id}/fixed-path-preview")
+        response = self._request("GET", f"/pilots/{pilot_id}/fixed-path-preview")
+        return _parse(FixedPathPreview, fixed_path_preview_from_api(_json(response)))
 
     def list_admin_enrollments(self, *, limit: int = 100, offset: int = 0) -> Page[AdminEnrollment]:
         response = self._request("GET", "/enrollments", params={"limit": limit, "offset": offset})
-        return _page(AdminEnrollment, _json(response))
+        return _page(AdminEnrollment, admin_enrollments_page_from_api(_json(response)))
+
+    def _enrollment(self, method: str, path: str, body: dict[str, Any]) -> AdminEnrollment:
+        response = self._request(method, path, json=body)
+        return _parse(AdminEnrollment, admin_enrollment_from_api(_json(response)))
 
     def create_admin_enrollment(self, user_id: int, learning_path_id: int) -> AdminEnrollment:
         body = {"user_id": user_id, "learning_path_id": learning_path_id}
-        return self._send(AdminEnrollment, "POST", "/enrollments", body)
+        return self._enrollment("POST", "/enrollments", body)
 
     def withdraw_enrollment(self, enrollment_id: int, note: str) -> AdminEnrollment:
-        return self._send(
-            AdminEnrollment, "PATCH", f"/enrollments/{enrollment_id}/withdraw", {"note": note}
-        )
+        path = f"/enrollments/{enrollment_id}/withdraw"
+        return self._enrollment("PATCH", path, {"note": note})
 
     def move_enrollment(self, enrollment_id: int, learning_path_id: int) -> AdminEnrollment:
         body = {"learning_path_id": learning_path_id}
-        return self._send(AdminEnrollment, "PATCH", f"/enrollments/{enrollment_id}/move", body)
+        return self._enrollment("PATCH", f"/enrollments/{enrollment_id}/move", body)
 
 
 # --- Cliente de fixtures ----------------------------------------------------------------------
@@ -610,11 +740,23 @@ class StaffFixturesOps:
     def get_grading_queue(self, sample: SampleType) -> GradingQueue:
         queue = self._model(GradingQueue, "grading_queue")
         queue.sample_type = sample
+        # Como la API: lo que ya califiqué no vuelve a la cola y suma a lo hecho de la muestra.
+        graded = self._graded_answer_ids()
+        queue.items = [i for i in queue.items if i.attempt_answer_id not in graded]
+        if sample == "random":
+            queue.sample_done += len(graded)
         return queue
 
     def grade_answer(self, attempt_answer_id: int, body: HumanGradingBody) -> HumanGradingResult:
-        del attempt_answer_id, body
+        del body
+        self._graded_answer_ids().add(attempt_answer_id)
         return self._model(HumanGradingResult, "human_grading_result")
+
+    def _graded_answer_ids(self) -> set[int]:
+        """Eco mínimo de «Guardar»: las respuestas calificadas en esta sesión de fixtures."""
+        if not hasattr(self, "_graded"):
+            self._graded: set[int] = set()
+        return self._graded
 
     # Administrador
 
@@ -655,6 +797,10 @@ class StaffFixturesOps:
     def get_evaluation_metrics(self, learning_path_id: int | None = None) -> MetricsEvaluation:
         del learning_path_id
         return self._model(MetricsEvaluation, "metrics")
+
+    def find_pilot_id(self) -> int | None:
+        # Los fixtures tienen un solo piloto, el de la cohorte.
+        return DEFAULT_PILOT_ID
 
     def get_pilot(self, pilot_id: int) -> Pilot:
         del pilot_id

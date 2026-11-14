@@ -14,6 +14,7 @@ from app.common.schemas import Page
 from app.core.idempotency import IdempotencyDep
 from app.domains.ai_gateway.entities import JobRef
 from app.domains.ai_gateway.schemas import JobAccepted
+from app.domains.content.constants import VIDEO_QUALITY_MIN_RATINGS
 from app.domains.content.contracts import TopicExplanationBody
 from app.domains.content.dependencies import (
     get_item_service,
@@ -235,6 +236,7 @@ async def list_video_candidates(
     views = await service.list_for_topic(user, topic_id)
     return VideoListResponse(
         topic_id=topic_id,
+        topic_name=await service.topic_name(user, topic_id),
         has_backup=any(v.video.status == "backup" for v in views),
         candidates=[_video(v) for v in views],
     )
@@ -276,6 +278,7 @@ async def video_quality(
     rows = await service.quality(user, path_id)
     return VideoQualityResponse(
         learning_path_id=path_id,
+        min_ratings=VIDEO_QUALITY_MIN_RATINGS,
         items=[
             VideoQualityItem(
                 video=_video(VideoView(r.video, None)),
@@ -286,6 +289,7 @@ async def video_quality(
                 useful_rate=r.useful_rate,
                 quality_index=r.quality_index,
                 measuring=r.measuring,
+                status=r.status,
             )
             for r in rows
         ],

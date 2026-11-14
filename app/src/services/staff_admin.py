@@ -8,17 +8,21 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from clients.models import Role
-from clients.models_staff import AdminUser, LlmSummary
+from clients.models_staff import AdminUser, LlmSummary, MetricEntry
 from components.formatting import decimal, integer, usd
 from components.staff_theme import ROLE_TEXT
 
 _ROLE_ORDER: tuple[Role, ...] = ("admin", "instructor", "learner")
 
 
+def ordered_roles(roles: Sequence[Role]) -> list[Role]:
+    """Los roles del de mayor privilegio al de menor (admin, instructor, aprendiz)."""
+    return [role for role in _ROLE_ORDER if role in roles]
+
+
 def roles_text(roles: Sequence[Role]) -> str:
     """«Instructor, Aprendiz», del rol de mayor privilegio al de menor."""
-    ordered = [role for role in _ROLE_ORDER if role in roles]
-    return ", ".join(ROLE_TEXT[role] for role in ordered) or "—"
+    return ", ".join(ROLE_TEXT[role] for role in ordered_roles(roles)) or "—"
 
 
 def users_caption(total: int, users: Sequence[AdminUser]) -> str:
@@ -43,6 +47,27 @@ class LlmTotals:
 
 def seconds(milliseconds: int) -> str:
     return f"{decimal(milliseconds / 1000)} s"
+
+
+def metric_text(metric: MetricEntry) -> str:
+    """Valor de una métrica de AD3: el texto de los fixtures o el número de la API con su unidad."""
+    if metric.value_text:
+        return metric.value_text
+    value = metric.value
+    if value is None:
+        return "—"
+    if metric.unit == "percent":
+        points = value * 100
+        return f"{decimal(points) if points < 10 else round(points)} %"
+    if metric.unit == "seconds":
+        return f"{decimal(value)} s"
+    if metric.unit == "usd":
+        return usd(value)
+    if metric.unit == "minutes":
+        return f"{round(value)} min"
+    if metric.unit == "count":
+        return integer(round(value))
+    return decimal(value, 2)
 
 
 def llm_totals(summary: LlmSummary) -> LlmTotals:

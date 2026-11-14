@@ -56,10 +56,16 @@ def button(at: AppTest, label: str) -> Any:
 _BADGE = re.compile(r":[a-z]+-badge\[([^\]]*)\]")
 _ICON = re.compile(r":material/[a-z_0-9]+:")
 _COLOR = re.compile(r":[a-z]+\[([^\[\]]*)\]")
+_IMAGE = re.compile(r"!\[[^\]]*\]\([^)]*\)")
+_LINK = re.compile(r"\[((?:\\.|[^\]\\])*)\]\([^)]*\)")
+_ESCAPED = re.compile(r"\\(.)")
 
 
 def plain(text: str) -> str:
-    """Quita el Markdown de Streamlit (colores, badges, íconos, negritas) y normaliza espacios."""
+    """Quita el Markdown de Streamlit (colores, badges, íconos, negritas, imágenes y enlaces) y
+    normaliza espacios. Un enlace queda como su texto, que es lo que se lee en pantalla."""
+    text = _IMAGE.sub("", text)
+    text = _LINK.sub(lambda m: _ESCAPED.sub(r"\1", m.group(1)), text)
     text = _BADGE.sub(r"\1", text)
     text = _ICON.sub("", text)
     previous = None
@@ -68,6 +74,8 @@ def plain(text: str) -> str:
         text = _COLOR.sub(r"\1", text)
     text = re.sub(r"^#+\s*", "", text.strip())
     text = text.replace("**", "").replace("`", "")
+    # Los escapes de Markdown (`\@`, `\.`) no se ven en pantalla (`PlainText` de la tabla, V-009).
+    text = _ESCAPED.sub(r"\1", text)
     return re.sub(r"\s+", " ", text).strip()
 
 

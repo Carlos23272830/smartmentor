@@ -38,6 +38,7 @@ from clients.models import (
     LearningPathCard,
     LearningPathRef,
     Me,
+    NextAction,
     Objective,
     Page,
     PathDetail,
@@ -198,6 +199,11 @@ class FixturesClient(LearnerFixtureOps, StaffFixturesOps):
         completeness.description = bool(update.description)
         completeness.resume = update.education_level is not None
         completeness.percent = 50 * (int(completeness.description) + int(completeness.resume))
+        if update.description:
+            # Como la API (`PUT /me/profile`): con descripción, las inscripciones que esperaban el
+            # perfil pasan al diagnóstico. Sin esto E2b volvía a E2 en el modo `fixtures`.
+            for enrollment in self._enrollments:
+                _ready_for_diagnostic(enrollment)
         return self.get_profile()
 
     def list_consents(self) -> list[Consent]:
@@ -257,6 +263,8 @@ class FixturesClient(LearnerFixtureOps, StaffFixturesOps):
         created.learning_path = LearningPathRef(
             id=card.id, name=card.name, group_label=card.group_label
         )
+        if self._profile.description:
+            _ready_for_diagnostic(created)  # la API inscribe en `diagnosing` si ya hay perfil
         self._enrollments.append(created)
         return created.model_copy(deep=True)
 
@@ -358,8 +366,12 @@ class FixturesClient(LearnerFixtureOps, StaffFixturesOps):
         self.check_online()
         return 1
 
-    def create_final_attempt(self, enrollment_id: int, *, idempotency_key: str) -> Attempt:
+    def create_final_attempt(
+        self, enrollment_id: int, *, idempotency_key: str
+    ) -> Attempt | JobAccepted:
         del enrollment_id, idempotency_key
+        if "poll_url" in self.doc_raw("final_attempt"):
+            return self.accepted("final_attempt")
         return self.doc("final_attempt", Attempt)
 
     def get_review_plan(self, enrollment_id: int) -> ReviewPlan:
@@ -402,3 +414,10 @@ class FixturesClient(LearnerFixtureOps, StaffFixturesOps):
     def get_job(self, job_id: str) -> Job:
         """La primera consulta devuelve «en curso» y las siguientes el resultado del escenario."""
         return self.job_document(job_id)
+
+
+def _ready_for_diagnostic(enrollment: Enrollment) -> None:
+    """`enrolled` o `profiling` → `diagnosing`, con `start_diagnostic` (contrato, sección 3.2)."""
+    if enrollment.status in ("enrolled", "profiling"):
+        enrollment.status = "diagnosing"
+        enrollment.next_action = NextAction(type="start_diagnostic", screen="E3")

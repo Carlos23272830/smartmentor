@@ -16,6 +16,7 @@ from core.bootstrap_secrets import missing_variables, render_secrets
 from core.config import Settings, get_settings
 from core.errors import MESSAGES, action_message, describe_error
 from core.labels import GLOSSARIES, glossary, role_label
+from core.session import AppSession
 
 
 def make_jwt(claims: dict[str, object]) -> str:
@@ -31,6 +32,43 @@ NOW = datetime(2026, 11, 7, 15, 0, tzinfo=UTC)
 
 
 # --- Token ---------------------------------------------------------------------------------------
+
+
+def test_an_old_expired_token_is_renewed_silently() -> None:
+    token = make_jwt(
+        {
+            "iat": int((NOW - timedelta(minutes=6)).timestamp()),
+            "exp": int((NOW - timedelta(minutes=1)).timestamp()),
+        }
+    )
+    assert auth.should_renew_silently(token, now=NOW)
+
+
+def test_a_valid_token_is_not_renewed() -> None:
+    token = make_jwt(
+        {
+            "iat": int((NOW - timedelta(minutes=1)).timestamp()),
+            "exp": int((NOW + timedelta(minutes=4)).timestamp()),
+        }
+    )
+    assert not auth.should_renew_silently(token, now=NOW)
+
+
+def test_a_token_that_arrives_expired_is_not_renewed_again() -> None:
+    """Sin este freno, un reloj desfasado dejaría la app en un ciclo de redirecciones."""
+    token = make_jwt(
+        {
+            "iat": int((NOW - timedelta(seconds=30)).timestamp()),
+            "exp": int((NOW - timedelta(seconds=10)).timestamp()),
+        }
+    )
+    assert not auth.should_renew_silently(token, now=NOW)
+
+
+def test_without_token_or_iat_there_is_no_silent_renewal() -> None:
+    assert not auth.should_renew_silently(None, now=NOW)
+    no_iat = make_jwt({"exp": int((NOW - timedelta(minutes=1)).timestamp())})
+    assert not auth.should_renew_silently(no_iat, now=NOW)
 
 
 def test_token_expiry_reads_exp_without_validating_signature() -> None:
@@ -238,3 +276,16 @@ def test_messages_are_spanish_and_codes_are_upper_snake() -> None:
     for code, text in MESSAGES.items():
         assert code.isupper()
         assert text.endswith(".")
+
+
+def test_opening_another_enrollment_forgets_the_previous_topic_and_attempts_b027() -> None:
+    session = AppSession()
+    session.start_onboarding(1, 10)
+    learner = session.learner
+    learner.step_id, learner.attempt_id, learner.final_attempt_id = 813, 9002, 9100
+    learner.quiz_job_id = "job-grading"
+    session.start_onboarding(1, 10)  # la misma inscripción: se retoma donde iba
+    assert (learner.step_id, learner.attempt_id) == (813, 9002)
+    session.start_onboarding(2, 11)
+    assert learner.step_id is learner.attempt_id is learner.final_attempt_id is None
+    assert learner.quiz_job_id is None

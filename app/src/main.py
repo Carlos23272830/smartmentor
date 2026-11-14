@@ -51,6 +51,7 @@ def _login_screen() -> None:
         title="Inicia sesión para continuar",
         message="Tu cuenta y tu contraseña las gestiona Keycloak; SmartMentor nunca las ve.",
         primary_label="Iniciar sesión",
+        card=True,
     )
     if primary:
         auth.clear_end_session_url()
@@ -69,6 +70,8 @@ def _error_screen(error: ApiError, *, page_title: str) -> None:
         error.code,
         error.request_id,
     )
+    if error.status == 401 and error.code == auth.TOKEN_EXPIRED_CODE:
+        auth.renew_silently_if_possible()  # redirige y no regresa si la sesión SSO sigue viva
     role = session.active_role
     role_text = label_for(role) if role and session.me else None
     view = describe_error(error, role_text, page_title)
@@ -82,6 +85,7 @@ def _error_screen(error: ApiError, *, page_title: str) -> None:
             message=view.message,
             primary_label="Volver a mi inicio" if is_forbidden else "Iniciar sesión",
             secondary_label="Cambiar de cuenta",
+            card=not is_forbidden,
         )
         if go_home and is_forbidden and role is not None:
             st.switch_page(home_for(role))

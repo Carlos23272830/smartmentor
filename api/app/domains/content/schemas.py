@@ -108,6 +108,7 @@ class VideoResponse(BaseModel):
 
 class VideoListResponse(BaseModel):
     topic_id: int
+    topic_name: str
     has_backup: bool
     candidates: list[VideoResponse]
 
@@ -121,10 +122,14 @@ class VideoQualityItem(BaseModel):
     useful_rate: float | None
     quality_index: float | None
     measuring: bool
+    # `measuring`, `recommended`, `observation` o `under_review` (aditivo, 2026-11-12).
+    status: str
 
 
 class VideoQualityResponse(BaseModel):
     learning_path_id: int
+    # Calificaciones necesarias para calcular el índice (aditivo, 2026-11-12).
+    min_ratings: int
     items: list[VideoQualityItem]
 
 

@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from app.common.schemas import RequestSchema, UtcDatetime
+from app.common.schemas import Page, RequestSchema, UtcDatetime
 
 
 class EvaluatorCreate(RequestSchema):
@@ -46,6 +46,7 @@ class QueueItem(BaseModel):
 
     id: int
     topic_id: int
+    topic_name: str
     learning_outcome_id: int | None
     source: str
     item_type: str
@@ -58,6 +59,15 @@ class QueueItem(BaseModel):
     rubric: list[Any] | None
     review_status: str
     own_annotation: AnnotationResponse | None
+    # Puesto (1 o 2) del evaluador en este ítem: el suyo si ya anotó, si no el que tomaría.
+    # None si los dos puestos ya están ocupados (aditivo, 2026-11-12).
+    evaluator_slot: int | None
+
+
+class AnnotationQueuePage(Page[QueueItem]):
+    """La cola más cuántos ítems de esos cursos ya anotó el evaluador."""
+
+    annotated: int = Field(description="Ítems de estos cursos que el evaluador ya anotó")
 
 
 class CriterionGrade(RequestSchema):
@@ -78,11 +88,18 @@ class GradingQueueEntry(BaseModel):
     attempt_answer_id: int
     item_id: int
     topic_id: int
+    topic_name: str
     stem: str
     model_answer: str | None
     rubric: list[Any]
     text_answer: str | None
     review_requested_at: UtcDatetime | None
+
+
+class GradingQueuePage(Page[GradingQueueEntry]):
+    """La cola más cuántas respuestas de esa muestra ya calificó el evaluador."""
+
+    graded: int = Field(description="Respuestas de esta muestra que el evaluador ya calificó")
 
 
 class LlmGradeResponse(BaseModel):

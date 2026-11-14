@@ -11,8 +11,14 @@ from collections.abc import Callable
 import streamlit as st
 
 from clients.base import ApiError
-from components.layout import render_page_header
-from components.staff_theme import ADMIN_ENROLLMENT_BADGE, COURSE_BADGE, PILOT_ARM_TEXT
+from clients.models_staff import Course
+from components.layout import render_notice, render_page_header
+from components.staff_theme import (
+    ADMIN_ENROLLMENT_BADGE,
+    CONSENT_BADGE,
+    COURSE_BADGE,
+    PILOT_ARM_BADGE,
+)
 from components.table import Actions, Row, render_table
 from core.container import get_client
 from core.staff_errors import show_staff_error
@@ -39,38 +45,53 @@ except ApiError as error:
     st.stop()
 
 with st.container(horizontal=True):
-    if st.button("Crear curso", type="primary", key="ce-create"):
+    # Como Figma AD5: «Inscribir aprendiz» es la acción principal (V-023).
+    if st.button("Crear curso", key="ce-create"):
         state.course_id = None
         state.job_id = None
         st.session_state.pop("nc-view", None)
         st.session_state.pop("nc-draft", None)
         st.switch_page(NEW_COURSE)
-    if st.button("Inscribir aprendiz", key="ce-enroll"):
+    if st.button("Inscribir aprendiz", type="primary", key="ce-enroll"):
         st.session_state["ce-panel"] = ("enroll", None)
+
+user_names = {u.id: u.full_name for u in users}
+
+
+def _owner_name(course: Course) -> str | None:
+    """El dueño del curso: el de los fixtures o, con la API real, el que indica `owner_user_id`."""
+    if course.owner is not None:
+        return course.owner.full_name
+    if course.owner_user_id is not None:
+        return user_names.get(course.owner_user_id, f"Usuario {course.owner_user_id}")
+    return None
+
 
 st.subheader("Cursos y rutas", anchor=False)
 course_rows = [
     Row(
         key=str(course.id),
         cells=[
-            f"**{course.name}**",
-            course.owner.full_name if course.owner else "Sin asignar",
+            course.name,
+            _owner_name(course) or ":gray[Sin asignar]",
             (
                 f"{course.learning_path.group_label or course.learning_path.name} · "
                 f"{course.topics_count} temas"
                 if course.learning_path
-                else "Sin ruta"
+                else ":gray[Sin ruta]"
             ),
             COURSE_BADGE[course.status],
             str(course.enrolled_count),
-            Actions((("owner", "Cambiar instructor" if course.owner else "Asignar instructor"),)),
+            Actions(
+                (("owner", "Cambiar instructor" if _owner_name(course) else "Asignar instructor"),)
+            ),
         ],
     )
     for course in courses
 ]
 clicked = render_table(
     ["Curso", "Instructor", "Ruta", "Estado", "Inscritos", "Acciones"],
-    [4, 2, 3, 2, 1, 3],
+    [4, 2, 3, 2, 2, 3],
     course_rows,
     key="admin-courses",
     empty_text="Todavía no hay cursos.",
@@ -83,11 +104,11 @@ enrollment_rows = [
     Row(
         key=str(item.id),
         cells=[
-            f"**{item.user.full_name}**",
+            item.user.full_name,
             f"{item.learning_path.name}"
             + (f" · {item.learning_path.group_label}" if item.learning_path.group_label else ""),
-            PILOT_ARM_TEXT[item.pilot_arm] if item.pilot_arm else "—",
-            "Aceptado" if item.consent_accepted else "Pendiente",
+            PILOT_ARM_BADGE[item.pilot_arm] if item.pilot_arm else "—",
+            CONSENT_BADGE[item.consent_accepted],
             ADMIN_ENROLLMENT_BADGE[item.status],
             Actions((("move", "Cambiar de ruta"), ("withdraw", "Retirar")))
             if item.status not in ("withdrawn", "completed")
@@ -105,7 +126,7 @@ clicked_enrollment = render_table(
 )
 if clicked_enrollment is not None:
     st.session_state["ce-panel"] = (clicked_enrollment[1], int(clicked_enrollment[0]))
-st.caption(
+render_notice(
     "Durante el piloto, cambiar a un aprendiz de ruta o de grupo lo saca del análisis. Quien no "
     "aceptó el consentimiento usa la plataforma, pero sus datos no se analizan."
 )
