@@ -51,13 +51,13 @@ if session.consent_step == "informed":
         st.switch_page(DATA_RIGHTS)
     if result.back or result.proceed:
         session.consent_step = "terms"
+        st.session_state["consent-terms-data"] = session.accept_data
+        st.session_state["consent-terms-pilot"] = session.accept_pilot
         st.rerun()
     st.stop()
 
 form = render_consent_form(
     key="consent-terms",
-    data_default=session.accept_data,
-    pilot_default=session.accept_pilot,
 )
 session.accept_data = form.data_processing
 session.accept_pilot = form.pilot_research

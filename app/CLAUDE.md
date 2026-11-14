@@ -27,7 +27,7 @@ Hoy `app/src` es el **prototipo de la Fase 0** (v2): páginas en `pages/student`
 
 | Pregunta | Respuesta en este proyecto |
 | --- | --- |
-| Framework de UI | **Streamlit 1.65** (Python 3.12), multipágina con `st.navigation(position="hidden")` y una barra superior propia. La versión queda fija |
+| Framework de UI | **Streamlit 1.67** (Python 3.12), multipágina con `st.navigation(position="hidden")` y una barra superior propia. La versión queda fija |
 | Librería de estilos | Ninguna. El aspecto sale de `.streamlit/config.toml` y de **un directorio de CSS propio** (sección 7) |
 | Build y bundler | Ninguno. Dependencias con `uv` (`pyproject.toml` y `uv.lock`); Ruff (línea de 100, comillas dobles), mypy estricto y pytest, igual que la API. Se corren en contenedores con `app/scripts/dev.sh` |
 | Gráficas | Las nativas de Streamlit; la paleta está en `chartCategoricalColors` del tema |

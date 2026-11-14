@@ -32,24 +32,25 @@ class InformedConsentResult:
 def render_consent_form(
     *,
     key: str,
-    data_default: bool = False,
-    pilot_default: bool = False,
     submit_label: str = "Continuar",
 ) -> ConsentFormResult:
-    """A3: autorización de datos (obligatoria) y de piloto (opcional)."""
+    """A3: autorización de datos (obligatoria) y de piloto (opcional).
+
+    Los valores iniciales se fijan desde la página con `st.session_state[f"{key}-data"]` y
+    `st.session_state[f"{key}-pilot"]`: Streamlit 1.67 conserva el estado de un widget con `key`
+    aunque no se dibuje, y `value=` ya no lo pisa.
+    """
     with st.container(key=f"card-consent-{key}"):
         st.subheader("Tus autorizaciones", anchor=False)
         st.caption("Antes de empezar necesitamos tu autorización para tratar tus datos.")
         data = st.checkbox(
             "Autorizo el tratamiento de mis datos personales para armar mi ruta "
             "(Ley 1581 de 2012). **Obligatorio**",
-            value=data_default,
             key=f"{key}-data",
         )
         pilot = st.checkbox(
             "Quiero participar en el piloto de investigación (consentimiento informado). "
             "**Opcional**",
-            value=pilot_default,
             key=f"{key}-pilot",
         )
         read = st.button("Leer el consentimiento informado", type="tertiary", key=f"{key}-read")
