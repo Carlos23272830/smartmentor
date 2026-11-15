@@ -182,6 +182,12 @@ def test_attempt_history_lists_attempts_and_flags_exhausted() -> None:
     assert "Intentos agotados" in badges(at)
 
 
+def test_attempt_history_scores_are_red() -> None:
+    raw = [e.value for e in run(_history).markdown]
+    assert ":red[60 % · 3 de 5]" in raw
+    assert ":red[40 % · 2 de 5]" in raw
+
+
 # --- topic_graph ---------------------------------------------------------------------------------
 
 

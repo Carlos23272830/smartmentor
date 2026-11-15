@@ -27,16 +27,19 @@ def render_attempt_history(
     exhausted: bool = False,
     title: str = "Historial de intentos",
 ) -> None:
-    with st.container(key=f"attempt-history-{key}"):
-        title_col, badge_col = st.columns([4, 2], vertical_alignment="center")
-        title_col.subheader(title, anchor=False)
-        if exhausted:
-            with badge_col:
+    with st.container(key=f"card-attempts-{key}"):
+        # Título e insignia en una línea, como en Figma (V-047).
+        with st.container(
+            horizontal=True, vertical_alignment="center", key=f"attempts-title-{key}"
+        ):
+            st.subheader(title, anchor=False)
+            if exhausted:
                 st.badge("Intentos agotados", color="orange")
         for row in rows:
-            name_col, score_col = st.columns([2, 4])
+            name_col, score_col = st.columns([1, 1])
             extra = " · intento extra" if row.extra_grant else ""
             name_col.markdown(f"**Intento {row.number}**{extra}")
-            score_col.markdown(f"{percent_points(row.score)} · {row.correct} de {row.total}")
+            with score_col.container(key=f"attempt-score-{key}-{row.number}"):
+                st.markdown(f":red[{percent_points(row.score)} · {row.correct} de {row.total}]")
         if pass_threshold is not None:
             st.caption(f"Necesitas {percent_points(pass_threshold)} para aprobar.")

@@ -421,6 +421,16 @@ def test_e7c_exhausted_attempts_from_next_action() -> None:
     assert "Recursos de repaso" in texts
 
 
+def test_e7c_route_rows_have_one_badge_each() -> None:
+    at = _result("learner_exhausted")
+    found = [
+        m.group(1) for e in at.markdown if (m := re.fullmatch(r":[a-z]+-badge\[(.*)\]", e.value))
+    ]
+    assert found.count("En espera") >= 1
+    assert "Puedes seguir" in found
+    assert ":red[40 % · 2 de 5]" in [e.value for e in at.markdown]
+
+
 def test_e7c_exhausted_from_the_result() -> None:
     at = _result("learner_exhausted")
     session_of(at).learner.attempt_id = 9003

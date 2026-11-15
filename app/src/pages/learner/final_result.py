@@ -74,19 +74,26 @@ if result.attempts.remaining <= 0:
             "y puede habilitarte un nuevo intento después de un repaso."
         ),
     )
-    render_attempt_history(
-        [AttemptRow(h.number, h.score, h.correct, h.total, h.extra_grant) for h in history],
-        key="final",
-        pass_threshold=result.pass_threshold,
-        exhausted=True,
-    )
-    st.caption(f"Necesitas {threshold} para obtener el badge.")
-    st.subheader("Temas a repasar", anchor=False)
-    for topic in plan.weak_topics:
-        name_col, score_col = st.columns([5, 1])
-        name_col.markdown(topic.name)
-        score_col.markdown(f"**{percent_points(topic.score)}**")
-    st.caption(f"Promedio de las preguntas de cada tema en tus {result.attempts.used} intentos.")
+    history_col, topics_col = st.columns(2)
+    with history_col:
+        render_attempt_history(
+            [AttemptRow(h.number, h.score, h.correct, h.total, h.extra_grant) for h in history],
+            key="final",
+            pass_threshold=result.pass_threshold,
+            exhausted=True,
+        )
+        st.caption(f"Necesitas {threshold} para obtener el badge.")
+    with topics_col, st.container(key="card-attempts-weak"):
+        st.subheader("Temas a repasar", anchor=False)
+        for topic in plan.weak_topics:
+            name_col, score_col = st.columns([5, 1])
+            name_col.markdown(topic.name)
+            score_col.markdown(
+                f":orange[**{percent_points(topic.score)}**]", text_alignment="right"
+            )
+        st.caption(
+            f"Promedio de las preguntas de cada tema en tus {result.attempts.used} intentos."
+        )
     with st.container(horizontal=True):
         if st.button("Volver a mi ruta", key="final-back"):
             st.switch_page(PATH_PAGE)
@@ -109,7 +116,7 @@ for topic in plan.weak_topics:
     with st.container(border=True, key=f"panel-weak-{topic.topic_id}"):
         name_col, score_col, action_col = st.columns([5, 1, 2], vertical_alignment="center")
         name_col.markdown(f"**{topic.name}**")
-        score_col.markdown(f"**{percent_points(topic.score)}**")
+        score_col.markdown(f":orange[**{percent_points(topic.score)}**]", text_alignment="right")
         if action_col.button("Repasar tema", key=f"review-topic-{topic.topic_id}"):
             _review(topic.topic_id)
 st.caption(
