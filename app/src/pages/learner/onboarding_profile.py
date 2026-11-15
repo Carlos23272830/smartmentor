@@ -34,15 +34,14 @@ except ApiError as error:
     show_action_error(error)
     st.stop()
 
-with st.container(key="card-profile-description"):
-    description = st.text_area(
-        "Describe tu formación, experiencia e intereses",
-        value=profile.description or "",
-        height=160,
-        max_chars=2000,
-        label_visibility="collapsed",
-        key="profile-description",
-    )
+description = st.text_area(
+    "Describe tu formación, experiencia e intereses",
+    value=profile.description or "",
+    height=160,
+    max_chars=2000,
+    label_visibility="collapsed",
+    key="profile-description",
+)
 
 back_col, next_col = st.columns([1, 1])
 if back_col.button("Atrás", key="profile-back"):
