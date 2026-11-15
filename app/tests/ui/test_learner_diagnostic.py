@@ -246,8 +246,6 @@ def test_e5_follows_figma() -> None:
         accepted=(
             # Con la ruta confirmada el objetivo no se edita (B-032): va una nota en su lugar.
             "Editar objetivo",
-            # Un tema omitido no se repasa desde la ruta: la API no entrega su contenido (409).
-            "Puedes repasarlo cuando quieras",
             # El API no dice de qué tema es prerrequisito, ni el último puntaje (solo el mejor).
             "Incluido como prerrequisito débil de Regresión logística (64 % en el diagnóstico)",
             "Intento 2 de 3 · último puntaje 60 %",
@@ -257,13 +255,23 @@ def test_e5_follows_figma() -> None:
     )
 
 
-def test_e5_passed_and_skipped_topics_do_not_open() -> None:
-    """La API responde `409 STEP_NOT_AVAILABLE` al contenido de un tema aprobado u omitido."""
+def test_e5_passed_and_skipped_topics_open_for_review_b025() -> None:
+    """La API entrega un tema aprobado u omitido en modo repaso: E5 los deja abrir."""
     at = learner_app("learner_path", PATH)
     keys = {b.key for b in at.button}
-    assert "open-step-811" not in keys  # omitido
-    assert "open-step-812" not in keys  # aprobado
+    assert "open-step-811" in keys  # omitido
+    assert "open-step-812" in keys  # aprobado
     assert "open-step-813" in keys  # en curso
+
+
+def test_e5_skipped_topic_opens_in_review_mode_b025() -> None:
+    at = learner_app("learner_path", PATH)
+    at.button(key="open-step-811").click().run()
+    no_exception(at)
+    assert session_of(at).learner.step_id == 811
+    texts = page_texts(at)
+    assert "Repaso" in texts
+    assert "Empezar quiz" not in texts
 
 
 def test_e5_open_step_goes_to_the_topic() -> None:

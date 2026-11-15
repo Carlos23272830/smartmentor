@@ -11,8 +11,9 @@ from components.formatting import approx_duration, duration, percent_points
 from components.path_rows import PathRow
 
 # Pasos que no se abren: la API no entrega su contenido (`409 STEP_NOT_AVAILABLE`). Un tema
-# aprobado u omitido no se repasa desde la ruta (decisión del 11-nov-2026: seguir a la API).
-CLOSED_STEPS = frozenset({"blocked", "on_hold", "passed", "skipped"})
+# aprobado u omitido sí se abre: la API lo entrega en modo repaso (B-025, 2026-11-15).
+CLOSED_STEPS = frozenset({"blocked", "on_hold"})
+SKIPPED_DETAIL = "Puedes repasarlo cuando quieras"
 
 
 def reason_line(step: PathStep) -> str:
@@ -43,7 +44,7 @@ def detail_line(step: PathStep) -> str | None:
     best = percent_points(step.best_score) if step.best_score is not None else None
     match step.status:
         case "skipped":
-            return None  # el motivo ya dice «Omitido por tu diagnóstico»
+            return SKIPPED_DETAIL  # el motivo ya dice «Omitido por tu diagnóstico»
         case "passed":
             if best is None:
                 return "Aprobado"

@@ -154,6 +154,17 @@ def test_e9_review_topic_opens_the_topic() -> None:
     assert session_of(at).learner.step_id == 813
 
 
+def test_e9_review_topic_shows_the_passed_topic_in_review_mode_b025() -> None:
+    """En `final_ready` los temas débiles ya están aprobados: «Repasar tema» abre el repaso."""
+    at = learner_app("learner_final_failed", FINAL_RESULT)
+    at.button(key="review-topic-12").click().run()
+    no_exception(at)
+    texts = page_texts(at)
+    assert "Repaso" in texts
+    assert "Empezar quiz" not in texts
+    assert not at.error
+
+
 def test_e9_retry_creates_a_new_final_attempt() -> None:
     at = learner_app("learner_final_failed", FINAL_RESULT)
     button(at, "Reintentar evaluación final").click().run()
