@@ -1,0 +1,30 @@
+/* Nuevo curso (D1b a D1d). El estilo de las tarjetas viene de las reglas «st-key-card-» de
+   layout.css. */
+
+/* D1b: el archivo cargado en una fila gris con el estado a la derecha (V-063). */
+.st-key-new-course-file-row {
+  background: var(--bg-neutral);
+  border-radius: var(--radius-row);
+  padding: var(--space-8) var(--space-12);
+  align-items: center;
+}
+
+/* D1c: tarjeta de carga centrada y de ancho máximo (V-064). */
+.st-key-new-course-loading {
+  max-width: 560px;
+  margin: var(--space-16) auto 0;
+}
+
+/* D1c: aviso de reintento como pastilla ámbar centrada (V-065). */
+.st-key-new-course-retry {
+  background: var(--warning-soft);
+  color: var(--warning-text);
+  border-radius: var(--radius-pill);
+  padding: var(--space-6) var(--space-16);
+  width: fit-content;
+  margin: 0 auto;
+  text-align: center;
+}
+.st-key-new-course-retry p {
+  color: var(--warning-text);
+}

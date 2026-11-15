@@ -82,7 +82,7 @@ def test_d1d_syllabus_without_text_keeps_the_course_data() -> None:
     texts = page_texts(at)
     assert "No pudimos leer el syllabus" in texts
     assert any("0 caracteres de texto detectados" in t for t in texts)
-    assert "Tus datos del curso están guardados. No se perdió nada." in texts
+    assert any("Tus datos del curso están guardados. No se perdió nada." in t for t in texts)
     at = click(at, "Pegar el texto")
     assert at.text_input(key="nc-name").value == "Curso de prueba"
 
@@ -189,3 +189,37 @@ def test_d1c_back_to_courses_discards_the_draft() -> None:
     at = click(at, "Volver a mis cursos")
     assert_no_exception(at)
     assert "nc-draft" not in at.session_state
+
+
+def test_d1b_ai_note_is_an_info_box_under_two_columns() -> None:
+    at = staff_app(page=NEW_COURSE)
+    assert_no_exception(at)
+    assert len(at.columns) == 2
+    assert [i.value for i in at.info] == [
+        "El syllabus se procesa con IA para extraer temas, prerrequisitos y resultados de "
+        "aprendizaje. Tú revisas, corriges y apruebas todo antes de publicar."
+    ]
+    assert [s.value for s in at.subheader] == ["Datos del curso", "Syllabus"]
+
+
+def test_d1c_has_no_page_title_and_shows_the_retry_pill() -> None:
+    at = _fill_paste_form("loading")
+    at = click(at, "Extraer temas con IA")
+    assert_no_exception(at)
+    assert len(at.title) == 0
+    texts = page_texts(at)
+    assert "La respuesta no tenía el formato esperado · Reintentando, 2 de 3" in texts
+
+
+def test_d1d_error_box_names_the_file_and_swaps_the_buttons() -> None:
+    at = _fill_paste_form("no_text")
+    at = click(at, "Extraer temas con IA")
+    assert_no_exception(at)
+    assert len(at.error) == 1
+    assert at.error[0].value.startswith(":red[**syllabus")
+    assert "0 caracteres de texto detectados" in at.error[0].value
+    assert "Tus datos del curso están guardados. No se perdió nada." in at.error[0].value
+    assert not any("0 caracteres" in c.value for c in at.caption)
+    kinds = {b.label: b.proto.type for b in at.button}
+    assert kinds["Subir otro archivo"] == "primary"
+    assert kinds["Pegar el texto"] == "secondary"

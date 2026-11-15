@@ -47,3 +47,13 @@ def short_date(value: date) -> str:
 def initials(full_name: str) -> str:
     parts = full_name.split()
     return "".join(p[0] for p in parts[:2]).upper() or "?"
+
+
+def file_size(size: int) -> str:
+    """Tamaño de un archivo: 800 -> «800 B», 1536 -> «1,5 KB», 250000 -> «244 KB»."""
+    if size < 1024:
+        return f"{size} B"
+    if size < 1024 * 1024:
+        kilobytes = size / 1024
+        return f"{decimal(kilobytes)} KB" if kilobytes < 10 else f"{round(kilobytes)} KB"
+    return f"{decimal(size / (1024 * 1024))} MB"

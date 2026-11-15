@@ -6,6 +6,7 @@ Una sola página con tres vistas, guardadas en `st.session_state["nc-view"]`:
 que no se dibujan pierden su valor.
 """
 
+import re
 from dataclasses import dataclass
 
 import streamlit as st
@@ -13,6 +14,7 @@ import streamlit as st
 from clients.base import ApiError
 from clients.jobs import is_done
 from clients.models_staff import CourseCreate
+from components.formatting import file_size
 from components.layout import render_page_header
 from components.loading_steps import render_loading_steps
 from core.container import get_client
@@ -103,7 +105,8 @@ def _form() -> None:
             "IA antes de publicar la ruta."
         ),
     )
-    with st.container(border=True, key="panel-new-course"):
+    data_card, syllabus_card = st.columns(2)
+    with data_card.container(key="card-new-course-data"):
         st.subheader("Datos del curso", anchor=False)
         draft.name = st.text_input("Nombre del curso", value=draft.name, key="nc-name")
         draft.group = st.text_input("Grupo o periodo", value=draft.group, key="nc-group")
@@ -115,7 +118,9 @@ def _form() -> None:
             height=120,
             key="nc-description",
         )
-        st.markdown("**Syllabus**")
+    upload = None
+    with syllabus_card.container(key="card-new-course-syllabus"):
+        st.subheader("Syllabus", anchor=False)
         draft.mode = (
             st.segmented_control(
                 "Syllabus",
@@ -126,7 +131,6 @@ def _form() -> None:
             )
             or draft.mode
         )
-        upload = None
         if draft.mode == UPLOAD:
             upload = st.file_uploader(
                 "Arrastra aquí el PDF del syllabus", type=["pdf"], key="nc-file"
@@ -134,16 +138,18 @@ def _form() -> None:
             st.caption("o haz clic para elegir un archivo · PDF o texto, máximo 10 MB")
             if upload is not None:
                 draft.file_name, draft.file_size = upload.name, upload.size
-                st.markdown(f"{upload.name} · {upload.size // 1024} KB")
-                st.badge("Listo", color="green")
+                with st.container(horizontal=True, key="new-course-file-row"):
+                    st.markdown(f"{upload.name} · {file_size(upload.size)}")
+                    st.space("stretch")
+                    st.badge("Listo", color="green")
         else:
             draft.text = st.text_area(
                 "Texto del syllabus", value=draft.text, height=200, key="nc-text"
             )
-        st.caption(
-            "El syllabus se procesa con IA para extraer temas, prerrequisitos y resultados de "
-            "aprendizaje. Tú revisas, corriges y apruebas todo antes de publicar."
-        )
+    st.info(
+        "El syllabus se procesa con IA para extraer temas, prerrequisitos y resultados de "
+        "aprendizaje. Tú revisas, corriges y apruebas todo antes de publicar."
+    )
     too_big = upload is not None and upload.size > MAX_BYTES
     if too_big:
         st.error("El archivo pesa más de 10 MB. Sube uno más liviano o pega el texto.")
@@ -167,27 +173,35 @@ def _form() -> None:
         _submit(file if draft.mode == UPLOAD else None)
 
 
+def _retry_text(progress_label: str) -> str:
+    """Aviso de reintento de D1c; el prefijo solo va si el trabajo informa un reintento."""
+    if progress_label.startswith("Reintentando"):
+        return f"La respuesta no tenía el formato esperado · {progress_label}"
+    return progress_label
+
+
 def _extracting() -> bool:
     """Dibuja D1c; devuelve True si el trabajo sigue en curso (hay que seguir sondeando)."""
     if state.job_id is None:
         st.stop()
     job = client.poll_job(state.job_id)
     failed = job.status == "failed"
-    st.title("Extrayendo temas del syllabus", anchor=False)
-    action = render_loading_steps(
-        "Extrayendo temas del syllabus",
-        extraction_steps(job),
-        "menos de 20 segundos",
-        key="extract",
-        error_message=(
-            "No pudimos extraer los temas. Tu syllabus está guardado: puedes reintentar."
-            if failed
-            else None
-        ),
-        back_label="Volver a mis cursos",
-    )
-    if job.progress_label and not failed:
-        st.caption(job.progress_label)
+    with st.container(key="new-course-loading"):
+        action = render_loading_steps(
+            "Extrayendo temas del syllabus",
+            extraction_steps(job),
+            "menos de 20 segundos",
+            key="extract",
+            error_message=(
+                "No pudimos extraer los temas. Tu syllabus está guardado: puedes reintentar."
+                if failed
+                else None
+            ),
+            back_label="Volver a mis cursos",
+        )
+        if job.progress_label and not failed:
+            with st.container(key="new-course-retry"):
+                st.markdown(_retry_text(job.progress_label))
     if is_done(job) and not failed:
         state.job_id = None
         st.session_state.pop("nc-view", None)
@@ -227,19 +241,21 @@ def _poll() -> None:
 
 def _error() -> None:
     render_page_header("No pudimos leer el syllabus", breadcrumb=BREADCRUMB)
-    st.markdown(
+    st.caption(
         "El PDF parece escaneado: no tiene texto seleccionable. Sube otro archivo o pega el "
         "texto del syllabus."
     )
-    name = draft.file_name or "syllabus.pdf"
-    st.caption(f"{name} · 0 caracteres de texto detectados")
-    st.info("Tus datos del curso están guardados. No se perdió nada.")
+    name = re.sub(r"([\\\[\]*_`])", r"\\\1", draft.file_name or "syllabus.pdf")
+    st.error(
+        f":red[**{name} · 0 caracteres de texto detectados**]\n\n"
+        "Tus datos del curso están guardados. No se perdió nada."
+    )
     with st.container(horizontal=True):
-        if st.button("Pegar el texto", type="primary", key="nc-paste"):
+        if st.button("Pegar el texto", key="nc-paste"):
             draft.mode = PASTE
             _set_view("form")
             st.rerun()
-        if st.button("Subir otro archivo", key="nc-upload"):
+        if st.button("Subir otro archivo", type="primary", key="nc-upload"):
             draft.mode = UPLOAD
             _set_view("form")
             st.rerun()
