@@ -132,11 +132,12 @@ def progress_line(enrollment: Enrollment, path: PathDetail) -> str:
 
 CONTINUE_TOPIC = "Continuar tema"
 # Texto del botón principal de E5 según el `next_action` (B-039). Lo que no está aquí sigue un
-# tema y dice «Continuar tema». Se reusan los textos de E9, E10 y E13a.
+# tema y dice «Continuar tema». Se reusan los textos de E9 y E10. Con la encuesta pendiente el
+# botón lleva al badge (E10), que la ofrece como tarjeta opcional (B-045).
 CONTINUE_LABELS: dict[NextActionType, str] = {
     "take_final": "Presentar evaluación final",
     "review_final": "Ver resultado de la evaluación final",
-    "answer_survey": "Responder encuesta",
+    "answer_survey": "Ver badge",
     "view_badge": "Ver badge",
 }
 

@@ -283,7 +283,7 @@ def test_savings_without_minutes_is_not_shown_as_zero() -> None:
         (NextAction(type="take_final"), 1, "Reintentar evaluación final"),
         (NextAction(type="continue_attempt", attempt_id=9), 0, "Continuar evaluación final"),
         (NextAction(type="review_final", attempt_id=9), 1, "Ver resultado de la evaluación final"),
-        (NextAction(type="answer_survey"), 1, "Responder encuesta"),
+        (NextAction(type="answer_survey"), 1, "Ver badge"),
         (NextAction(type="view_badge"), 1, "Ver badge"),
     ],
 )

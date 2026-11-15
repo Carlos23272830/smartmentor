@@ -16,7 +16,7 @@ from pathlib import Path
 import streamlit as st
 from streamlit.navigation.page import StreamlitPage
 
-from clients.models import NextAction, Role
+from clients.models import NextAction, NextActionType, Role
 
 SRC_DIR = Path(__file__).resolve().parents[1]
 
@@ -213,14 +213,26 @@ def active_menu_path(url_path: str, role: Role) -> str | None:
     return None
 
 
+# Acciones cuya pantalla decide la app y no el campo `screen` (B-045, decisión del 2026-11-15).
+# Con la ruta completada la API manda `answer_survey` a E13a, pero en Figma el aprendiz ve primero
+# su badge (E10) y la encuesta es una tarjeta opcional de esa pantalla, que la ofrece mientras el
+# `next_action` siga siendo `answer_survey`. Así nadie ve la encuesta antes que su resultado.
+ACTION_SCREENS: dict[NextActionType, str] = {
+    "answer_survey": "E10",
+    "view_badge": "E10",
+}
+
+
 def page_for_next_action(action: NextAction) -> str | None:
     """Página que atiende un `next_action`, o None si todavía no existe.
 
-    La app navega por lo que dice la API; nunca deduce el estado. El mapa va de `screen` a página.
+    La app navega por lo que dice la API; nunca deduce el estado. El mapa va de `screen` a página,
+    salvo las acciones de `ACTION_SCREENS`, que siempre llevan a su pantalla.
     """
-    if action.screen is None:
+    screen = ACTION_SCREENS.get(action.type, action.screen)
+    if screen is None:
         return None
-    path = SCREEN_PAGES.get(action.screen)
+    path = SCREEN_PAGES.get(screen)
     return path if path is not None and is_registered(path) else None
 
 

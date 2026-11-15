@@ -416,10 +416,11 @@ def test_e5_continue_says_final_assessment_when_it_comes_next_b039() -> None:
     assert {b.key: b.label for b in at.button}["path-continue"] == "Presentar evaluación final"
 
 
-def test_e5_continue_says_survey_when_it_comes_next_b039() -> None:
+def test_e5_continue_says_badge_when_the_survey_is_pending_b045() -> None:
+    """Con la encuesta pendiente «Continuar» lleva a E10, que la ofrece como tarjeta (B-045)."""
     at = learner_app("learner_completed", PATH)
     no_exception(at)
-    assert {b.key: b.label for b in at.button}["path-continue"] == "Responder encuesta"
+    assert {b.key: b.label for b in at.button}["path-continue"] == "Ver badge"
 
 
 def test_e5_does_not_show_zero_savings_with_skipped_topics_b039() -> None:

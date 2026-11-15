@@ -432,8 +432,13 @@ class FixturesClient(LearnerFixtureOps, StaffFixturesOps):
         sus_items: Sequence[int],
         comment: str | None,
     ) -> float:
-        del enrollment_id, likert, sus_items, comment
+        del likert, sus_items, comment
         self.check_online()
+        # Como la API: con la encuesta enviada la inscripción pasa a `view_badge` y E10 deja de
+        # ofrecerla (B-045). Sin esto la tarjeta seguía en el modo `fixtures`.
+        for enrollment in self._enrollments:
+            if enrollment.id == enrollment_id and enrollment.next_action.type == "answer_survey":
+                enrollment.next_action = NextAction(type="view_badge", screen="E10")
         return 85.0
 
     # --- Trabajos de IA ---

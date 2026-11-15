@@ -1,6 +1,7 @@
 """E9 · Repaso dirigido y E9c · Evaluación final con intentos agotados.
 
-Si la final se aprobó, la API manda al badge o a la encuesta (`next_action`). Si no, esta página
+Si la final se aprobó, se sigue el `next_action`: con `answer_survey` o `view_badge` lleva al badge
+(E10), que ofrece la encuesta como tarjeta opcional (B-045). Si no, esta página
 lista los temas débiles (`review-plan`) y ofrece reintentar con preguntas nuevas; sin intentos
 (`attempts.remaining = 0`) muestra el historial y avisa que el instructor ya recibió una alerta.
 
