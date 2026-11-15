@@ -170,3 +170,11 @@ Revisión con `gh` y `git` del estado real de `dev`, sin subir nada.
 - **Pruebas locales:** las 9 ramas fusionadas juntas en una copia: app 792 en verde, ai 474 en verde y 10 omitidas, Ruff, formato y mypy en verde, y `check-env-coherence.py` coherente. Se fusionan sin conflictos en cualquier orden. Al probarlas juntas apareció que R-001 no documentaba sus variables: se corrigió en `1354d20`
 - **CI:** se anota al fusionar
 - **Quién aprobó la subida:** el dueño, en el chat («Abro un PR por rama y tú fusionas»)
+
+### S-013 · 2026-11-15 00:08 · PR 8 a PR 16 fusionados en `dev`
+
+- **Fusiones (el dueño, en GitHub):** PR 15 (`ca0b133`) y PR 16 (`7fe1538`) el 2026-11-14 23:59; PR 8 (`dce0ecc`) y PR 14 (`209f913`) el 2026-11-15 00:00; PR 9 (`f6ad347`), PR 11 (`284d679`) y PR 12 (`d419a2b`) a las 00:01; PR 10 (`dc58757`) y PR 13 (`cedf2d7`) a las 00:02
+- **IDs:** B-009, T-015, F-004, R-001, R-002, R-003, V-033, V-050, R-009
+- **CI:** en verde en los 9 PR antes de fusionar, y en `dev` sobre `dc58757`, que los incluye a todos. Las corridas de los commits intermedios quedaron canceladas porque GitHub las reemplazó con la siguiente
+- **Esta entrada:** rama `feature/seguimiento-fusion-pr8-16`, con PR hacia `dev`
+- **Quién aprobó la subida:** el dueño, en el chat («Abro un PR por rama y tú fusionas»)
