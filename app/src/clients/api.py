@@ -112,6 +112,7 @@ class ApiClient(LearnerApiOps, StaffApiOps):
         json: Any = None,
         params: dict[str, Any] | None = None,
         idempotency_key: str | None = None,
+        timeout: httpx.Timeout | None = None,
     ) -> httpx.Response:
         headers = {
             "Authorization": f"Bearer {self._token_provider()}",
@@ -122,7 +123,12 @@ class ApiClient(LearnerApiOps, StaffApiOps):
             headers["Idempotency-Key"] = idempotency_key
         try:
             response = self._http.request(
-                method, f"{API_PREFIX}{path}", json=json, params=params, headers=headers
+                method,
+                f"{API_PREFIX}{path}",
+                json=json,
+                params=params,
+                headers=headers,
+                timeout=timeout or httpx.USE_CLIENT_DEFAULT,
             )
         except httpx.HTTPError as error:
             logger.warning("API sin conexión: %s %s (%s)", method, path, type(error).__name__)

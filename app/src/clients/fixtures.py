@@ -178,6 +178,7 @@ class FixturesClient(LearnerFixtureOps, StaffFixturesOps):
         ]
         self._enrollments = self._load(self.scenario.enrollments, Page[Enrollment]).items
         self._job_polls: dict[str, int] = {}
+        self.recorded_events = []  # eventos de uso recibidos (`POST /me/events`), en memoria
 
     def _load[M: BaseModel](self, name: str, model: type[M]) -> M:
         return model.model_validate(_read(self._dir, name))
