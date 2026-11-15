@@ -19,8 +19,13 @@
           "title": "Points Awarded",
           "type": "number"
         },
+        "reason": {
+          "description": "One sentence in Spanish for the learner: why the criterion is met or not, without revealing the expected answer",
+          "title": "Reason",
+          "type": "string"
+        },
         "evidence": {
-          "description": "Part of the answer that justifies the decision",
+          "description": "Short literal quote of the answer that supports the decision; empty if none",
           "title": "Evidence",
           "type": "string"
         }
@@ -29,6 +34,7 @@
         "criterion",
         "met",
         "points_awarded",
+        "reason",
         "evidence"
       ],
       "title": "CriterionResultLLM",

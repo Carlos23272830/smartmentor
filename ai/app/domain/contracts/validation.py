@@ -357,6 +357,8 @@ def check_short_answer_grading(
             issues.append(
                 f"'{result.criterion}': points_awarded {result.points_awarded} out of 0..{maximum}"
             )
+        if not result.reason.strip():
+            issues.append(f"'{result.criterion}': reason is empty")
     if not grading.feedback.strip():
         issues.append("feedback is empty")
     return issues

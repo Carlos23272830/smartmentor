@@ -27,6 +27,12 @@
           "title": "Points Awarded",
           "type": "number"
         },
+        "reason": {
+          "default": "",
+          "description": "Why the criterion is met or not (short_answer_grading v2); empty before v2",
+          "title": "Reason",
+          "type": "string"
+        },
         "evidence": {
           "title": "Evidence",
           "type": "string"

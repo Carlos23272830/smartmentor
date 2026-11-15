@@ -201,7 +201,13 @@ async def test_feedback_that_gives_the_answer_is_sent_back(
 ) -> None:
     leaking = {
         "criteria": [
-            {"criterion": r["criterion"], "met": False, "points_awarded": 0, "evidence": "-"}
+            {
+                "criterion": r["criterion"],
+                "met": False,
+                "points_awarded": 0,
+                "reason": "No se cumple.",
+                "evidence": "",
+            }
             for r in RUBRIC
         ],
         "feedback": GRADE["model_answer"],
@@ -211,6 +217,52 @@ async def test_feedback_that_gives_the_answer_is_sent_back(
     calls = llm.calls("short_answer_grading")
     assert len(calls) == 2
     assert "feedback repeats the expected answer" in calls[1].user
+
+
+async def test_a_reason_that_gives_the_answer_is_sent_back(
+    world: EvalWorld, llm: FakeLlmProvider
+) -> None:
+    leaking = {
+        "criteria": [
+            {
+                "criterion": r["criterion"],
+                "met": False,
+                "points_awarded": 0,
+                "reason": f"No se cumple; lo esperado era: {GRADE['model_answer']}",
+                "evidence": "",
+            }
+            for r in RUBRIC
+        ],
+        "feedback": "Revisa el efecto del umbral sobre los errores.",
+    }
+    llm.script("short_answer_grading", json.dumps(leaking))
+    await world.call("grading.short_answer", GRADE, REFS)
+    calls = llm.calls("short_answer_grading")
+    assert len(calls) == 2
+    assert "reason repeats the expected answer" in calls[1].user
+
+
+async def test_grading_uses_prompt_v2_and_carries_each_reason(
+    world: EvalWorld, llm: FakeLlmProvider
+) -> None:
+    result = await world.call("grading.short_answer", GRADE, REFS)
+    grading = AnswerGrading.model_validate(result.result)
+    assert grading.meta is not None and grading.meta.prompt_version == "v2"
+    (request,) = llm.calls("short_answer_grading")
+    assert request.prompt_version == 2
+    assert "`reason`" in request.user
+    assert all(c.reason for c in grading.rubric_detail)
+    unmet = [c for c in grading.rubric_detail if not c.met]
+    assert unmet and all(c.evidence == "" for c in unmet)
+
+
+async def test_an_empty_answer_has_a_fixed_reason_per_criterion(world: EvalWorld) -> None:
+    from app.application.grading.short_answer import EMPTY_ANSWER_REASON
+
+    result = await world.call("grading.short_answer", {**GRADE, "answer_text": ""}, REFS)
+    grading = AnswerGrading.model_validate(result.result)
+    assert [c.reason for c in grading.rubric_detail] == [EMPTY_ANSWER_REASON] * len(RUBRIC)
+    assert all(c.evidence == "" for c in grading.rubric_detail)
 
 
 async def test_the_rubric_must_add_up_to_one() -> None:

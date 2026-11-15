@@ -284,7 +284,9 @@ def test_short_answer_grading_follows_the_rubric() -> None:
     grading.criteria[0].points_awarded = 0.9
     grading.criteria[1].criterion = "Otro criterio"
     grading.feedback = ""
+    grading.criteria[2].reason = "  "
     issues = v.check_short_answer_grading(grading, rubric)
+    assert _has(issues, "'Justifica la decisión con la diferencia de costos': reason is empty")
     assert _has(issues, "points_awarded 0.9 out of 0..0.4")
     assert _has(issues, "criterion 'Otro criterio' is not in the rubric")
     assert _has(issues, "was not graded")
