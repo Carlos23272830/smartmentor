@@ -60,7 +60,8 @@ def render_resume_form(
     experience_options = list(EXPERIENCE_BAND_LABEL)
     with st.container(key=f"card-{key}-studies"):
         st.markdown("**Estudios y experiencia**")
-        level = st.selectbox(
+        level_col, title_col = st.columns(2)
+        level = level_col.selectbox(
             "Nivel máximo de estudios",
             education_options,
             index=_index(education_options, values.education_level),
@@ -68,9 +69,10 @@ def render_resume_form(
             placeholder=_NOT_SELECTED,
             key=f"{key}-education",
         )
-        title = st.text_input("Título", value=values.qualification_title, key=f"{key}-title")
-        job = st.text_input("Cargo actual", value=values.job_title, key=f"{key}-job")
-        experience = st.selectbox(
+        title = title_col.text_input("Título", value=values.qualification_title, key=f"{key}-title")
+        job_col, experience_col = st.columns(2)
+        job = job_col.text_input("Cargo actual", value=values.job_title, key=f"{key}-job")
+        experience = experience_col.selectbox(
             "Años de experiencia",
             experience_options,
             index=_index(experience_options, values.experience_band),

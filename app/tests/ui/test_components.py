@@ -24,7 +24,9 @@ def badges(at: AppTest) -> set[str]:
 
 
 def texts(at: AppTest) -> list[str]:
-    values = [plain(e.value) for e in [*at.markdown, *at.caption, *at.subheader, *at.error]]
+    values = [
+        plain(e.value) for e in [*at.markdown, *at.caption, *at.subheader, *at.error, *at.success]
+    ]
     return values + [plain(b.label) for b in at.button]
 
 
@@ -101,7 +103,7 @@ def _objective() -> None:
 def test_objective_editor_disables_save_without_criterion() -> None:
     at = run(_objective)
     assert at.button(key="e4b-save").disabled
-    assert "Con este objetivo tu ruta tiene 4 temas." in texts(at)
+    assert any("Con este objetivo tu ruta tiene 4 temas." in t for t in texts(at))
     assert any("El 80 % para obtener el badge" in t for t in texts(at))
 
 
@@ -147,6 +149,12 @@ def test_rubric_result_states_each_criterion_in_words() -> None:
     assert "No cumple · Justifica con datos del caso" in shown
 
 
+def test_rubric_result_colors_met_green_and_unmet_red() -> None:
+    raw = [e.value for e in run(_rubric).markdown]
+    assert ":green[Cumple · Relaciona el umbral con el costo]" in raw
+    assert ":red[No cumple · Justifica con datos del caso]" in raw
+
+
 # --- attempt_history -----------------------------------------------------------------------------
 
 
@@ -174,6 +182,12 @@ def test_attempt_history_lists_attempts_and_flags_exhausted() -> None:
     assert "Intento 3 · intento extra" in shown
     assert "Necesitas 70 % para aprobar." in shown
     assert "Intentos agotados" in badges(at)
+
+
+def test_attempt_history_scores_are_red() -> None:
+    raw = [e.value for e in run(_history).markdown]
+    assert ":red[60 % · 3 de 5]" in raw
+    assert ":red[40 % · 2 de 5]" in raw
 
 
 # --- topic_graph ---------------------------------------------------------------------------------
@@ -398,8 +412,8 @@ def _levels() -> None:
 
 def test_levels_write_the_state_next_to_the_percentage() -> None:
     at = run(_levels)
-    markdown = [e.value for e in at.markdown]
-    assert "**92 %**" in markdown
+    # El porcentaje va en gris normal (caption), no en negrita (V-040).
+    assert "92 %" in [e.value for e in at.caption]
     shown = badges(at)
     assert shown == {
         "Dominado",
@@ -477,11 +491,14 @@ def _badges() -> None:
 
 
 def test_badge_slots_say_obtained_or_locked() -> None:
+    """V-052: el estado va una sola vez (texto e ícono), sin insignia repetida."""
     at = run(_badges)
-    assert badges(at) == {
-        "Obtenida",
-        "Bloqueada",
-    }
+    assert badges(at) == set()
+    assert [e.value for e in at.caption][-2:] == ["Obtenida el 7 nov 2026", "Aprueba los 5 temas"]
+    assert [e.value for e in at.markdown][-2:] == [
+        "#### :material/workspace_premium: Fundamentos de ML",
+        "#### :material/lock: Estadística",
+    ]
     assert at.header[0].value == "¡Ruta completada!"
 
 
@@ -515,3 +532,37 @@ def test_role_card_has_an_enter_button() -> None:
     at = run(_role_card)
     assert at.button(key="enter-admin").label == "Entrar como admin"
     assert badges(at) == {"Admin"}
+
+
+def _path_rows() -> None:
+    from components.path_rows import PathRow, render_path_rows
+
+    render_path_rows(
+        [
+            PathRow(1, 1, "Introducción", "skipped", "Omitido", tone="green", openable=False),
+            PathRow(
+                2, 2, "Regresión", "in_progress", "Parte de tu objetivo", "Intento 2", tone="blue"
+            ),
+        ],
+        grouped=True,
+    )
+
+
+def test_path_rows_color_the_reason_and_mark_the_current_topic() -> None:
+    at = run(_path_rows)
+    captions = [e.value for e in at.caption]
+    assert ":green[Omitido]" in captions
+    assert ":blue[Parte de tu objetivo]  \nIntento 2" in captions
+    assert [b.key for b in at.button] == ["open-step-2"]
+
+
+def _info_notice() -> None:
+    from components.layout import render_notice
+
+    render_notice("Grupo asignado al azar", tone="info")
+
+
+def test_info_notice_is_a_soft_blue_box_not_a_warning() -> None:
+    at = run(_info_notice)
+    assert [e.value for e in at.markdown] == ["Grupo asignado al azar"]
+    assert not at.warning

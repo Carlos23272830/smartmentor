@@ -19,7 +19,7 @@ from clients.models import (
     LearnerAnswer,
     NextActionType,
 )
-from components.layout import render_page_header
+from components.layout import render_notice, render_page_header
 from core.container import get_client
 from core.errors import show_action_error
 from core.learner_flow import (
@@ -164,7 +164,7 @@ open_view(
     payload=final_payload,
 )
 
-st.caption(BANNER)
+render_notice(BANNER)
 render_page_header(
     "Evaluación final",
     caption=(
@@ -209,4 +209,6 @@ render_question_sheet(
     notes=("Tutor IA desactivado durante la evaluación",),
     context=_context,
     hint="Responde en 2 a 4 frases.",
+    card=True,
+    notes_style="chip",
 )

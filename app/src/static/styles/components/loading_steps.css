@@ -1,7 +1,10 @@
-/* Estado de carga (U1x, D1c): tres pasos con su estado escrito además del color. */
+/* Estado de carga (U1x, D1c): tarjeta blanca centrada y tres pasos con su estado escrito además
+   del color (V-055). */
 [class*="st-key-loading-"] {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-card);
   padding: var(--space-16);
+  max-width: 560px;
+  margin: var(--space-16) auto 0;
 }

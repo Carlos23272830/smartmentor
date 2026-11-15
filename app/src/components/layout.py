@@ -50,6 +50,7 @@ def render_header(
     switch_label: str = "Cambiar de perfil",
     active_label: str = "Rol activo",
     active_role_label: str | None = None,
+    active_path: str | None = None,
 ) -> HeaderAction | None:
     """Barra superior: marca, rol, enlaces del rol y menú de la cuenta (CU-35).
 
@@ -57,6 +58,9 @@ def render_header(
     larga; si no llega, la corta). `other_roles` son los demás roles del usuario con su etiqueta;
     si hay alguno, el menú ofrece cambiar de perfil (F-004). Devuelve la acción elegida (cambiar
     de rol o cerrar sesión), o None.
+
+    `active_path` es el enlace que se marca como activo (azul y en negrita); la página lo decide
+    porque pantallas como el quiz no tienen enlace propio y cuelgan de «Rutas» (V-044).
     """
     action: HeaderAction | None = None
     with st.container(key="app-header", horizontal=True, vertical_alignment="center", gap="medium"):
@@ -64,7 +68,8 @@ def render_header(
         st.badge(role_label, color=ROLE_COLOR[role])
         st.space("stretch")
         for path, text in links:
-            st.page_link(path, label=text)
+            with st.container(key="nav-link-active" if path == active_path else None):
+                st.page_link(path, label=text)
         with st.popover(initials(full_name), type="tertiary"):
             st.markdown(f"**{full_name}**")
             st.caption(email)
@@ -110,9 +115,19 @@ def render_page_header_with_actions(
     return right.container(horizontal=True, horizontal_alignment="right", key=key)
 
 
-def render_notice(text: str) -> None:
-    """Aviso ámbar de permisos o reglas («Tu rol: Instructor · Solo corriges tus cursos»)."""
-    st.warning(text)
+def render_notice(text: str, *, tone: Literal["warning", "info", "success"] = "warning") -> None:
+    """Aviso de permisos o reglas («Tu rol: Instructor · Solo corriges tus cursos»).
+
+    Ámbar por defecto. Con `tone="info"` va en una caja azul suave (nota del grupo, E5b) y con
+    `tone="success"` es la nota verde informativa (E4b: «El 80 % para obtener el badge…»).
+    """
+    if tone == "info":
+        with st.container(key="notice-info"):
+            st.markdown(text)
+    elif tone == "success":
+        st.success(text)
+    else:
+        st.warning(text)
 
 
 def render_status_screen(

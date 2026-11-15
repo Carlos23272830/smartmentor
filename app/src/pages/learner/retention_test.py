@@ -1,7 +1,8 @@
 """E14 · Prueba de retención (P2): post-test diferido, opcional, que no cambia el badge.
 
 Crea un intento de tipo `retention` (`POST …/steps/{id}/attempts`) y lo responde con el mismo flujo
-del quiz. Solo se ofrece cuando la inscripción está completada; la API protege el resto.
+del quiz. Solo se ofrece cuando hay una inscripción completada (la elegida o, si no, la terminada
+más reciente); la API protege el resto.
 """
 
 import streamlit as st
@@ -25,6 +26,16 @@ NOTE = (
 client = get_client()
 state = get_session().learner
 enrollment = current_enrollment(client)
+if enrollment.status != "completed":
+    # B-037: con varias rutas basta con que otra esté terminada; se usa la más reciente.
+    try:
+        finished = [e for e in client.list_enrollments(limit=100).items if e.status == "completed"]
+    except ApiError as error:
+        show_action_error(error)
+        st.stop()
+    if finished:
+        enrollment = max(finished, key=lambda e: e.completed_at or e.created_at)
+        get_session().selected_enrollment_id = enrollment.id
 course = enrollment.learning_path.name
 
 if enrollment.status != "completed":
@@ -55,8 +66,9 @@ render_page_header(
     breadcrumb=f"{course} › Prueba de retención",
     caption="Esta prueba mide cuánto recuerdas. Es opcional y no cambia tu badge.",
 )
-st.markdown(f"**Pregunta {number} de {len(attempt.items)}**")
-st.caption("Sin ayuda de IA ni apuntes")
+with st.container(horizontal=True, key="retention-chips"):
+    st.badge(f"Pregunta {number} de {len(attempt.items)}", color="blue")
+    st.badge("Sin ayuda de IA ni apuntes", color="orange")
 
 
 def _save(answers: list[LearnerAnswer]) -> None:
@@ -76,6 +88,11 @@ def _context(item: AssessmentItem) -> str | None:
     return item_context(item)
 
 
+def _skip() -> None:
+    if st.button("Ahora no", key="retention-skip"):
+        st.switch_page(PROGRESS_PAGE)
+
+
 render_question_sheet(
     attempt.items,
     state.sheet,
@@ -85,6 +102,8 @@ render_question_sheet(
     submit_label="Enviar prueba",
     notes=(NOTE,),
     context=_context,
+    card=True,
+    notes_style="notice",
+    progress=False,
+    leading_action=_skip,
 )
-if st.button("Ahora no", key="retention-skip"):
-    st.switch_page(PROGRESS_PAGE)

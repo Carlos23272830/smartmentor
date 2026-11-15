@@ -31,3 +31,33 @@
   background: var(--learner-soft);
   border-color: var(--learner-accent);
 }
+
+/* Revisión de respuestas (E7): la insignia y la pregunta van en una línea; el texto largo se parte
+   dentro de su columna, no baja debajo de la insignia (V-045). */
+[class*="st-key-answer-line-"] {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+[class*="st-key-answer-line-"] > *:first-child {
+  flex: 0 0 auto;
+  width: auto;
+}
+[class*="st-key-answer-line-"] > *:last-child {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Barra de progreso de la hoja (V-034): azul del Aprendiz sobre pista neutra. */
+[class*="st-key-card-quiz-"] [data-testid="stProgress"],
+[data-testid="stProgress"] {
+  margin-bottom: var(--space-4);
+}
+
+/* «Cómo se califica» (E6c): caja azul suave sin borde (V-036). */
+[class*="st-key-card-rubric-"] {
+  background: var(--learner-soft);
+  border-color: transparent;
+}
+[class*="st-key-card-rubric-"] p {
+  color: var(--text-primary);
+}

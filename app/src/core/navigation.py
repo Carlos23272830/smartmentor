@@ -155,6 +155,14 @@ def is_registered(path: str) -> bool:
     return any(spec.path == path for spec in registered_pages())
 
 
+def page_for_url_path(url_path: str) -> str | None:
+    """Archivo de la página registrada con ese `url_path` (el último tramo de su URL), o None."""
+    for spec in registered_pages():
+        if spec.url_path == url_path:
+            return spec.path
+    return None
+
+
 def home_for(role: Role) -> str:
     """Archivo de la página de inicio del rol, o «Próximamente» si todavía no se construye."""
     for path in HOME_CANDIDATES[role]:
@@ -170,6 +178,40 @@ def menu_links(role: Role) -> list[tuple[str, str]]:
         for spec in registered_pages()
         if spec.menu_role == role
     ]
+
+
+# Páginas del flujo del aprendiz que no tienen enlace propio: en Figma (E6b, E8…) la barra
+# superior marca «Rutas» como activo mientras la persona recorre su ruta (V-044).
+ROUTES_FLOW_URLS = frozenset(
+    {
+        "onboarding-profile",
+        "onboarding-resume",
+        "diagnostic",
+        "diagnostic-result",
+        "path",
+        "topic",
+        "quiz",
+        "quiz-result",
+        "final-assessment",
+        "final-result",
+        "badge",
+        "final-survey",
+        "retention-test",
+    }
+)
+
+
+def active_menu_path(url_path: str, role: Role) -> str | None:
+    """Archivo del enlace del menú que se marca como activo para la página `url_path`."""
+    links = menu_links(role)
+    for spec in registered_pages():
+        if spec.url_path != url_path:
+            continue
+        if spec.menu_role == role:
+            return spec.path
+        if role == "learner" and url_path in ROUTES_FLOW_URLS:
+            return CATALOG if any(path == CATALOG for path, _ in links) else None
+    return None
 
 
 def page_for_next_action(action: NextAction) -> str | None:

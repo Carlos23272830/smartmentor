@@ -11,6 +11,7 @@ from datetime import UTC, datetime, timedelta
 import httpx
 import pytest
 import respx
+import streamlit as st
 from apptest import header_texts, new_app, page_texts, session_of
 from streamlit.testing.v1 import AppTest
 from support import FIXTURES_DIR
@@ -167,3 +168,82 @@ def test_fixtures_mode_is_refused_in_production(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setenv("APP_DATA_SOURCE", "fixtures")
     at: AppTest = new_app().run()
     assert at.exception  # Settings lanza ValueError: no se puede saltar el login en producción
+
+
+# --- B-030 · Renovación del token: vuelve a la misma página y con la misma sesión ---------------
+
+
+def jwt_issued(issued_ago: timedelta, expires_in: timedelta) -> str:
+    def encode(data: dict[str, object]) -> str:
+        return base64.urlsafe_b64encode(json.dumps(data).encode()).decode().rstrip("=")
+
+    now = datetime.now(UTC)
+    claims = {
+        "iat": int((now - issued_ago).timestamp()),
+        "exp": int((now + expires_in).timestamp()),
+    }
+    return f"{encode({'alg': 'none'})}.{encode(claims)}.test-only-not-a-secret"
+
+
+@respx.mock
+@pytest.mark.usefixtures("api_mode")
+def test_silent_renewal_returns_to_the_same_page_with_the_same_session_b030(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """La redirección de OIDC no se simula: se prueba aparcar antes de `st.login` y recuperar en
+    la sesión nueva (otra `AppTest`, como la que abre Streamlit al volver a la raíz)."""
+    from core import auth, renewal
+
+    token = {"access": jwt(timedelta(minutes=5))}
+    logins: list[str] = []
+    store = renewal.RenewalStore()
+    monkeypatch.setattr(renewal, "STORE", store)
+    monkeypatch.setattr(auth, "is_logged_in", lambda: True)
+    monkeypatch.setattr(auth, "user_key", lambda: "sub-ana")
+    monkeypatch.setattr(auth, "_exposed_token", lambda name: token.get(name))
+    monkeypatch.setattr(st, "login", lambda provider: logins.append(provider))
+    respx.get(f"{API}/api/v1/me").mock(return_value=httpx.Response(200, json=fixture("me_learner")))
+    respx.get(f"{API}/api/v1/learning-paths").mock(
+        return_value=httpx.Response(200, json=fixture("learning_paths"))
+    )
+    respx.get(f"{API}/api/v1/me/profile").mock(
+        return_value=httpx.Response(200, json=fixture("profile"))
+    )
+    at = new_app().run()
+    at.switch_page("pages/learner/my_profile.py").run()
+    assert [e.value for e in at.exception] == []
+    session_of(at).learner.step_id = 813  # estado del aprendiz que debe sobrevivir
+
+    # El token vence (emitido hace 6 min): se aparca la sesión y se redirige a Keycloak sin A7.
+    token["access"] = jwt_issued(timedelta(minutes=6), timedelta(minutes=-1))
+    at.run()
+    assert [e.value for e in at.exception] == []
+    assert logins == ["keycloak"]
+    texts = page_texts(at, skip_header=False)
+    assert "Renovando tu sesión…" in texts
+    assert "Tu sesión expiró" not in texts
+    assert len(store) == 1
+
+    # Vuelta de Keycloak: sesión nueva en la raíz con un token nuevo.
+    token["access"] = jwt(timedelta(minutes=5))
+    back = new_app().run()
+    assert [e.value for e in back.exception] == []
+    assert session_of(back).learner.step_id == 813
+    assert session_of(back).current_page == "pages/learner/my_profile.py"
+    assert "Descripción de tu perfil" in [t.label for t in back.text_area]
+    assert len(store) == 0
+
+
+@respx.mock
+@pytest.mark.usefixtures("api_mode")
+def test_a_freshly_issued_expired_token_shows_a7_without_parking(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from core import renewal
+
+    store = renewal.RenewalStore()
+    monkeypatch.setattr(renewal, "STORE", store)
+    logged_in_as(monkeypatch, jwt_issued(timedelta(seconds=30), timedelta(seconds=-5)))
+    at = new_app().run()
+    assert "Tu sesión expiró" in page_texts(at, skip_header=False)
+    assert len(store) == 0

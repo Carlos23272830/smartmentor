@@ -64,8 +64,10 @@ def no_exception(at: AppTest) -> None:
     assert [e.value for e in at.exception] == []
 
 
-def matches_figma(at: AppTest, screen: str, accepted: tuple[str, ...] = ()) -> None:
+def matches_figma(
+    at: AppTest, screen: str, accepted: tuple[str, ...] = (), *, alerts: bool = False
+) -> None:
     """Los textos del frame aparecen en orden; solo faltan las diferencias aceptadas."""
     no_exception(at)
-    missing = missing_in_order(figma_texts(screen), page_texts(at))
+    missing = missing_in_order(figma_texts(screen), page_texts(at, alerts=alerts))
     assert missing == list(accepted), f"{screen}: faltan o desordenados {missing}"

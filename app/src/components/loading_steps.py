@@ -20,10 +20,16 @@ _STATE_TEXT: dict[StepState, str] = {
     "failed": "Falló",
 }
 _STATE_ICON: dict[StepState, str] = {
-    "done": ":green[:material/check_circle:]",
-    "running": ":blue[:material/progress_activity:]",
-    "pending": ":gray[:material/radio_button_unchecked:]",
-    "failed": ":red[:material/error:]",
+    "done": ":material/check_circle:",
+    "running": ":material/progress_activity:",
+    "pending": ":material/radio_button_unchecked:",
+    "failed": ":material/error:",
+}
+_STATE_COLOR: dict[StepState, str] = {
+    "done": "green",
+    "running": "blue",
+    "pending": "gray",
+    "failed": "red",
 }
 _FOOTNOTE = "Si tarda más: tu avance está guardado; puedes volver a tu ruta."
 
@@ -47,10 +53,12 @@ def render_loading_steps(
     """Dibuja la carga y devuelve «retry» o «back» si hay error y se pulsó el botón."""
     result: Literal["retry", "back"] | None = None
     with st.container(key=f"loading-{key}"):
-        st.markdown(f"#### {title}")
+        st.markdown(f"#### {title}", text_alignment="center")
         for step in steps:
-            st.markdown(f"{_STATE_ICON[step.state]} {_STATE_TEXT[step.state]} · {step.label}")
-        st.caption(f"Tiempo estimado: {estimate}")
+            color = _STATE_COLOR[step.state]
+            icon = _STATE_ICON[step.state]
+            st.markdown(f":{color}[{icon} {_STATE_TEXT[step.state]} · {step.label}]")
+        st.caption(f"Tiempo estimado: {estimate}", text_alignment="center")
         if error_message:
             st.error(error_message)
             with st.container(horizontal=True):
@@ -59,5 +67,5 @@ def render_loading_steps(
                 if st.button(back_label, key=f"loading-back-{key}"):
                     result = "back"
         else:
-            st.caption(_FOOTNOTE)
+            st.caption(_FOOTNOTE, text_alignment="center")
     return result

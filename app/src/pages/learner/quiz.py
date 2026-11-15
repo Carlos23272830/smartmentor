@@ -10,7 +10,7 @@ import streamlit as st
 
 from clients.base import ApiError
 from clients.models import AssessmentItem, Attempt, AttemptResult, LearnerAnswer
-from components.layout import render_page_header
+from components.layout import render_notice, render_page_header
 from core.container import get_client
 from core.errors import show_action_error
 from core.learner_flow import (
@@ -214,14 +214,23 @@ open_view(
     payload=quiz_payload,
 )
 
-st.caption(
+render_notice(
     f"Quiz del tema · Sin ayuda de IA ni apuntes. Apruebas con "
     f"{round(content.quiz_rules.pass_threshold)} %. Intento {attempt_number} de {total_attempts}."
 )
-render_page_header(
-    f"Quiz: {content.topic.name}",
-    breadcrumb=f"{breadcrumb} · Pregunta {number} de {len(attempt.items)}",
-)
+current = attempt.items[min(state.sheet.index, len(attempt.items) - 1)] if attempt.items else None
+if current is not None and current.item_type == "short_answer":
+    # E6c: título único; la posición va en el chip «Pregunta n de N · Respuesta corta».
+    render_page_header(
+        "Quiz del tema",
+        breadcrumb=f"{breadcrumb} · {content.topic.name} · Intento {attempt_number} de "
+        f"{total_attempts}",
+    )
+else:
+    render_page_header(
+        f"Quiz: {content.topic.name}",
+        breadcrumb=f"{breadcrumb} · Pregunta {number} de {len(attempt.items)}",
+    )
 
 
 def _context(item: AssessmentItem) -> str | None:
@@ -265,4 +274,6 @@ render_question_sheet(
     notes=_notes,
     context=_context,
     hint="Responde en 2 a 4 frases.",
+    card=True,
+    notes_style="chip",
 )

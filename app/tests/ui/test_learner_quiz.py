@@ -1,5 +1,7 @@
 """E6, E6b, E6c, U1b, U1c, E7, E7b y E7c: tema, quiz y resultado."""
 
+import re
+
 from apptest import button, page_texts, session_of
 from learner_support import (
     QUIZ,
@@ -202,7 +204,43 @@ def test_e6b_first_question_follows_figma() -> None:
             "Fundamentos de ML › Tema 3 de 5 · Pregunta 1 de 5",
             "(Demo del prototipo) Ver resultado menor a 70 %",
         ),
+        alerts=True,
     )
+
+
+def test_e6b_expired_token_while_saving_goes_to_a7_and_keeps_the_answers_b031() -> None:
+    """B-031: un 401 dentro del fragmento de la hoja ya no deja el traceback ni bloquea «Siguiente».
+
+    `main.py` atiende el error en una ejecución completa (A7) y las respuestas siguen en la sesión.
+    """
+    at = _open_quiz()
+    client = client_of(at)
+    original = client.save_attempt_answers
+    fail(at, "save_attempt_answers", ApiError(401, "TOKEN_EXPIRED"))
+    at.radio[0].set_value(at.radio[0].options[0]).run()
+    button(at, "Siguiente").click().run()
+    no_exception(at)
+    assert "Tu sesión expiró" in page_texts(at, skip_header=False)
+    sheet = session_of(at).learner.sheet
+    assert sheet.index == 0
+    assert len(sheet.answers) == 1
+    # Con la sesión renovada, la hoja vuelve con lo respondido y «Siguiente» funciona.
+    client.save_attempt_answers = original  # type: ignore[method-assign]
+    at.run()
+    no_exception(at)
+    assert not button(at, "Siguiente").disabled
+    button(at, "Siguiente").click().run()
+    no_exception(at)
+    assert any("Pregunta 2 de 5" in t for t in page_texts(at))
+
+
+def test_e6b_role_error_while_saving_shows_a6_b031() -> None:
+    at = _open_quiz()
+    fail(at, "save_attempt_answers", ApiError(403, "INSUFFICIENT_ROLE"))
+    at.radio[0].set_value(at.radio[0].options[0]).run()
+    button(at, "Siguiente").click().run()
+    no_exception(at)
+    assert "No tienes permiso para ver esta página" in page_texts(at, skip_header=False)
 
 
 def test_e6c_short_answer_shows_the_rubric_and_limit() -> None:
@@ -210,8 +248,9 @@ def test_e6c_short_answer_shows_the_rubric_and_limit() -> None:
     _answer_all(at, 4)
     no_exception(at)
     texts = page_texts(at)
-    assert "Respuesta corta" in texts
-    assert "0 / 500 caracteres" in texts
+    assert "Pregunta 5 de 5 · Respuesta corta" in texts
+    assert "0 / 500 caracteres" not in texts  # un solo contador: el del cuadro (V-036)
+    assert "Quiz del tema" in texts
     assert "CÓMO SE CALIFICA" in texts
     assert "Responde sin ayuda de IA." in texts
     assert button(at, "Enviar quiz").disabled
@@ -381,6 +420,14 @@ def test_e7b_follows_figma() -> None:
     )
 
 
+def test_e7b_next_attempt_badge_and_review_link() -> None:
+    at = _result("learner_quiz_failed")
+    assert "Intento 2 de 3" in {
+        m.group(1) for e in at.markdown if (m := re.fullmatch(r":blue-badge\[(.*)\]", e.value))
+    }
+    assert at.button(key="request-review-1005").proto.type == "tertiary"
+
+
 def test_e7b_retry_with_new_questions_opens_the_quiz() -> None:
     at = _result("learner_quiz_failed")
     button(at, "Reintentar con preguntas nuevas").click().run()
@@ -411,6 +458,16 @@ def test_e7c_exhausted_attempts_from_next_action() -> None:
     assert "Recursos de repaso" in texts
 
 
+def test_e7c_route_rows_have_one_badge_each() -> None:
+    at = _result("learner_exhausted")
+    found = [
+        m.group(1) for e in at.markdown if (m := re.fullmatch(r":[a-z]+-badge\[(.*)\]", e.value))
+    ]
+    assert found.count("En espera") >= 1
+    assert "Puedes seguir" in found
+    assert ":red[40 % · 2 de 5]" in [e.value for e in at.markdown]
+
+
 def test_e7c_exhausted_from_the_result() -> None:
     at = _result("learner_exhausted")
     session_of(at).learner.attempt_id = 9003
@@ -438,3 +495,25 @@ def test_e6b_submitted_attempt_is_not_answered_again_b026() -> None:
     texts = page_texts(at)
     assert "Enviar quiz" not in texts
     assert "Siguiente" not in texts
+
+
+# --- V-034 a V-036 · barra de progreso, aviso, tarjeta y chips -----------------------------------
+
+
+def test_quiz_shows_the_progress_bar_notice_and_card() -> None:
+    at = _open_quiz()
+    assert [p.value for p in at.progress] == [20]  # pregunta 1 de 5
+    assert any("Quiz del tema · Sin ayuda de IA" in w.value for w in at.warning)
+    assert at.get_by_key("card-quiz-quiz")
+    assert "Tutor IA desactivado durante el quiz" in page_texts(at)
+    _answer_all(at, 1)
+    assert [p.value for p in at.progress] == [40]
+
+
+def test_quiz_short_answer_has_one_counter_and_a_rubric_box() -> None:
+    at = _open_quiz()
+    _answer_all(at, 4)
+    assert [p.value for p in at.progress] == [100]
+    assert at.get_by_key("card-rubric-quiz")
+    assert not any("caracteres" in c.value for c in at.caption)
+    assert not any(t.startswith("Quiz: ") for t in page_texts(at))

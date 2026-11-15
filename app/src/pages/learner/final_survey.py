@@ -58,6 +58,7 @@ if step == 1:
     )
     st.markdown("**Paso 1 de 2**")
     st.caption("unos 3 minutos")
+    st.progress(1 / 2)
     st.subheader("Tu experiencia", anchor=False)
     st.caption(SCALE_HINT)
     for code, statement in EXPERIENCE_ITEMS:
@@ -81,6 +82,7 @@ else:
     render_page_header("Casi terminas")
     st.markdown("**Paso 2 de 2**")
     st.caption("unos 2 minutos")
+    st.progress(2 / 2)
     st.subheader("Usabilidad (SUS · ítems 6 a 10)", anchor=False)
     st.caption(SCALE_HINT)
     for index in range(6, 11):

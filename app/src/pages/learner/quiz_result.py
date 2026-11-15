@@ -61,6 +61,13 @@ def _breadcrumb(content: StepContent, path: PathDetail, *, topic: bool = True) -
     return f"{text} · {content.topic.name}" if topic else text
 
 
+def _route_row(index: int, label: str, color: str, text: str) -> None:
+    """Una fila de «Qué pasa con tu ruta»: insignia y texto en una línea (V-047)."""
+    with st.container(horizontal=True, vertical_alignment="center", key=f"route-row-{index}"):
+        st.badge(label, color=color)  # type: ignore[arg-type]
+        st.markdown(text)
+
+
 def _exhausted(content: StepContent, path: PathDetail) -> None:
     """E7c · Intentos agotados."""
     total = content.attempts.max + content.attempts.extra_granted
@@ -78,32 +85,41 @@ def _exhausted(content: StepContent, path: PathDetail) -> None:
     except ApiError as error:
         show_action_error(error)
         history = []
-    render_attempt_history(
-        [AttemptRow(h.number, h.score, h.correct, h.total, h.extra_grant) for h in history],
-        key="topic",
-        pass_threshold=content.quiz_rules.pass_threshold,
-        exhausted=True,
-    )
-    st.subheader("Qué pasa con tu ruta", anchor=False)
+    history_col, route_col = st.columns(2)
+    with history_col:
+        render_attempt_history(
+            [AttemptRow(h.number, h.score, h.correct, h.total, h.extra_grant) for h in history],
+            key="topic",
+            pass_threshold=content.quiz_rules.pass_threshold,
+            exhausted=True,
+        )
     can_continue = [
         s for s in path.steps if s.step_id != step_id and s.status in ("pending", "in_progress")
     ]
     waiting = [s for s in path.steps if s.status == "on_hold"]
-    if can_continue:
-        st.badge("Puedes seguir", color="green")
-        for s in can_continue:
-            st.markdown(s.name)
-    if waiting:
-        st.badge("En espera", color="orange")
-        st.caption(f"Temas que tienen {content.topic.name} como prerrequisito")
-    st.badge("En espera", color="orange")
-    st.caption(f"Evaluación final: se habilita al aprobar los {len(path.steps)} temas")
-    st.subheader("Recursos de repaso", anchor=False)
-    if content.explanation is not None:
-        st.markdown(f"•  Releer la explicación «{explanation_title(content.explanation)}»")
-    if content.video is not None:
-        st.markdown("•  Ver el video de respaldo curado por tu instructor")
-    st.markdown(f"•  Revisar tus respuestas de los {len(history)} intentos")
+    with route_col, st.container(key="card-attempts-route"):
+        st.subheader("Qué pasa con tu ruta", anchor=False)
+        rows = [("Puedes seguir", "green", s.name) for s in can_continue]
+        if waiting:
+            rows.append(
+                ("En espera", "gray", f"Temas que tienen {content.topic.name} como prerrequisito")
+            )
+        rows.append(
+            (
+                "En espera",
+                "gray",
+                f"Evaluación final: se habilita al aprobar los {len(path.steps)} temas",
+            )
+        )
+        for index, (label, color, text) in enumerate(rows):
+            _route_row(index, label, color, text)
+    with st.container(key="card-attempts-resources"):
+        st.subheader("Recursos de repaso", anchor=False)
+        if content.explanation is not None:
+            st.markdown(f"•  Releer la explicación «{explanation_title(content.explanation)}»")
+        if content.video is not None:
+            st.markdown("•  Ver el video de respaldo curado por tu instructor")
+        st.markdown(f"•  Revisar tus respuestas de los {len(history)} intentos")
     with st.container(horizontal=True):
         _back_to_path()
         if can_continue and st.button(
@@ -138,29 +154,33 @@ used, maximum = result.attempts.used, result.attempts.max
 
 
 def _review() -> None:
-    st.subheader("Revisión de respuestas", anchor=False)
-    for number, answer in enumerate(result.answers, start=1):
-        item = stems.get(answer.item_id)
-        stem = item.stem if item else f"Pregunta {number}"
-        is_short = answer.grading.get("item_type") == "short_answer"
-        ok = bool(answer.grading.get("is_correct"))
-        render_answer_review(
-            number=number,
-            stem=f"{stem} · Respuesta corta" if is_short else stem,
-            correct=ok,
-            explanation=None if ok or is_short else str(answer.grading.get("feedback", "")) or None,
-        )
-        if is_short and (view := rubric_view(answer.grading)):
-            render_rubric_result(view, key=f"answer-{answer.attempt_answer_id}")
-            if not answer.review_requested and st.button(
-                "Pedir revisión del instructor", key=f"review-{answer.attempt_answer_id}"
-            ):
-                try:
-                    client.request_answer_review(answer.attempt_answer_id, "")
-                except ApiError as error:
-                    show_action_error(error)
-                else:
-                    st.success("Listo: tu instructor revisará esta respuesta.")
+    with st.container(key="card-review"):
+        st.subheader("Revisión de respuestas", anchor=False)
+        for number, answer in enumerate(result.answers, start=1):
+            item = stems.get(answer.item_id)
+            stem = item.stem if item else f"Pregunta {number}"
+            is_short = answer.grading.get("item_type") == "short_answer"
+            ok = bool(answer.grading.get("is_correct"))
+            feedback = None if ok or is_short else str(answer.grading.get("feedback", "")) or None
+            render_answer_review(
+                number=number,
+                stem=f"{stem} · Respuesta corta" if is_short else stem,
+                correct=ok,
+                explanation=feedback,
+            )
+            if is_short and (view := rubric_view(answer.grading)):
+                render_rubric_result(view, key=f"answer-{answer.attempt_answer_id}")
+                if not answer.review_requested and st.button(
+                    "Pedir revisión del instructor",
+                    type="tertiary",
+                    key=f"request-review-{answer.attempt_answer_id}",
+                ):
+                    try:
+                        client.request_answer_review(answer.attempt_answer_id, "")
+                    except ApiError as error:
+                        show_action_error(error)
+                    else:
+                        st.success("Listo: tu instructor revisará esta respuesta.")
 
 
 if result.passed:
@@ -195,17 +215,21 @@ render_page_header(
         "próximo intento trae preguntas nuevas."
     ),
 )
-_review()
 explanation = content.explanation
-if explanation is not None and explanation.resource_id == result.remedial_resource_id:
-    with st.container(key="card-alternate"):
-        eyebrow("OTRA FORMA DE VERLO · GENERADO CON IA")
-        st.markdown(f"**{explanation_title(explanation)}**")
-        st.markdown(explanation_text(explanation.content))
-        st.caption(source_note(explanation, alternate=True))
+review_col, alternate_col = st.columns([3, 2])
+with review_col:
+    _review()
+with alternate_col:
+    if explanation is not None and explanation.resource_id == result.remedial_resource_id:
+        with st.container(key="card-alt-view"):
+            eyebrow("OTRA FORMA DE VERLO · GENERADO CON IA")
+            st.markdown(f"**{explanation_title(explanation)}**")
+            st.markdown(explanation_text(explanation.content))
+            st.caption(source_note(explanation, alternate=True))
 with st.container(key="card-next-attempt"):
-    st.markdown("**Tu próximo intento**")
-    st.markdown(f"**Intento {used + 1} de {maximum}**")
+    with st.container(horizontal=True, vertical_alignment="center", key="attempts-title-next"):
+        st.markdown("**Tu próximo intento**")
+        st.badge(f"Intento {used + 1} de {maximum}", color="blue")
     st.markdown(
         f"•  {len(attempt.items)} preguntas nuevas sobre los mismos resultados de aprendizaje, "
         "no las mismas que ya viste."
