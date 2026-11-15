@@ -263,7 +263,11 @@ def _empty_profile() -> dict[str, object]:
     return profile
 
 
-def _learner_api(monkeypatch: pytest.MonkeyPatch, token: dict[str, str]) -> list[str]:
+def _learner_api(
+    monkeypatch: pytest.MonkeyPatch,
+    token: dict[str, str],
+    profile: dict[str, object] | None = None,
+) -> list[str]:
     """Aprendiz con la API simulada; devuelve los logins que se pidieron a Keycloak."""
     from core import auth
 
@@ -277,7 +281,7 @@ def _learner_api(monkeypatch: pytest.MonkeyPatch, token: dict[str, str]) -> list
         return_value=httpx.Response(200, json=fixture("learning_paths"))
     )
     respx.get(f"{API}/api/v1/me/profile").mock(
-        return_value=httpx.Response(200, json=_empty_profile())
+        return_value=httpx.Response(200, json=profile if profile is not None else _empty_profile())
     )
     return logins
 
@@ -287,12 +291,14 @@ def _fill_resume(at: AppTest) -> None:
     at.text_input(key="resume-title").input("Ingeniería de sistemas")
 
 
-def _open_resume(monkeypatch: pytest.MonkeyPatch) -> tuple[AppTest, dict[str, str], list[str]]:
+def _open_resume(
+    monkeypatch: pytest.MonkeyPatch, profile: dict[str, object] | None = None
+) -> tuple[AppTest, dict[str, str], list[str]]:
     from core import renewal
 
     monkeypatch.setattr(renewal, "STORE", renewal.RenewalStore())
     token = {"access": jwt_issued(timedelta(minutes=1), timedelta(minutes=4))}
-    logins = _learner_api(monkeypatch, token)
+    logins = _learner_api(monkeypatch, token, profile)
     at = new_app().run()
     at.switch_page(RESUME).run()
     assert [e.value for e in at.exception] == []
@@ -398,3 +404,44 @@ def test_a_changed_widget_with_an_expired_token_is_restored_without_a_click_b040
     assert back.text_input(key="resume-job").value == "Analista"
     assert session_of(back).resume_click is None
     assert not saved.called
+
+
+@respx.mock
+@pytest.mark.usefixtures("api_mode")
+def test_restoring_the_draft_over_a_saved_resume_does_not_warn_b053(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """E2b con la hoja de vida ya guardada: al volver de Keycloak el borrador pisa los valores del
+    perfil y Streamlit no debe avisar de «default value» más «Session State API» (B-053)."""
+    from streamlit.elements.lib import policies
+
+    saved_profile = fixture("profile")
+    assert isinstance(saved_profile, dict)
+    respx.put(f"{API}/api/v1/me/profile").mock(return_value=httpx.Response(200, json=saved_profile))
+    at, token, logins = _open_resume(monkeypatch, saved_profile)
+    assert at.text_input(key="resume-title").value == "Ingeniería industrial"
+
+    token["access"] = jwt_issued(timedelta(minutes=6), timedelta(seconds=-1))
+    at.text_input(key="resume-title").input("Ingeniería de sistemas")
+    at.text_input(key="resume-job").input("Arquitecta")
+    at.selectbox(key="resume-experience").select("3_5_years")
+    at.pills(key="resume-tools").set_value(["Excel"])
+    at.selectbox(key="resume-cefr-0").select("C1")
+    at.button(key="resume-save").click().run()
+    assert logins == ["keycloak"]
+
+    # Streamlit avisa una sola vez por proceso: se reinicia para que la prueba lo vea.
+    monkeypatch.setattr(policies, "_shown_default_value_warning", False)
+    token["access"] = jwt(timedelta(minutes=5))
+    with caplog.at_level("WARNING", logger="streamlit"):
+        back = new_app().run()
+    assert [e.value for e in back.exception] == []
+    warned = [r.getMessage() for r in caplog.records if "Session State API" in r.getMessage()]
+    assert warned == []
+    # El borrador se conserva: ningún valor vuelve al del perfil guardado.
+    assert back.text_input(key="resume-title").value == "Ingeniería de sistemas"
+    assert back.text_input(key="resume-job").value == "Arquitecta"
+    assert back.selectbox(key="resume-experience").value == "3_5_years"
+    assert back.pills(key="resume-tools").value == ["Excel"]
+    assert back.selectbox(key="resume-cefr-0").value == "C1"
+    assert back.selectbox(key="resume-language-0").value == "en"
