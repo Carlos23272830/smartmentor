@@ -185,8 +185,10 @@ def test_e11b_leave_the_pilot_revokes_only_the_pilot_consent() -> None:
 
     client.revoke_consent = spy  # type: ignore[method-assign]
     button(at, "Gestionar mis autorizaciones").click().run()
-    texts = page_texts(at)
-    assert "Elige qué quieres cambiar. Puedes volver a autorizar más adelante." in texts
+    # V-051: E11b es una ventana modal (`st.dialog`); sus textos no están en el cuerpo de la página.
+    assert "Elige qué quieres cambiar. Puedes volver a autorizar más adelante." in [
+        c.value for c in at.caption
+    ]
     assert button(at, "Confirmar").disabled
     at.radio(key="consents-choice").set_value("Salir del piloto").run()
     button(at, "Confirmar").click().run()
@@ -212,9 +214,9 @@ def test_e11b_cancel_closes_the_panel() -> None:
     at = learner_app("learner_path", PROGRESS)
     button(at, "Gestionar mis autorizaciones").click().run()
     button(at, "Cancelar").click().run()
-    assert "Elige qué quieres cambiar. Puedes volver a autorizar más adelante." not in page_texts(
-        at
-    )
+    assert "Elige qué quieres cambiar. Puedes volver a autorizar más adelante." not in [
+        c.value for c in at.caption
+    ]
 
 
 def test_e11_offline() -> None:
