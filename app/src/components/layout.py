@@ -68,7 +68,11 @@ def render_header(
         st.badge(role_label, color=ROLE_COLOR[role])
         st.space("stretch")
         for path, text in links:
-            with st.container(key="nav-link-active" if path == active_path else None):
+            # width="content": cada enlace ocupa lo suyo y todos quedan juntos a la derecha, junto
+            # al avatar, como en Figma (sin esto la fila los reparte por toda la barra, V-089).
+            with st.container(
+                key="nav-link-active" if path == active_path else None, width="content"
+            ):
                 st.page_link(path, label=text)
         with st.popover(initials(full_name), type="tertiary"):
             st.markdown(f"**{full_name}**")
