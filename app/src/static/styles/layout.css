@@ -7,8 +7,21 @@
  * Barra superior (render_header), como en Figma: blanca, de lado a lado y con borde inferior (V-001).
  * El fondo se pinta fuera de la caja con box-shadow (no cuenta para el scroll, a diferencia de
  * un ancho de 100vw) y clip-path lo recorta arriba y abajo. Así no se tocan los
- * contenedores de Streamlit. La separación con el borde superior es la de Streamlit (aceptada).
+ * contenedores de Streamlit.
  */
+
+/*
+ * Barra pegada arriba (V-088). Streamlit reserva 6 rem de relleno arriba para su encabezado; con
+ * `toolbarMode = "minimal"` ese encabezado queda vacío, así que en las páginas con barra propia se
+ * quita ese relleno y se deja el encabezado vacío sin capturar clics. Se usa data-testid (atributo
+ * estable) y :has() para no tocar las pantallas sin barra (acceso, selector de rol).
+ */
+[data-testid="stMainBlockContainer"]:has(.st-key-app-header) {
+  padding-top: 0;
+}
+[data-testid="stHeader"] {
+  pointer-events: none;
+}
 .st-key-app-header {
   background: var(--bg-surface);
   padding: var(--space-10) var(--space-16);
