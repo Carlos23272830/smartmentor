@@ -54,6 +54,7 @@ from app.application.video.service import (
     RankTask,
     VideoRecommender,
 )
+from app.core.config import get_settings
 from app.ports.catalog import CatalogReader
 from app.ports.jobs import JobRepository
 from app.ports.video import TranscriptProvider, VideoSearchProvider
@@ -115,6 +116,7 @@ class ContentServices:
 
 
 def build_content_services(deps: ContentDeps) -> ContentServices:
+    settings = get_settings()
     indexer = CourseIndexer(
         catalog=deps.catalog,
         sources=deps.sources,
@@ -132,6 +134,8 @@ def build_content_services(deps: ContentDeps) -> ContentServices:
         search=deps.video_search,
         transcripts=deps.transcripts,
         embeddings=deps.embeddings,
+        english_fallback=settings.ai_video_english_fallback,
+        english_score=settings.ai_video_english_score,
     )
     orchestrator = CourseContentOrchestrator(
         catalog=deps.catalog,

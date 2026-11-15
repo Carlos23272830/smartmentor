@@ -59,6 +59,32 @@ def test_english_is_excluded_unless_allowed() -> None:
     assert exclusion_reason(french, RankingPreferences(english_allowed=True)) is not None
 
 
+def test_a_topic_with_only_english_candidates_still_has_candidates() -> None:
+    prefs = RankingPreferences(english_allowed=True)
+    ranked, excluded = rank_videos(
+        [video("a", 0.6, language="en"), video("b", 0.5, language="en")], prefs
+    )
+    assert [r.video_id for r in ranked] == ["a", "b"] and excluded == {}
+    only_spanish_pref, dropped = rank_videos([video("a", 0.6, language="en")], PREFS)
+    assert only_spanish_pref == [] and dropped == {"a": "language_not_understood"}
+
+
+def test_spanish_beats_english_at_equal_quality() -> None:
+    prefs = RankingPreferences(english_allowed=True)
+    ranked, _ = rank_videos(
+        [video("en", 0.5, language="en"), video("es", 0.5, language="es")], prefs
+    )
+    assert [r.video_id for r in ranked] == ["es", "en"]
+
+
+def test_the_english_score_is_configurable() -> None:
+    video_en = video("a", 0.5, language="en")
+    low = RankingPreferences(english_allowed=True, english_score=0.0)
+    high = RankingPreferences(english_allowed=True, english_score=0.9)
+    assert language_score("en", low) == 0.0 and language_score("en", high) == 0.9
+    assert rank_videos([video_en], low)[0][0].score < rank_videos([video_en], high)[0][0].score
+
+
 def test_unknown_language_and_duration_are_kept() -> None:
     assert exclusion_reason(video("a", 0.5, language=None, seconds=None), PREFS) is None
 
