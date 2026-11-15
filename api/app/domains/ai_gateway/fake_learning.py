@@ -278,7 +278,29 @@ LEARNING_JOB_RESULTS: dict[str, tuple[str, Any]] = {
 # `items.generate_quiz_bank` lo define el dominio `content` (CONTENT_RESULTS); `fake_quiz_bank`
 # queda para la prueba de contrato.
 
+
+def fake_video_rank(input_: dict[str, Any]) -> dict[str, Any]:
+    """`video.rank` sin modelo: conserva el orden y descarta el inglés si no se permite."""
+    prefs = input_.get("preferences") or {}
+    allowed = {prefs.get("language", "es")} | ({"en"} if prefs.get("english_allowed") else set())
+    kept = [
+        c
+        for c in input_.get("candidates", [])
+        if c.get("language") is None or c.get("language") in allowed
+    ]
+    ranked = [c | {"rank": n} for n, c in enumerate(kept, start=1)]
+    return {
+        "topic_id": str(input_.get("topic_id", "")),
+        "origin": ranked[0]["origin"] if ranked else "none",
+        "embedding_model": "fake",
+        "candidates": ranked,
+        "selected_video_id": ranked[0]["youtube_video_id"] if ranked else None,
+        "backup_video_ids": [c["youtube_video_id"] for c in ranked[1:3]],
+    }
+
+
 LEARNING_TASK_RESULTS: dict[str, Any] = {
     "levels.estimate": fake_levels_estimate,
     "path.sequence": fake_path_sequence,
+    "video.rank": fake_video_rank,
 }

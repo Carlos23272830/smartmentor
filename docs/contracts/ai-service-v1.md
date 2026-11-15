@@ -175,6 +175,8 @@ Respuesta: `learning_path.v1`. Reglas (plan 5.4.8): orden topológico que respet
 
 Cuerpo: `{"topic_id": "12", "candidates": [<VideoCandidate de video_resource.v1 sin rank>], "preferences": {"language": "es", "min_duration_seconds": 240, "max_duration_seconds": 1800, "english_allowed": false}}`. Respuesta: `video_resource.v1` con `rank` 1..n, `selected_video_id` y hasta dos `backup_video_ids`.
 
+**Uso desde la API (R-001, inglés por aprendiz).** La colecta (`video.collect_candidates`) es por tema y deja el inglés como respaldo penalizado, así que el video `in_use` ya es el adecuado para quien entiende inglés. Al abrir un tema (E6), si el video del tema está en inglés y el aprendiz **no** declara inglés B1 o superior en la hoja de vida (`user_profiles.languages`, código `en`), la API llama a `video.rank` con los videos `in_use` y de respaldo del tema y `preferences = {"language": "es", "english_allowed": false}`, y muestra `selected_video_id`. Con inglés B1 o superior (`english_allowed: true`) no hace falta reordenar y se muestra el video del tema. Si `video.rank` no deja ninguno o `ai/` no responde, se muestra el video del tema.
+
 ## 5. Catálogo de prompts (`GET /v1/prompts`)
 
 ```json

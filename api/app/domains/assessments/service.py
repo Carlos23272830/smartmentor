@@ -69,6 +69,7 @@ from app.domains.assessments.repository import (
     ItemRepository,
     SurveyLookup,
 )
+from app.domains.assessments.video_choice import english_allowed, language_code, pick_video
 from app.domains.courses.entities import Course, Topic
 from app.domains.identity.authentication import CurrentUser
 from app.domains.identity.entities import UserProfile
@@ -900,13 +901,28 @@ class AttemptService(_Base):
             step = await self._progress.set_step_status(step, StepStatus.IN_PROGRESS)
             await self._uow.commit()
         path = await self._path(enrollment)
+        topic = await self._topic(path, step.topic_id)
+        # R-001: videos en inglés solo a quien declara inglés B1 o superior en la hoja de vida.
+        # El perfil se lee solo si el video del tema está en inglés.
+        videos = await self._r.content.videos(step.topic_id)
+        profile = (
+            await self._r.reader.profile(enrollment.user_id)
+            if videos and language_code(videos[0].get("language")) == "en"
+            else None
+        )
+        video = await pick_video(
+            self._ai,
+            step.topic_id,
+            videos,
+            allow_english=english_allowed(profile.languages if profile else None),
+        )
         return StepContentView(
             step=step,
-            topic=await self._topic(path, step.topic_id),
+            topic=topic,
             outcomes=await self._r.content.outcomes(step.topic_id),
             explanation=await self._r.content.explanation(step.topic_id),
             personal_example=await self._r.content.personal_example(step.topic_id, enrollment_id),
-            video=await self._r.content.video(step.topic_id),
+            video=video,
             pass_threshold=path.topic_pass_threshold,
             short_answer_ratio=_short_answer_ratio(path),
             max_attempts=path.max_attempts,

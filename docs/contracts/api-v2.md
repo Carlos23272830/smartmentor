@@ -276,6 +276,8 @@ Campos sin valor van en `null`. `screen` es una ayuda para la app (código de Fi
 }
 ```
 
+`video` es el video `in_use` del tema (o, si no hay, el primer respaldo), salvo que esté en inglés y el aprendiz no declare inglés B1 o superior en la hoja de vida: entonces la API pide a `ai/` el mejor en español con `video.rank` (`english_allowed: false`; ver `ai-service-v1.md`, sección 4.3) y puede llegar un respaldo (`is_backup: true`). Si no hay alternativa o `ai/` no responde, se mantiene el del tema (R-001).
+
 `Attempt`: `{"id", "assessment_type": "topic"|"final"|"retention", "status", "step_id", "items": [ítems sin solución], "answers": [LearnerAnswer], "uses_extra_grant": false, "created_at"}`.
 
 Los ítems de `Diagnostic` y `Attempt` traen además `topic_name`, `bloom_level` y `rubric_summary` (solo en respuesta corta: los criterios con su peso, por ejemplo `"concepto clave (40 %) · ejemplo aplicado (30 %) · conclusión clara (30 %)"`; nunca la respuesta modelo). Los pidió la app (F07b).
