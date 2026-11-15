@@ -8,12 +8,13 @@ import streamlit as st
 
 from clients.base import ApiError
 from components.layout import render_action_row, render_page_header
-from components.resume_form import render_resume_form, render_weights_card
+from components.resume_form import render_resume_form, render_weights_card, resume_form_state
 from core.container import get_client
 from core.errors import show_action_error
 from core.identity import refresh_me
 from core.navigation import DATA_RIGHTS, page_for_next_action
 from core.session import get_session
+from core.widget_state import seed_defaults
 from services.profile import resume_values, save_resume
 
 session = get_session()
@@ -50,9 +51,9 @@ def _continue() -> None:
 
 form_col, weights_col = st.columns([2, 1])
 with form_col:
-    result = render_resume_form(
-        resume_values(profile), key="resume", extra_tools=session.extra_tools
-    )
+    values = resume_values(profile)
+    seed_defaults(resume_form_state(values, key="resume"))
+    result = render_resume_form(values, key="resume", extra_tools=session.extra_tools)
 with weights_col:
     wants_rights = render_weights_card(key="resume")
 

@@ -7,6 +7,7 @@ la sesión y las vuelve a pasar en `extra_tools` (el componente no toca `st.sess
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Any
 
 import streamlit as st
 
@@ -40,6 +41,32 @@ class ResumeFormResult:
     """Herramienta nueva escrita en «+ Agregar»; la página la suma a `extra_tools`."""
 
 
+def resume_form_state(values: ResumeValues, *, key: str) -> dict[str, Any]:
+    """Valor inicial de cada widget con `key` del formulario, para ponerlo en `st.session_state`.
+
+    Los widgets no llevan `value=`, `index=` ni `default=`: el valor inicial entra solo por el
+    estado de sesión. Así, al restaurar un borrador antes de dibujar la página (B-040), Streamlit
+    no avisa de que el widget tiene un valor por defecto y otro por la API de estado de sesión
+    (B-053). La página lo aplica con `widget_state.seed_defaults`, que no pisa lo ya escrito.
+    """
+    state: dict[str, Any] = {}
+    if values.education_level in EDUCATION_LEVEL_LABEL:
+        state[f"{key}-education"] = values.education_level
+    if values.qualification_title:
+        state[f"{key}-title"] = values.qualification_title
+    if values.job_title:
+        state[f"{key}-job"] = values.job_title
+    if values.experience_band in EXPERIENCE_BAND_LABEL:
+        state[f"{key}-experience"] = values.experience_band
+    if values.tools:
+        state[f"{key}-tools"] = list(values.tools)
+    for position, (code, cefr) in enumerate(_language_rows(values.languages)):
+        if code in LANGUAGE_LABEL:
+            state[f"{key}-language-{position}"] = code
+        state[f"{key}-cefr-{position}"] = cefr
+    return state
+
+
 def tool_options(selected: Sequence[str], extra_tools: Sequence[str]) -> list[str]:
     """Herramientas ofrecidas: las comunes, las agregadas y las ya elegidas, sin repetir."""
     options: list[str] = []
@@ -58,24 +85,25 @@ def render_resume_form(
     """Las dos tarjetas de la hoja de vida: «Estudios y experiencia» y «Herramientas e idiomas»."""
     education_options = list(EDUCATION_LEVEL_LABEL)
     experience_options = list(EXPERIENCE_BAND_LABEL)
+    # Sin `value=` ni `default=` e `index=None`: el valor inicial va por `resume_form_state`.
     with st.container(key=f"card-{key}-studies"):
         st.markdown("**Estudios y experiencia**")
         level_col, title_col = st.columns(2)
         level = level_col.selectbox(
             "Nivel máximo de estudios",
             education_options,
-            index=_index(education_options, values.education_level),
+            index=None,
             format_func=lambda code: EDUCATION_LEVEL_LABEL[code],
             placeholder=_NOT_SELECTED,
             key=f"{key}-education",
         )
-        title = title_col.text_input("Título", value=values.qualification_title, key=f"{key}-title")
+        title = title_col.text_input("Título", key=f"{key}-title")
         job_col, experience_col = st.columns(2)
-        job = job_col.text_input("Cargo actual", value=values.job_title, key=f"{key}-job")
+        job = job_col.text_input("Cargo actual", key=f"{key}-job")
         experience = experience_col.selectbox(
             "Años de experiencia",
             experience_options,
-            index=_index(experience_options, values.experience_band),
+            index=None,
             format_func=lambda code: EXPERIENCE_BAND_LABEL[code],
             placeholder=_NOT_SELECTED,
             key=f"{key}-experience",
@@ -87,7 +115,6 @@ def render_resume_form(
             "Herramientas",
             tool_options(values.tools, extra_tools),
             selection_mode="multi",
-            default=list(values.tools),
             label_visibility="collapsed",
             key=f"{key}-tools",
         )
@@ -96,7 +123,7 @@ def render_resume_form(
             if st.button("Agregar herramienta", key=f"{key}-add-tool") and new_tool.strip():
                 added = new_tool.strip()
         st.caption("Toca para marcar las que usas.")
-        languages = _render_languages(values.languages, key)
+        languages = _render_languages(_language_rows(values.languages), key)
     resolved = ResumeValues(
         education_level=level,
         qualification_title=title.strip(),
@@ -108,19 +135,25 @@ def render_resume_form(
     return ResumeFormResult(values=resolved, added_tool=added)
 
 
+def _language_rows(
+    current: tuple[tuple[str, CefrLevel], ...],
+) -> list[tuple[str, CefrLevel]]:
+    """Una fila por idioma del perfil, y una vacía si no hay ninguno."""
+    return list(current) or [("", "A1")]
+
+
 def _render_languages(
-    current: tuple[tuple[str, CefrLevel], ...], key: str
+    rows: list[tuple[str, CefrLevel]], key: str
 ) -> tuple[tuple[str, CefrLevel], ...]:
     """Una fila «Idioma» y «Nivel» por idioma del perfil (al menos una)."""
-    rows = list(current) or [("", "A1")]
     codes = list(LANGUAGE_LABEL)
     result: list[tuple[str, CefrLevel]] = []
-    for position, (code, cefr) in enumerate(rows):
+    for position, _ in enumerate(rows):
         language_col, level_col = st.columns(2)
         picked = language_col.selectbox(
             "Idioma",
             codes,
-            index=_index(codes, code or None),
+            index=None,
             format_func=lambda value: LANGUAGE_LABEL[value],
             placeholder=_NOT_SELECTED,
             key=f"{key}-language-{position}",
@@ -128,7 +161,6 @@ def _render_languages(
         level = level_col.selectbox(
             "Nivel",
             list(CEFR_LEVELS),
-            index=CEFR_LEVELS.index(cefr),
             key=f"{key}-cefr-{position}",
         )
         if picked is not None and level is not None:
@@ -160,7 +192,3 @@ def render_weights_card(*, weights: tuple[int, int, int] = (80, 10, 10), key: st
         return st.button(
             "Tus derechos y quién ve cada dato →", type="tertiary", key=f"{key}-rights"
         )
-
-
-def _index(options: Sequence[str], value: str | None) -> int | None:
-    return options.index(value) if value in options else None

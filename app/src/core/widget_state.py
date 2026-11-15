@@ -167,6 +167,18 @@ def apply_form_values(values: dict[str, Any]) -> None:
             logger.info("No se pudo restaurar el widget %s", key)
 
 
+def seed_defaults(defaults: dict[str, Any]) -> None:
+    """Valor inicial de widgets con `key` por `st.session_state`, sin pisar lo que ya haya.
+
+    Es la forma de dar un valor inicial a un widget que puede restaurarse (`apply_form_values`):
+    el widget se crea sin `value=`/`index=`/`default=` y así Streamlit no avisa de que recibe el
+    valor por dos vías (B-053). Un borrador restaurado o lo que la persona ya escribió se respeta.
+    """
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+
 def press(widget_id: str) -> bool:
     """Marca el botón como pulsado en esta ejecución, como si llegara el clic del navegador.
 
