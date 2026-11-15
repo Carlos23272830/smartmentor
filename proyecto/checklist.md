@@ -2,7 +2,7 @@
 
 Lista de verificación del [brief](brief.md): qué está hecho, qué falta y quién responde de cada cosa. Se marca a mano (`[x]`) y el resumen de avance se recalcula con un script. Complementa a [`HANDOFF.md`](../HANDOFF.md) (estado técnico y deuda) y a [`decisiones-pendientes.md`](decisiones-pendientes.md).
 
-**Última actualización:** 2026-11-13 · **Cohorte:** 1 · El estado tarea por tarea, con fecha y hora, está en [`seguimiento/HOJA_DE_RUTA.md`](seguimiento/HOJA_DE_RUTA.md)
+**Última actualización:** 2026-11-14 · **Cohorte:** 1 · El estado tarea por tarea, con fecha y hora, está en [`seguimiento/HOJA_DE_RUTA.md`](seguimiento/HOJA_DE_RUTA.md)
 
 ## Cómo usar este checklist
 
@@ -59,11 +59,11 @@ _Calculado el 2026-11-13 con `proyecto/scripts/avance.sh --actualizar`._
 | --- | --- | --- |
 | **Fase 0: prototipado** | Hecha en lo técnico | Prototipo en Figma v3 y las 96 pantallas en Streamlit. Falta: aprobación del flujo por el director y prueba de usabilidad |
 | **Fundamentos** | Hecha en lo técnico | Modelo de datos v2.0.0, contratos, CI y estándares en `dev`. Falta: estado del arte y syllabus real del curso piloto |
-| **Flujo completo** | Casi completa (F6) | El 2026-11-12, con Gemini real, se creó un curso desde un syllabus y 4 aprendices simulados lo recorrieron por la API hasta la insignia. Falta: el syllabus real y el recorrido del aprendiz por la interfaz (PR 5) |
+| **Flujo completo** | Casi completa (F6) | El 2026-11-12, con Gemini real, se creó un curso desde un syllabus y 4 aprendices simulados lo recorrieron por la API hasta la insignia. El PR 5 (aprendiz por la interfaz con la API real) ya está en `dev`. Falta: el syllabus real y recorrer el flujo del aprendiz en el navegador |
 | **Piloto** | Herramientas listas | Métricas, notebook, anotación y piloto en la API y la interfaz. Falta: personas reales, textos legales y despliegue |
 | **Cierre** | No iniciada | Documento final, brief v2, etiqueta y traspaso |
 
-**Lectura honesta del avance (2026-11-13):** la base de datos, la API, la capa de IA y la interfaz del instructor y del administrador ya funcionan con datos y LLM reales. Lo que falta para el hito es que el aprendiz recorra la ruta por la interfaz con la API real (PR 5, en borrador) y usar el syllabus real. Después vienen el piloto con personas, que depende de los textos legales y de dónde se despliega, y el cierre.
+**Lectura honesta del avance (2026-11-14):** la base de datos, la API, la capa de IA y la interfaz del instructor y del administrador ya funcionan con datos y LLM reales. El flujo del aprendiz con la API real ya está en `dev` (PR 5, 2026-11-14), con la CI en verde y Streamlit 1.67. Lo que falta para el hito es recorrerlo en el navegador y usar el syllabus real. Después vienen el piloto con personas, que depende de los textos legales y de dónde se despliega, y el cierre.
 
 ## A. Gestión del proyecto y repositorio
 

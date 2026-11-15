@@ -1,6 +1,6 @@
 # HANDOFF
 
-Estado técnico del proyecto, deuda y próximos pasos para la siguiente cohorte. **Última actualización: 2026-11-13 (cohorte 1).**
+Estado técnico del proyecto, deuda y próximos pasos para la siguiente cohorte. **Última actualización: 2026-11-14 (cohorte 1).**
 
 Dónde está cada cosa:
 
@@ -12,7 +12,7 @@ Dónde está cada cosa:
 
 - **Entorno:** `scripts/local-up.sh` levanta todo con Docker Compose: PostgreSQL 17 + pgvector (o una base externa como Neon), Liquibase, la API, el servicio `ai/` y su trabajador, Keycloak, la interfaz y Mailpit. Ver [`README.md`](README.md).
 - **Base de datos v2.0.0:** 39 tablas con auditoría y rollback, roles `learner`, `instructor` y `admin`, y usuarios de mínimo privilegio por servicio: `smartmentor_api`, `smartmentor_ai` y `smartmentor_metrics` ([ADR 0019](docs/adr/0019-least-privilege-db-users.md)). Ver [`database/README.md`](database/README.md).
-- **API v2** ([contrato](docs/contracts/api-v2.md) y [OpenAPI](docs/contracts/openapi-api.json)): aprendiz, instructor, administrador, piloto, métricas y log del LLM. Las reglas de negocio están en la API, no en la interfaz ([ADR 0017](docs/adr/0017-frontend-rebuilt-from-figma-v3.md)). Hay unas 660 pruebas y la CI está en verde.
+- **API v2** ([contrato](docs/contracts/api-v2.md) y [OpenAPI](docs/contracts/openapi-api.json)): aprendiz, instructor, administrador, piloto, métricas y log del LLM. Las reglas de negocio están en la API, no en la interfaz ([ADR 0017](docs/adr/0017-frontend-rebuilt-from-figma-v3.md)). Hay unas 660 pruebas y la CI está en verde (`audit` incluido).
 - **Servicio `ai/`:** trabajos asíncronos con lease y reintentos ([ADR 0010](docs/adr/0010-async-jobs-postgres-pull-ingestion.md)), prompts versionados ([`prompts/catalog.yaml`](prompts/catalog.yaml)), presupuestos en USD y registro de cada llamada. Hace todo esto:
   - estructurar el syllabus;
   - generar el diagnóstico y estimar el nivel;
@@ -35,7 +35,7 @@ Dónde está cada cosa:
 
 | Pendiente | Detalle |
 | --- | --- |
-| Aprendiz por la interfaz | El catálogo, el perfil, el quiz y la ruta con la API real están en el PR 5 (`fix/flujo-aprendiz`), en borrador. Se fusiona limpio con `dev` y pasan 730 pruebas. Falta verlo en el navegador (T-010 y T-011) |
+| Aprendiz por la interfaz | El catálogo, el perfil, el quiz y la ruta con la API real están en `dev` (PR 5, 2026-11-14). Falta recorrerlos en el navegador (T-010 y T-011) y el resto de las pantallas del aprendiz con la API real (T-011) |
 | Syllabus real | El del curso piloto (T-031) |
 | Piloto con personas | Textos legales del consentimiento (T-040), dónde se despliega y quién lo opera (T-043), anotación de expertos y prueba de usabilidad (T-041 y T-042) |
 | Revisión visual | Nunca se comparó cada pantalla con su captura de Figma (T-034) |
@@ -49,12 +49,12 @@ Dónde está cada cosa:
 - **Renovación del token por redirección:** Streamlit no expone el refresh token, así que la app repite `st.login`. Al renovar, la app vuelve a su página de inicio.
 - **`ai/` corta las llamadas al LLM a los 240 s:** antes eran 120 s y se cortaban los bancos de preguntas (B-013). El lease de los trabajos no se renueva mientras corren: es de 1800 s.
 - **`GET /jobs/{id}` siempre devuelve `next_action` en `null`** (B-012): la app vuelve a leer la inscripción.
-- **Dependencias con vulnerabilidades conocidas** en `api/` y `app/`: `certifi` y `pillow` (B-009, trabajo `audit` de la CI).
+- **Streamlit 1.67 y los widgets con `key`:** conserva su estado aunque no se dibujen. Se corrigió A3b; otras páginas con pasos y `st.stop()` (nuevo curso, encuesta final, quiz, evaluación final) no tienen prueba que lo cubra (B-009).
 - **Las pruebas no miden la cobertura.**
 
 ## Próximos pasos sugeridos
 
-1. Terminar y fusionar el PR 5 (aprendiz por la interfaz) y recorrer una ruta completa en el navegador.
+1. Recorrer una ruta completa del aprendiz en el navegador con la API real (el PR 5 ya está en `dev`) y terminar T-011.
 2. Correr el flujo de punta a punta con el syllabus real del curso piloto (cierra F6).
 3. Revisión visual frente a Figma y decidir los estados que Figma no dibuja.
 4. Textos legales, despliegue y piloto con 15 a 30 aprendices (F9).

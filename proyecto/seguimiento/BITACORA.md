@@ -532,3 +532,11 @@ A pedido del dueño se buscaron fallas del flujo sin esperar a que aparecieran e
 - **Flujo:** se leyó cómo la API calcula `next_action` y qué estados acepta cada acción, y se compararon con cada página del aprendiz y con D5.
 
 Se corrigieron 6 fallas (B-024 a B-029), cada una con su prueba. Resultado: 643 pruebas en verde en la rama y 746 en la copia de prueba (PR 7 + PR 5), donde `quiz.py` y `topic.py` se unieron a mano con los cambios del PR 5. 8501 reconstruido. B-025 deja una decisión pendiente para el dueño: si E9 debe dejar repasar el contenido de un tema aprobado, la API tiene que entregarlo.
+
+### 2026-11-14 21:45 · VALIDACIÓN · PR 5 y PR 7 en `dev`
+
+A pedido del dueño se comprobó con `gh` y `git` que todo lo hecho está en `dev` (`e9f349c`): los 7 PR están fusionados y la CI de `dev` está en verde, con los 15 trabajos, incluidos los tres `audit`.
+
+- **B-009 (`pillow`):** el `audit (app)` fallaba con 42 vulnerabilidades de `pillow` 12.3.0, que Streamlit 1.65 no deja subir (`pillow<13`). Se subió a Streamlit 1.67.0 (`38fcf00`) y `pillow` quedó en 13.0.0. Streamlit 1.67 conserva el estado de un widget con `key` aunque no se dibuje, así que A3b recuperaba la casilla vieja del piloto: la decisión se fija ahora en `st.session_state` al volver del consentimiento informado y se quitó `value=`. También se quitó un botón `topic-continue-quiz` repetido en `topic.py`, sobrante de una fusión, que hacía fallar 2 pruebas del quiz.
+- **Riesgo abierto:** otras páginas con pasos y `st.stop()` (nuevo curso, encuesta final, quiz y evaluación final) con casillas o radios con `key` podrían mostrar un valor viejo. Ninguna prueba lo detecta; hay que recorrerlas en el navegador.
+- **Documentos al día:** BUGS (B-009, B-012 a B-020 y B-022 a B-029 pasan a ✔ en `dev`; B-021 sigue sin causa confirmada), HOJA_DE_RUTA (T-003 y T-010), SUBIDAS (S-011), HANDOFF, checklist, `app/README.md`, `app/CLAUDE.md` y CHANGELOG.

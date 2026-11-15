@@ -13,6 +13,7 @@ Completa al plan, no lo reemplaza. [`PLAN_IMPLEMENTACION_V3.md`](../../PLAN_IMPL
 | [`BUGS.md`](BUGS.md) | Bugs `B-NNN`: cuándo se encontró, cuándo se corrigió y dónde | Se actualiza el estado; el historial va en la bitácora |
 | [`FIGMA.md`](FIGMA.md) | Lo que Figma no tiene o contradice, y cómo se resolvió (`F-NNN`) | Igual que los bugs |
 | [`SUBIDAS.md`](SUBIDAS.md) | Cada `push` a GitHub y cada pull request (`S-NNN`) | Solo se agregan entradas |
+| [`PENDIENTES.md`](PENDIENTES.md) | Resumen de lo que falta, con las funcionalidades de cada punto | Se rehace en cada corte, con la fecha y el commit de `dev` |
 | [`MEJORAS.md`](MEJORAS.md) | Propuestas que nadie pidió pero conviene hacer (`M-NNN`) | Se marca si se aceptan o se descartan |
 
 ## Fecha y hora

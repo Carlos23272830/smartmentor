@@ -2,7 +2,7 @@
 
 Lo que falta para llegar al hito del brief (el flujo corre de punta a punta con el LLM real) y al piloto. Arranca del estado de `dev` en `d8de841` (2026-11-12). Estados e IDs en el [README](README.md#estados). Las fases F0–F11 son las del [plan v3](../../PLAN_IMPLEMENTACION_V3.md#7-plan-fase-a-fase).
 
-**Última actualización:** 2026-11-12 15:31
+**Última actualización:** 2026-11-14
 
 ## Dónde estamos (2026-11-12)
 
@@ -28,8 +28,8 @@ Fuentes: el [tablero del plan](../../PLAN_IMPLEMENTACION_V3.md#21-tablero-de-ava
 | F3 | API v2 sin IA | ✔ En `dev` · se amplía | `995dbd9` y siguientes; 641 pruebas (tablero) y 651 (PR 3) | Cambios aditivos de T-012 a T-015 (subidos en `feature/seguimiento-trazabilidad`, sin PR; CI en verde: API 660, app 621, ai 463) | T-012 a T-015 |
 | F4 | `ai/` base: trabajos, syllabus y diagnóstico | ✔ En `dev` | `9000895`; syllabus real → Gemini → temas verificado el 2026-11-10 (tablero) | — | — |
 | F5 | `ai/`: contenido, evaluación y videos | ✔ En `dev` · **probado con el LLM real** | `9000895`: 400 pruebas con simulaciones. Con Gemini real (2026-11-12): las 10 tareas corrieron en 3 cursos (ver la evidencia de F6) | — | — |
-| F6 | Integración de punta a punta (**hito**) | ◐ **En curso · casi completa** | Syllabus real a temas (2026-11-10). PR 4 y PR 6 en `dev`. **2026-11-12: el dueño creó un curso desde un syllabus en la UI, y 4 aprendices simulados recorrieron por la API 3 cursos con Gemini real, de la inscripción a la insignia** (costo y latencia en [Evidencia de F6](#evidencia-de-f6-2026-11-12)) | Syllabus real del curso piloto (T-031). Repetir el recorrido del aprendiz en la UI, no solo por la API (depende del PR 5) | T-031, T-032 |
-| F7 | Interfaz v3 | ◐ **En curso** | Las 96 pantallas tienen página en `dev`; 577 pruebas de la UI (PR 3) | Que todas las pantallas lean la API real (PR 5 en borrador; T-011, T-015f, T-016, T-017). Estados que Figma no dibuja (T-020 a T-023). **Comparación visual con Figma, nunca hecha** (T-034) | T-010 a T-024, T-033, T-034 |
+| F6 | Integración de punta a punta (**hito**) | ◐ **En curso · casi completa** | Syllabus real a temas (2026-11-10). PR 4, PR 5, PR 6 y PR 7 en `dev`. **2026-11-12: el dueño creó un curso desde un syllabus en la UI, y 4 aprendices simulados recorrieron por la API 3 cursos con Gemini real, de la inscripción a la insignia** (costo y latencia en [Evidencia de F6](#evidencia-de-f6-2026-11-12)) | Syllabus real del curso piloto (T-031). Repetir el recorrido del aprendiz en la UI, no solo por la API (el PR 5 ya está en `dev`; falta recorrerlo en el navegador) | T-031, T-032 |
+| F7 | Interfaz v3 | ◐ **En curso** | Las 96 pantallas tienen página en `dev`; 577 pruebas de la UI (PR 3) | Que todas las pantallas lean la API real (el catálogo, el perfil, el quiz y la ruta del aprendiz ya leen la API real, PR 5; T-011, T-015f, T-016, T-017). Estados que Figma no dibuja (T-020 a T-023). **Comparación visual con Figma, nunca hecha** (T-034) | T-010 a T-024, T-033, T-034 |
 | F8 | Keycloak, infraestructura y CI | ✔ En `dev` · salida sin verificar | `995dbd9`: realm v3, compose y `.github/workflows/ci.yml` | `docker compose up` en un PC limpio en menos de 10 minutos (sin verificar). Contraseña SMTP de Keycloak (P-19). Endurecimiento antes de datos reales | T-050 |
 | F9 | Evaluación y piloto | ◐ Herramientas hechas · faltan personas | `97ffd44`: métricas y notebook. AD3 ya muestra el catálogo de métricas (T-015c, subido sin PR) | Anotación de expertos, calificación humana, usabilidad (SUS) y piloto con personas reales. Textos legales | T-040 a T-043 |
 | F10 | Revisión final, despliegue y brief v2 | ☐ Pendiente | — | Todo; empieza después de F9. Incluye poner al día el checklist y el HANDOFF ([B-002](BUGS.md)) | T-003, T-051 |
@@ -43,7 +43,7 @@ Resumen: **hechas 6** (F0 a F5 en lo técnico; F0 y F1 esperan la aprobación de
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | T-001 | Crear la carpeta de seguimiento (esta hoja, bitácora, bugs, Figma, subidas y mejoras) | — | — | ✔ En `dev` (PR 6, `42b14df`) | 2026-11-12 13:57 | 2026-11-12 14:00 | `feature/seguimiento-trazabilidad` · `ee2ee75` |
 | T-002 | Llevar a `dev` el arreglo del bloqueo API ↔ `ai/` ([B-001](BUGS.md)) | F6 | — | ✔ En `dev` (PR 6, `42b14df`) | 2026-11-12 14:01 | 2026-11-12 14:01 | `feature/seguimiento-trazabilidad` · `4ea823f` (también en `fix/bloqueo-trabajos-ia-a-dev` · `0699da7`, sin subir) |
-| T-003 | Poner al día `proyecto/checklist.md`, `HANDOFF.md`, `app/README.md` y `CHANGELOG.md` ([B-002](BUGS.md)) | F10 | T-002 | ◐ Hecho, sin commit: el checklist marca solo lo que tiene evidencia (72 de 120, 60 %; antes 28 %), el HANDOFF está reescrito, y se actualizaron el estado de `app/README.md` y el CHANGELOG del plan v3 | 2026-11-13 10:40 | 2026-11-13 10:40 | `feature/hoja-de-ruta-f6-f7` |
+| T-003 | Poner al día `proyecto/checklist.md`, `HANDOFF.md`, `app/README.md` y `CHANGELOG.md` ([B-002](BUGS.md)) | F10 | T-002 | ✔ En `dev` (PR 7): el checklist marca solo lo que tiene evidencia (72 de 120, 60 %; antes 28 %), el HANDOFF está reescrito, y se actualizaron el estado de `app/README.md` y el CHANGELOG del plan v3 | 2026-11-13 10:40 | 2026-11-13 10:40 | `feature/hoja-de-ruta-f6-f7` |
 
 ## Etapa 1 · Conectar con la API real las pantallas que faltan
 
@@ -51,7 +51,7 @@ Se sigue el patrón del PR 3: cambios **aditivos** en la API, un adaptador por p
 
 | ID | Tarea | Pantallas de Figma | Depende de | Estado | Inicio | Fin | Rama / PR |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T-010 | Flujo del aprendiz: revisar y terminar el PR 5 (catálogo, perfil, quiz y ruta) y sacarlo de borrador | E1–E7c, E15 | T-002 | ◐ PR 5 en borrador · revisado el 2026-11-12: se fusiona limpio con `dev` y pasan 730 pruebas; falta la verificación en el navegador y ajustar la forma | 2026-11-11 | | `fix/flujo-aprendiz` · PR 5 |
+| T-010 | Flujo del aprendiz: revisar y terminar el PR 5 (catálogo, perfil, quiz y ruta) y sacarlo de borrador | E1–E7c, E15 | T-002 | ✔ En `dev` (PR 5, `e9f349c`, 2026-11-14 13:49; CI en verde, 746 pruebas de la app). Falta recorrerlo en el navegador con la API real | 2026-11-11 | | `fix/flujo-aprendiz` · PR 5 |
 | T-011 | Resto del aprendiz con la API real: diagnóstico, final, badge, progreso, logros, encuesta y retención | E3–E4b, E8–E14, U1a–U1d | T-010 | ☐ | | | |
 | T-012 | Detalle del aprendiz e intentos extra | D4, D4b, D4c | — | ✔ En `dev` (PR 6, `42b14df`) | 2026-11-12 14:0x (aprox.) | 2026-11-12 14:11 | `feature/seguimiento-trazabilidad` · `d47df63` |
 | T-013 | Cola de anotación de preguntas | D5b | — | ✔ En `dev` (PR 6, `42b14df`) | 2026-11-12 14:13 | 2026-11-12 14:16 | `feature/seguimiento-trazabilidad` · `d47df63` |
@@ -63,7 +63,7 @@ Se sigue el patrón del PR 3: cambios **aditivos** en la API, un adaptador por p
 | T-015d | Piloto y vista previa de la ruta fija: el piloto se busca con `GET /pilots` ([B-006](BUGS.md)), y se agregan la ruta, los consentimientos, los temas con ítems y la vista previa con nombres | AD4, AD4b | — | ✔ En `dev` (PR 6, `42b14df`) | 2026-11-12 14:28 | 2026-11-12 14:33 | `feature/seguimiento-trazabilidad` · `d47df63` |
 | T-015e | Cursos, rutas e inscripciones: nombre del aprendiz y consentimiento al piloto en la API; dueño del curso desde `owner_user_id` | AD5 | — | ✔ En `dev` (PR 6, `42b14df`) | 2026-11-12 14:38 | 2026-11-12 14:42 | `feature/seguimiento-trazabilidad` · `d47df63` |
 | T-015f | Catálogo de prompts: revisar si lee la API o `prompts/catalog.yaml` | C4 | — | ✔ Revisado: no hay ruta en la API y C4 es una copia de `prompts/catalog.yaml`, con los 13 prompts, versiones y nombres iguales. Falta una prueba que avise si se desincronizan ([M-008](MEJORAS.md)) | 2026-11-13 10:22 | 2026-11-13 10:22 | sin cambios de código |
-| T-016 | Vista previa de la ruta fija | AD4b, E5b | T-015 | ◐ AD4b hecho en T-015d. E5b (la ruta fija que ve el aprendiz) depende del PR 5, que cambia `path.py`, y solo se puede ver con un aprendiz del grupo de control del piloto | 2026-11-12 14:28 | | |
+| T-016 | Vista previa de la ruta fija | AD4b, E5b | T-015 | ◐ AD4b hecho en T-015d. E5b (la ruta fija que ve el aprendiz) el PR 5 ya está en `dev`; solo se puede ver con un aprendiz del grupo de control del piloto | 2026-11-12 14:28 | | |
 | T-017 | Revisar si las demás pantallas del instructor ya leen la API real: nuevo curso, syllabus, grafo y panel de ruta | D1b–D2d, D3b | — | ✔ Leen la API real. Con el cliente de la app y datos reales de los cursos 2, 4 y 5 se leyeron bien temas, grafo, panel de la ruta y Mis cursos (10 de 10). El dueño ya creó un curso desde un syllabus y lo publicó por la UI (D1b, D1c, D2). No se probó guardar la configuración de la ruta (D3b) para no cambiar los cursos compartidos | 2026-11-13 10:22 | 2026-11-13 10:22 | sin cambios de código |
 
 ## Etapa 2 · Estados que Figma no dibuja
@@ -86,7 +86,7 @@ Antes de codificarlos se le avisa al dueño (ver [FIGMA.md](FIGMA.md)).
 | T-031 | Conseguir el syllabus real del curso (Carlos Villada) | Dueño | ⛔ Dueño |
 | T-032 | Corrida completa: syllabus → temas → contenido → diagnóstico → ruta → quiz → final → badge, con costo y latencia anotados | T-002, T-010, T-011, T-030, T-031 | ◐ Hecha por la API con 3 cursos y 4 aprendices (2026-11-12, [evidencia](#evidencia-de-f6-2026-11-12)). Falta con el syllabus real (T-031) y recorriendo la UI del aprendiz (T-010, T-011) |
 | T-033 | Verificar en el navegador que la nota del LLM aparece después de guardar (cambio 6 del PR 3) | Autorización para levantar la app | ☐ Se puede hacer: el stack está arriba |
-| T-034 | Revisión visual de todas las pantallas frente a Figma ([M-005](MEJORAS.md)) | Autorización para levantar la app | ◐ Revisadas E1, E6, A6, A7, D1 a D5f y AD1 a AD5 (2026-11-13 13:35); encontró B-014 y V-001 a V-032 ([FIGMA.md](FIGMA.md#revisión-visual-t-034)). Las del aprendiz siguen después del PR 5 |
+| T-034 | Revisión visual de todas las pantallas frente a Figma ([M-005](MEJORAS.md)) | Autorización para levantar la app | ◐ Revisadas E1, E6, A6, A7, D1 a D5f y AD1 a AD5 (2026-11-13 13:35); encontró B-014 y V-001 a V-032 ([FIGMA.md](FIGMA.md#revisión-visual-t-034)). Las del aprendiz siguen: el PR 5 ya está en `dev` |
 
 ### Evidencia de F6 (2026-11-12)
 

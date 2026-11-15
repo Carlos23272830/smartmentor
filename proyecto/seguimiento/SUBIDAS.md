@@ -149,3 +149,24 @@ También en verde: liquibase, keycloak-realm, prompts, infra, docs (markdownlint
 - **PR 7 hacia `dev`:** ya existía con todos los commits (B-012 a B-029). Se actualizaron el título y la descripción con el flujo del aprendiz (B-015 a B-029), las pruebas (643 y 746 con el PR 5) y lo que falta (B-017 con el PR 5 y la decisión de B-025)
 - **Commits:** el de esta entrada
 - **Quién aprobó la subida:** el dueño, en el chat (2026-11-13 17:33)
+
+### S-011 · 2026-11-14 21:45 · PR 7 y PR 5 fusionados en `dev` (validación)
+
+Revisión con `gh` y `git` del estado real de `dev`, sin subir nada.
+
+- **PR 7** (`feature/hoja-de-ruta-f6-f7` → `dev`): fusionado el 2026-11-14 13:09 en `12ca602`. Trae B-012 a B-029, la revisión visual (V-001 a V-032) y el seguimiento de F6 y F7
+- **PR 5** (`fix/flujo-aprendiz` → `dev`): fusionado el 2026-11-14 13:49 en `e9f349c`. Trae el flujo del aprendiz con la API real (`25f4c7c`, `397246f`, `c73d448`), la fusión con `dev` (`2d9145e`), `75d4f17` y `38fcf00` (Streamlit 1.67 y `pillow` 13.0.0, B-009)
+- **IDs:** T-010, B-009, B-017 y B-012 a B-029
+- **CI de `dev` (`e9f349c`):** en verde, los 15 trabajos, incluidos los tres `audit` (`ai`, `api` y `app`). Antes de `38fcf00` el de `app` fallaba por 42 vulnerabilidades de `pillow` 12.3.0
+- **Pruebas locales:** app con 746 pruebas, Ruff, formato y mypy en verde
+- **Verificado en el código de `dev`:** `FOR NO KEY UPDATE` (B-001), rutas `deactivate` (B-003), `topic_count` (B-017), `set_objective` sin `origin` (B-020), `open_attempt_id` en `topic.py` con un solo `topic-continue-quiz` (B-024), `ai_llm_timeout_seconds` en 240 (B-013) y Streamlit 1.67 con `pillow` 13.0.0 (B-009). El commit `448e154` del PR 4 no es ancestro de `dev` (se fusionó por otra rama), pero su contenido sí está
+- **Quién aprobó la subida:** no hubo subida; se registra la validación
+
+### S-012 · 2026-11-14 23:57 · 8 ramas nuevas y 9 PR hacia `dev`
+
+- **Ramas subidas:** `fix/widgets-key-streamlit-167`, `feature/admin-y-fixtures`, `feature/menu-perfil-roles`, `fix/videos-ingles-r001`, `feature/nivel-escala-absoluta-r002`, `feature/eventos-interfaz-r003`, `fix/widgets-casos-menores` y `fix/visual-preguntas-y-progreso` (todas desde `dev`, `e9f349c`)
+- **PR hacia `dev`:** [8](https://github.com/armandoordonez/smartmentor/pull/8) B-009 widgets · [9](https://github.com/armandoordonez/smartmentor/pull/9) T-015 · [10](https://github.com/armandoordonez/smartmentor/pull/10) F-004 · [11](https://github.com/armandoordonez/smartmentor/pull/11) R-001 · [12](https://github.com/armandoordonez/smartmentor/pull/12) R-002 · [13](https://github.com/armandoordonez/smartmentor/pull/13) R-003 · [14](https://github.com/armandoordonez/smartmentor/pull/14) B-009 menores · [15](https://github.com/armandoordonez/smartmentor/pull/15) V-033 y V-050 · [16](https://github.com/armandoordonez/smartmentor/pull/16) seguimiento
+- **IDs:** B-009, T-015, T-024, F-004, R-001, R-002, R-003, V-033, V-050, R-009
+- **Pruebas locales:** las 9 ramas fusionadas juntas en una copia: app 792 en verde, ai 474 en verde y 10 omitidas, Ruff, formato y mypy en verde, y `check-env-coherence.py` coherente. Se fusionan sin conflictos en cualquier orden. Al probarlas juntas apareció que R-001 no documentaba sus variables: se corrigió en `1354d20`
+- **CI:** se anota al fusionar
+- **Quién aprobó la subida:** el dueño, en el chat («Abro un PR por rama y tú fusionas»)
