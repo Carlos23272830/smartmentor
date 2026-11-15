@@ -431,6 +431,8 @@ class AttemptsCounter(ApiModel):
 class StepContent(ApiModel):
     step_id: int
     status: StepStatus | None = None
+    # `review`: tema aprobado u omitido que se repasa sin quiz (B-025).
+    mode: Literal["study", "review"] = "study"
     topic: StepTopic
     explanation: StepExplanation | None = None
     personal_example: dict[str, Any] | None = None

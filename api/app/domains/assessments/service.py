@@ -15,7 +15,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ValidationError
@@ -54,6 +54,12 @@ from app.domains.assessments.grading import (
     round_robin,
     short_answer_is_correct,
 )
+from app.domains.assessments.objective import (
+    ALLOWED_BLOOM_VERBS,
+    canonical_bloom_verb,
+    normalize_proposal,
+    objective_proposal,
+)
 from app.domains.assessments.repository import (
     AnswerRepository,
     AttemptRepository,
@@ -63,6 +69,7 @@ from app.domains.assessments.repository import (
     ItemRepository,
     SurveyLookup,
 )
+from app.domains.assessments.video_choice import english_allowed, language_code, pick_video
 from app.domains.courses.entities import Course, Topic
 from app.domains.identity.authentication import CurrentUser
 from app.domains.identity.entities import UserProfile
@@ -116,6 +123,21 @@ FINAL_ON_DEMAND_SHORT_ANSWERS = 1
 DIAGNOSTIC_ITEMS_PER_TOPIC = 3
 REINFORCE_CUTOFF = 50.0
 OPEN_DIAGNOSTIC = ("created", "in_progress", "scoring_failed")
+
+# Modo del contenido de un paso (E6). Un tema aprobado u omitido se repasa: la API entrega la
+# explicación y el video, sin abrir intentos ni cambiar el estado del paso (B-025).
+ContentMode = Literal["study", "review"]
+STUDY_MODE: ContentMode = "study"
+REVIEW_MODE: ContentMode = "review"
+REVIEW_STEPS = frozenset({StepStatus.PASSED, StepStatus.SKIPPED})
+UNAVAILABLE_CONTENT_STEPS = frozenset({StepStatus.BLOCKED, StepStatus.ON_HOLD})
+
+
+def content_mode(status: str) -> ContentMode:
+    """`review` para un tema aprobado u omitido, `study` para el resto; 409 si no se abre."""
+    if status in UNAVAILABLE_CONTENT_STEPS:
+        raise path_errors.step_not_available(status)
+    return REVIEW_MODE if status in REVIEW_STEPS else STUDY_MODE
 
 
 @dataclass
@@ -587,6 +609,18 @@ class DiagnosticService(_Base):
         enrollment = await self._own_enrollment(user, enrollment_id, for_update=True)
         if enrollment.status != EnrollmentStatus.OBJECTIVE_PENDING:
             raise InvalidStateTransitionError("The enrollment is not waiting for an objective.")
+        chosen = {k: str(parts[k]).strip() for k in ("bloom_verb", "content", "criterion")}
+        proposal = objective_proposal(enrollment)
+        verb = canonical_bloom_verb(chosen["bloom_verb"])
+        if verb is not None:
+            chosen["bloom_verb"] = verb
+        elif proposal is None or chosen["bloom_verb"] != proposal["bloom_verb"]:
+            # Solo se acepta un verbo fuera de la lista si es el de la propuesta guardada.
+            raise BusinessRuleError(
+                "The Bloom verb is not in the allowed list.",
+                code="INVALID_BLOOM_VERB",
+                extra={"allowed": list(ALLOWED_BLOOM_VERBS)},
+            )
         diagnostic = await self._r.diagnostics.by_enrollment(enrollment_id)
         data = (diagnostic.level_by_topic or {}) if diagnostic is not None else {}
         levels = {
@@ -595,17 +629,10 @@ class DiagnosticService(_Base):
             if str(t.get("topic_id", "")).isdigit()
         }
         focus = [int(t) for t in data.get("focus_topic_ids", []) if str(t).isdigit()]
-        chosen = {k: str(parts[k]).strip() for k in ("bloom_verb", "content", "criterion")}
-        proposed = {
-            "bloom_verb": enrollment.objective_bloom_verb,
-            "content": enrollment.objective_content,
-            "criterion": enrollment.objective_criterion,
-        }
-        origin = (
-            enrollment.objective_origin or "llm_proposed"
-            if chosen == proposed
-            else "learner_edited"
+        unchanged = proposal is not None and all(
+            chosen[k] == proposal[k] for k in ("bloom_verb", "content", "criterion")
         )
+        origin = (proposal or {}).get("origin") or "llm_proposed" if unchanged else "learner_edited"
         path = await self._path(enrollment)
         sequenced = await self._progress.sequence(enrollment, path, levels, focus)
         enrollment = await self._progress.set_enrollment_status(
@@ -654,13 +681,20 @@ class DiagnosticService(_Base):
             require_id(diagnostic),
             {"status": "scored", "scored_at": _now(), "level_by_topic": stored},
         )
+        verb, content = normalize_proposal(objective.bloom_verb, objective.content)
+        proposed_origin = "path_default" if objective.origin == "path_default" else "llm_proposed"
         await self._progress.set_enrollment_status(
             enrollment,
             EnrollmentStatus.OBJECTIVE_PENDING,
-            objective_bloom_verb=objective.bloom_verb[:60],
-            objective_content=objective.content,
+            objective_bloom_verb=verb[:60],
+            objective_content=content,
             objective_criterion=objective.criterion,
-            objective_origin=objective.origin,
+            objective_origin=proposed_origin,
+            # La propuesta se guarda aparte: confirmar o editar no la sobrescribe (B-033).
+            objective_proposal_bloom_verb=verb[:60],
+            objective_proposal_content=content,
+            objective_proposal_criterion=objective.criterion,
+            objective_proposal_origin=proposed_origin,
         )
         await self._uow.commit()
         return True
@@ -819,6 +853,7 @@ class StepContentView:
     pass_threshold: float
     short_answer_ratio: float
     max_attempts: int
+    mode: ContentMode = STUDY_MODE
 
 
 @dataclass(frozen=True)
@@ -868,30 +903,44 @@ class AttemptService(_Base):
     async def step_content(
         self, user: CurrentUser, enrollment_id: int, step_id: int
     ) -> StepContentView:
-        """Explicación aprobada, video en uso (o respaldo), reglas del quiz e intentos (E6)."""
+        """Explicación aprobada, video en uso (o respaldo), reglas del quiz e intentos (E6).
+
+        Un tema aprobado u omitido se entrega en modo repaso (`review`): mismo contenido, sin
+        cambiar el paso; los intentos los sigue rechazando `start_topic` (409).
+        """
         enrollment, step = await self._own_step(user, enrollment_id, step_id, for_update=True)
-        if step.status in (
-            StepStatus.BLOCKED,
-            StepStatus.SKIPPED,
-            StepStatus.ON_HOLD,
-            StepStatus.PASSED,
-        ):
-            raise path_errors.step_not_available(step.status)
+        mode = content_mode(step.status)
         if step.status == StepStatus.PENDING and enrollment.status == EnrollmentStatus.IN_PATH:
             # Abrir el tema no consume intentos.
             step = await self._progress.set_step_status(step, StepStatus.IN_PROGRESS)
             await self._uow.commit()
         path = await self._path(enrollment)
+        topic = await self._topic(path, step.topic_id)
+        # R-001: videos en inglés solo a quien declara inglés B1 o superior en la hoja de vida.
+        # El perfil se lee solo si el video del tema está en inglés.
+        videos = await self._r.content.videos(step.topic_id)
+        profile = (
+            await self._r.reader.profile(enrollment.user_id)
+            if videos and language_code(videos[0].get("language")) == "en"
+            else None
+        )
+        video = await pick_video(
+            self._ai,
+            step.topic_id,
+            videos,
+            allow_english=english_allowed(profile.languages if profile else None),
+        )
         return StepContentView(
             step=step,
-            topic=await self._topic(path, step.topic_id),
+            topic=topic,
             outcomes=await self._r.content.outcomes(step.topic_id),
             explanation=await self._r.content.explanation(step.topic_id),
             personal_example=await self._r.content.personal_example(step.topic_id, enrollment_id),
-            video=await self._r.content.video(step.topic_id),
+            video=video,
             pass_threshold=path.topic_pass_threshold,
             short_answer_ratio=_short_answer_ratio(path),
             max_attempts=path.max_attempts,
+            mode=mode,
         )
 
     @staticmethod

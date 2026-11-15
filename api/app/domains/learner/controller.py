@@ -21,6 +21,7 @@ from app.domains.assessments.dependencies import (
     DiagnosticServiceDep,
 )
 from app.domains.assessments.entities import AssessmentItem, AttemptAnswer
+from app.domains.assessments.objective import objective_proposal
 from app.domains.assessments.service import (
     AttemptHistoryEntry,
     AttemptOutcome,
@@ -67,7 +68,7 @@ from app.domains.learner.schemas import (
     TopicLevelResponse,
     WeakTopicResponse,
 )
-from app.domains.learning_paths.controller import enrollment_response, objective_of, step_response
+from app.domains.learning_paths.controller import enrollment_response, step_response
 from app.domains.learning_paths.dependencies import EnrollmentServiceDep
 from app.domains.learning_paths.schemas import (
     EnrollmentCreate,
@@ -335,7 +336,8 @@ async def diagnostic_result(
     """Niveles por tema, clasificación y objetivo propuesto (E4)."""
     view = await service.result(user, enrollment_id)
     data = view.diagnostic.level_by_topic or {}
-    objective = objective_of(view.enrollment)
+    # La propuesta guardada, no el objetivo confirmado: «Volver a la propuesta» la usa (B-033).
+    proposal = objective_proposal(view.enrollment)
     return DiagnosticResultResponse(
         status=view.diagnostic.status,
         level_by_topic=[
@@ -354,7 +356,12 @@ async def diagnostic_result(
         ],
         overall_score=float(data.get("overall_score", 0)),
         proposed_objective=(
-            ProposedObjective(**objective.model_dump()) if objective is not None else None
+            ProposedObjective(
+                statement=f"{proposal['bloom_verb']} {proposal['content']} {proposal['criterion']}",
+                **proposal,
+            )
+            if proposal is not None
+            else None
         ),
     )
 
@@ -405,13 +412,17 @@ async def get_path(
 async def step_content(
     enrollment_id: int, step_id: int, user: LearnerUser, service: AttemptServiceDep
 ) -> StepContentResponse:
-    """Explicación aprobada, video en uso (o respaldo), reglas del quiz e intentos (E6)."""
+    """Explicación aprobada, video en uso (o respaldo), reglas del quiz e intentos (E6).
+
+    Un tema aprobado u omitido llega con `mode: "review"` (repaso, sin quiz).
+    """
     view = await service.step_content(user, enrollment_id, step_id)
     step = view.step
     maximum = view.max_attempts + step.extra_attempts_granted
     return StepContentResponse(
         step_id=require_id(step),
         status=step.status,
+        mode=view.mode,
         topic=StepTopic(
             id=require_id(view.topic),
             name=view.topic.name,

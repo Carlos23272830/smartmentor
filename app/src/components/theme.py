@@ -141,3 +141,17 @@ VIDEO_RATING_LABEL: dict[VideoRating, str] = {
 }
 
 BLOOM_VERBS: tuple[str, ...] = ("Recordar", "Comprender", "Aplicar", "Analizar", "Evaluar", "Crear")
+# Verbos que acepta la API en el objetivo personal (E4b, B-033): cada nivel seguido de sus verbos
+# de acción. Es la lista de `api/app/domains/assessments/objective.py` y de
+# `docs/contracts/api-v2.md`.
+_BLOOM_ACTION_VERBS_BY_LEVEL: tuple[str, ...] = (
+    "Recordar Identificar Reconocer Definir Enumerar Listar Nombrar",
+    "Comprender Explicar Describir Interpretar Resumir Clasificar Ejemplificar",
+    "Aplicar Implementar Ejecutar Usar Utilizar Resolver Calcular Demostrar",
+    "Analizar Comparar Contrastar Diferenciar Distinguir Examinar Organizar",
+    "Evaluar Justificar Valorar Juzgar Criticar Argumentar Verificar",
+    "Crear Diseñar Construir Desarrollar Formular Planificar Proponer Producir Generar",
+)
+BLOOM_ACTION_VERBS: tuple[str, ...] = tuple(
+    verb for level in _BLOOM_ACTION_VERBS_BY_LEVEL for verb in level.split()
+)

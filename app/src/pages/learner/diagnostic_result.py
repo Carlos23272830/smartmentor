@@ -1,8 +1,12 @@
 """E4 · Resultado del diagnóstico y objetivo (paso 4 de 4) y E4b · Editar el objetivo.
 
 Muestra el nivel por tema y el objetivo propuesto por la IA. «Confirmar» o «Guardar objetivo»
-llaman a `PUT /me/enrollments/{id}/objective`; el objetivo medible lo valida la API
-(`OBJECTIVE_NOT_MEASURABLE`). La pantalla que sigue la dicta el `next_action` de la respuesta.
+llaman a `PUT /me/enrollments/{id}/objective`; el objetivo medible y el verbo de Bloom los valida
+la API (`OBJECTIVE_NOT_MEASURABLE`, `INVALID_BLOOM_VERB`) y el error se muestra con el texto de
+`core/errors.py`. La pantalla que sigue la dicta el `next_action` de la respuesta.
+
+`result.proposed_objective` es la propuesta original guardada por la API, aparte del objetivo
+confirmado (B-033): «Volver a la propuesta de la IA» la usa aunque el objetivo ya se haya editado.
 """
 
 import streamlit as st

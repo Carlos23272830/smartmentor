@@ -19,7 +19,7 @@ from core.learner_flow import (
     idempotency_key,
     wait_for_job,
 )
-from core.question_flow import render_question_sheet
+from core.question_flow import SHORT_ANSWER_HINT, render_question_sheet
 from core.session import get_session
 from core.usage_events import build_event, close_view, open_view, record_once
 from services.learning import bloom_label
@@ -273,7 +273,7 @@ render_question_sheet(
     submit_label="Enviar quiz",
     notes=_notes,
     context=_context,
-    hint="Responde en 2 a 4 frases.",
+    hint=SHORT_ANSWER_HINT,
     card=True,
     notes_style="chip",
 )

@@ -21,6 +21,10 @@ from core.learner_state import AnswerSheet
 
 DONT_KNOW_LABEL = "No lo sé"
 SHORT_ANSWER_LIMIT = 500
+# Consigna de la respuesta corta. Antes decía «Responde en 2 a 4 frases», que contradecía las
+# preguntas que piden varias partes (p. ej. un diseño en 3 partes de la final, B-039). El límite
+# de caracteres ya lo muestra el contador del campo; la consigna no fija un número de frases.
+SHORT_ANSWER_HINT = "Responde todo lo que pide la pregunta, de forma breve."
 
 NotesStyle = Literal["caption", "chip", "notice"]
 """Cómo se dibujan las notas: texto pequeño (diagnóstico), chip gris en la tarjeta (quiz y final,

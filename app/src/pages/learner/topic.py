@@ -3,6 +3,10 @@
 El video y la explicación se ven antes del quiz y no durante él. «Empezar quiz» crea el intento
 (`POST …/steps/{id}/attempts`): la API responde con el intento o, si hay que generar preguntas
 nuevas, con un trabajo de IA (U1b). Los intentos restantes salen de la API.
+
+Un tema aprobado u omitido llega en modo repaso (`mode: "review"`, B-025): se ve la explicación y
+el video con la etiqueta «Repaso» y sin la tarjeta del quiz. Se abre desde E5 o desde «Repasar
+tema» de E9.
 """
 
 from datetime import datetime
@@ -41,9 +45,11 @@ if step_id is None:
     st.page_link(PATH_PAGE, label="Volver a mi ruta")
     st.stop()
 
-# Un tema aprobado u omitido ya no abre intentos y la API tampoco entrega su contenido
-# (`409 STEP_NOT_AVAILABLE`). Antes se mostraba «Este tema todavía no está disponible», que no es
-# cierto, o se ofrecía un quiz que la API rechazaba (B-025).
+# Un tema aprobado u omitido ya no abre intentos: la API lo entrega en modo repaso. Una API anterior
+# al modo repaso respondía `409 STEP_NOT_AVAILABLE`; en ese caso se explica por qué (B-025).
+REVIEW_MODE = "review"
+REVIEW_LABEL = "Repaso"
+DEFAULT_CLOSED_NOTE = "Ya completaste este tema."
 CLOSED_NOTES = {
     "passed": "Ya aprobaste este tema.",
     "skipped": "Este tema se omitió porque tu diagnóstico mostró que ya lo dominas.",
@@ -73,6 +79,9 @@ except ApiError as error:
     st.stop()
 
 render_page_header(content.topic.name, breadcrumb=breadcrumb)
+reviewing = content.mode == REVIEW_MODE
+if reviewing:
+    st.badge(REVIEW_LABEL, color="blue", icon=":material/history_edu:")
 
 
 def _resources_shown(at: datetime) -> list[InteractionEvent]:
@@ -122,7 +131,12 @@ open_view(
     event_type="topic.open",
     close_type="topic.close",
     topic_id=content.topic.id,
-    payload={"screen": "E6", "step_id": content.step_id, "step_status": content.status},
+    payload={
+        "screen": "E6",
+        "step_id": content.step_id,
+        "step_status": content.status,
+        "mode": content.mode,
+    },
     extra=_resources_shown,
 )
 
@@ -199,13 +213,18 @@ def _start_quiz(step_id: int) -> None:
     st.switch_page(QUIZ_PAGE)
 
 
-with right, st.container(key="card-quiz-entry"):
-    eyebrow("QUIZ DEL TEMA")
-    if closed_note is not None:  # si la API sí entrega el contenido, se repasa sin quiz
-        st.caption(f"{closed_note} Puedes repasar la explicación y el video cuando quieras.")
+if reviewing:
+    # Repaso: sin tarjeta del quiz ni intentos nuevos (la API los rechaza con 409).
+    with right, st.container(key="card-topic-review"):
+        eyebrow(REVIEW_LABEL.upper())
+        note = CLOSED_NOTES.get(content.status or "", DEFAULT_CLOSED_NOTE)
+        st.caption(f"{note} Puedes repasar la explicación y el video cuando quieras.")
         if st.button("Volver a mi ruta", key="topic-back"):
             st.switch_page(PATH_PAGE)
-        st.stop()
+    st.stop()
+
+with right, st.container(key="card-quiz-entry"):
+    eyebrow("QUIZ DEL TEMA")
     st.markdown("**Cuando termines, presenta el quiz**")
     st.caption(f"{rules.items_per_attempt} preguntas, de opción múltiple y de respuesta corta.")
     total = attempts.max + attempts.extra_granted

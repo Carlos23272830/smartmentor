@@ -17,7 +17,7 @@ from core.learner_flow import current_enrollment, go_to_action, remember
 from core.navigation import CATALOG
 from core.session import get_session
 from core.usage_events import open_view
-from services.learning import path_rows, progress_line, step_name
+from services.learning import continue_label, path_rows, progress_line
 
 TOPIC_PAGE = "pages/learner/topic.py"
 DIAGNOSTIC_RESULT_PAGE = "pages/learner/diagnostic_result.py"
@@ -27,6 +27,8 @@ ORIGIN_LABEL = {
     "path_default": "TU OBJETIVO · DEFINIDO POR LA RUTA",
 }
 DEFAULT_ORIGIN_LABEL = "TU OBJETIVO"
+OBJECTIVE_PENDING = "objective_pending"
+OBJECTIVE_FIXED_NOTE = "El objetivo se fija al confirmar la ruta"
 
 client = get_client()
 state = get_session().learner
@@ -74,7 +76,11 @@ else:
         with st.container(key="card-objective"):
             eyebrow(ORIGIN_LABEL.get(enrollment.objective.origin or "", DEFAULT_ORIGIN_LABEL))
             st.markdown(enrollment.objective.statement)
-            if st.button("Editar objetivo", key="path-edit-objective"):
+            # La API solo acepta el objetivo en `objective_pending`; con la ruta confirmada
+            # respondería `409 INVALID_STATE_TRANSITION` (B-032, decisión del 2026-11-15).
+            if enrollment.status != OBJECTIVE_PENDING:
+                st.caption(OBJECTIVE_FIXED_NOTE)
+            elif st.button("Editar objetivo", key="path-edit-objective"):
                 state.edit_objective = True
                 st.switch_page(DIAGNOSTIC_RESULT_PAGE)
 
@@ -96,8 +102,7 @@ with st.container(key="card-final"):
         color="gray" if path.final.locked else "blue",
     )
 
-next_step = step_name(path, enrollment.next_action.step_id)
-label = f"Continuar con {next_step}" if fixed and next_step else "Continuar tema"
+label = continue_label(enrollment.next_action, path, fixed=fixed)
 if st.button(label, type="primary", key="path-continue"):
     remember(enrollment.next_action)
     go_to_action(enrollment.next_action)

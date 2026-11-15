@@ -1,8 +1,8 @@
 """Editor del objetivo (E4b): verbo de Bloom + contenido + criterio medible, con vista previa.
 
-El componente solo exige que las tres partes no estén vacías para habilitar «Guardar»; la regla de
-si el criterio es medible la aplica la API (`422 OBJECTIVE_NOT_MEASURABLE`) y la página muestra
-su mensaje.
+El componente solo exige que las tres partes no estén vacías para habilitar «Guardar». El verbo se
+elige de la lista que acepta la API (`BLOOM_ACTION_VERBS`); las reglas las aplica la API
+(`422 OBJECTIVE_NOT_MEASURABLE`, `422 INVALID_BLOOM_VERB`) y la página muestra su mensaje.
 """
 
 from dataclasses import dataclass
@@ -10,7 +10,9 @@ from dataclasses import dataclass
 import streamlit as st
 
 from components.layout import render_notice
-from components.theme import BLOOM_VERBS
+from components.theme import BLOOM_ACTION_VERBS
+
+VERB_PLACEHOLDER = "Elige un verbo"
 
 
 @dataclass(frozen=True)
@@ -51,23 +53,23 @@ def render_objective_editor(
     `topics_count` alimenta «Con este objetivo tu ruta tiene N temas».
     """
     st.caption("Redáctalo como un resultado medible: verbo de Bloom + contenido + criterio.")
-    verbs = list(BLOOM_VERBS)
+    verbs = list(BLOOM_ACTION_VERBS)
     if draft.bloom_verb and draft.bloom_verb not in verbs:
-        # La IA puede proponer un verbo fuera de la lista («Construir»): se conserva (B-020).
+        # La propuesta de la IA puede traer un verbo fuera de la lista: se conserva, y la API lo
+        # acepta solo si es el de la propuesta guardada (B-020, B-033).
         verbs.insert(0, draft.bloom_verb)
     verb = st.selectbox(
         "Verbo de Bloom",
         verbs,
         index=verbs.index(draft.bloom_verb) if draft.bloom_verb in verbs else None,
-        accept_new_options=True,
+        # Solo los verbos de la lista: la API rechaza los demás con 422 (B-033). Sin `placeholder`,
+        # Streamlit muestra el texto de ayuda en inglés (B-039).
+        placeholder=VERB_PLACEHOLDER,
         key=f"{key}-verb",
     )
-    st.caption("Recordar · Comprender · Aplicar · Analizar · Evaluar · Crear")
+    st.caption("Niveles: Recordar · Comprender · Aplicar · Analizar · Evaluar · Crear")
     content = st.text_input("Contenido", value=draft.content, key=f"{key}-content")
     criterion = st.text_input("Criterio medible", value=draft.criterion, key=f"{key}-criterion")
-    st.caption(
-        "Si el criterio no es medible, Guardar se desactiva: «Agrega cómo sabrás que lo lograste»."
-    )
     current = ObjectiveDraft(verb or "", content, criterion)
     with st.container(key=f"panel-{key}-preview"):
         st.caption("**VISTA PREVIA**")

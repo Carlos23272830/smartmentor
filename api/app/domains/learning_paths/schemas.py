@@ -293,7 +293,11 @@ class AlertResponse(BaseModel):
 
 
 class ObjectiveUpdate(RequestSchema):
-    """Objetivo en tres partes (E4b). Si falta una: `422 OBJECTIVE_NOT_MEASURABLE`."""
+    """Objetivo en tres partes (E4b).
+
+    Si falta una: `422 OBJECTIVE_NOT_MEASURABLE`. Si el verbo no está en la lista de Bloom (y no es
+    el de la propuesta guardada): `422 INVALID_BLOOM_VERB`.
+    """
 
     bloom_verb: Annotated[str, Field(max_length=60)] | None = None
     content: Annotated[str, Field(max_length=2000)] | None = None

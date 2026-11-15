@@ -152,6 +152,8 @@ class QuizRules(BaseModel):
 class StepContentResponse(BaseModel):
     step_id: int
     status: str
+    # `review`: tema aprobado u omitido; se repasa sin quiz ni intentos nuevos (B-025).
+    mode: Literal["study", "review"] = "study"
     topic: StepTopic
     explanation: dict[str, Any] | None
     personal_example: dict[str, Any] | None
