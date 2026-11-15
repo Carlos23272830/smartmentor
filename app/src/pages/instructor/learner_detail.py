@@ -77,9 +77,10 @@ if exhausted:
     with st.container(border=True, key="panel-exhausted"):
         st.badge("Intentos agotados", color="orange")
         best = f" · mejor puntaje {percent_points(step.best_score)}" if step.best_score else ""
+        # Título en el color del aviso (V-078): el naranja del tema es `warning-text`.
         st.markdown(
-            f"**{step.topic_name}** · {step.attempts_used} de {step.max_attempts} intentos "
-            f"usados{best}"
+            f":orange[**{step.topic_name}** · {step.attempts_used} de {step.max_attempts} "
+            f"intentos usados{best}]"
         )
         st.caption(
             f"Los temas que dependen de {step.topic_name} y la evaluación final quedan en "
@@ -114,10 +115,10 @@ def _grant_panel(target: int) -> None:
             st.caption(f"{detail.user.full_name} · {step.topic_name} · {used}{best}")
         else:
             st.caption(f"{detail.user.full_name} · Evaluación final")
-        attempts = st.selectbox("Intentos que se habilitan", [1, 2, 3, 4, 5], index=0, key="ld-n")
+        attempts = st.selectbox("Intentos que se habilitan", [1, 2, 3, 4, 5], index=2, key="ld-n")
         note = st.text_area("Nota para el aprendiz (opcional)", key="ld-note")
         max_attempts = step.max_attempts if step else 3
-        st.caption(
+        st.info(
             "Cada intento trae preguntas nuevas. El reinicio queda en el historial y se reporta "
             "aparte en las métricas de intentos por tema, para no mezclarlo con los "
             f"{max_attempts} intentos de la regla."
@@ -159,9 +160,14 @@ with profile_col.container(border=True, key="card-learner-profile"):
         st.markdown(_objective_text(detail))
 with levels_col.container(border=True, key="card-learner-levels"):
     st.caption("**NIVEL POR TEMA (DIAGNÓSTICO)**")
-    render_level_bars(
-        [LevelRow(t.topic_id, t.name, t.level * 100, t.classification) for t in detail.topic_levels]
-    )
+    # El contenedor con `key` deja a learner_detail.css pintar el riel gris de las barras (V-080).
+    with st.container(key="ld-level-bars"):
+        render_level_bars(
+            [
+                LevelRow(t.topic_id, t.name, t.level * 100, t.classification)
+                for t in detail.topic_levels
+            ]
+        )
 
 rows = [
     Row(
