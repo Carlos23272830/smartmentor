@@ -70,6 +70,14 @@ def test_e7b_alternative_view_card_needs_the_remedial_resource() -> None:
     assert "Reintentar con preguntas nuevas" in page_texts(without)
 
 
+def test_e7b_header_does_not_promise_the_alternative_view_without_it_b052() -> None:
+    with_card = " ".join(page_texts(_e7b(remedial=121)))
+    without = " ".join(page_texts(_e7b(remedial=None)))
+    assert "te mostramos otra forma de verlo" in with_card
+    assert "otra forma de verlo" not in without.lower()
+    assert "el próximo intento trae preguntas nuevas" in without
+
+
 # --- E9 · una sola tarjeta ----------------------------------------------------------------------
 
 

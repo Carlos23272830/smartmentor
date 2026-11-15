@@ -8,6 +8,7 @@ from support import FIXTURES_DIR
 from clients.base import ApiError
 from clients.fixtures import FixturesClient
 from clients.models import (
+    AssessmentItem,
     CourseSummary,
     Enrollment,
     LearningPathCard,
@@ -17,7 +18,7 @@ from clients.models import (
     PathSavings,
 )
 from components.formatting import approx_duration, duration, initials, percent, percent_points
-from services.assessment import rubric_view
+from services.assessment import grading_rubric_step, rubric_criteria_count, rubric_view
 from services.catalog import card_view, load_catalog, open_path
 from services.learning import continue_label, passed_next_label, progress_line, savings_label
 from services.profile import resume_values, save_description, save_resume
@@ -271,7 +272,7 @@ def test_savings_without_minutes_is_not_shown_as_zero() -> None:
     assert savings_label(path) == "1 h 20 min"
     assert "(ahorro 1 h 20 min)" in progress_line(enrollment, path)
     none = path.model_copy(update={"savings": PathSavings(skipped_topics=0, skipped_minutes=0)})
-    assert savings_label(none) == "0 min"
+    assert savings_label(none) == "—"  # B-052: nunca «0 min» falso, igual que con omitidos
 
 
 @pytest.mark.parametrize(
@@ -317,3 +318,34 @@ def test_passed_next_label_only_says_next_topic_when_there_is_one(
     action: NextAction, expected: str
 ) -> None:
     assert passed_next_label(action) == expected
+
+
+# --- B-052 · pasos de «Calificando» --------------------------------------------------------------
+
+
+def _short_item(summary: str | None) -> AssessmentItem:
+    return AssessmentItem(
+        item_id=1,
+        topic_id=1,
+        stem="Explica.",
+        item_type="short_answer",
+        rubric_summary=summary,
+    )
+
+
+def test_grading_step_uses_the_real_number_of_criteria_b052() -> None:
+    two = _short_item("Se califica con una rúbrica de 2 criterios: (1) a y (2) b.")
+    three = _short_item("Se califica con una rúbrica de 3 criterios: (1) a, (2) b y (3) c.")
+    assert rubric_criteria_count([two]) == 2
+    assert grading_rubric_step([two]) == "Aplicar la rúbrica de 2 criterios a tu respuesta corta"
+    assert grading_rubric_step([three]).startswith("Aplicar la rúbrica de 3 criterios")
+
+
+def test_grading_step_has_no_number_without_the_data_b052() -> None:
+    no_summary = _short_item(None)
+    free_text = _short_item("Se califica con una rúbrica.")
+    assert rubric_criteria_count([no_summary]) is None
+    assert grading_rubric_step([]) == "Aplicar la rúbrica a tu respuesta corta"
+    assert grading_rubric_step([free_text]) == "Aplicar la rúbrica a tu respuesta corta"
+    mixed = [_short_item("rúbrica de 2 criterios"), _short_item("rúbrica de 3 criterios")]
+    assert grading_rubric_step(mixed) == "Aplicar la rúbrica a tu respuesta corta"

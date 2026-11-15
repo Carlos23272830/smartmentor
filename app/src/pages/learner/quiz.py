@@ -16,6 +16,7 @@ from core.errors import show_action_error
 from core.learner_flow import (
     JobScreen,
     current_enrollment,
+    grading_screen,
     idempotency_key,
     wait_for_job,
 )
@@ -76,17 +77,13 @@ def _regrade() -> None:
 
 
 if state.quiz_job_id and state.quiz_job_kind == "grade":
-    grading_screen = JobScreen(
+    grading = grading_screen(
+        client,
         key="quiz-grade",
-        title="Calificando tu respuesta corta",
-        steps=(
-            "Calificar las preguntas de opción múltiple",
-            "Aplicar la rúbrica de 3 criterios a tu respuesta corta",
-            "Preparar tu retroalimentación",
-        ),
+        attempt_id=state.attempt_id,
         error_message="No pudimos calificar tu respuesta corta. Tus respuestas están guardadas.",
     )
-    graded_job = wait_for_job(client, state.quiz_job_id, grading_screen, on_retry=_regrade)
+    graded_job = wait_for_job(client, state.quiz_job_id, grading, on_retry=_regrade)
     if graded_job is None:
         st.stop()
     state.quiz_job_id = None

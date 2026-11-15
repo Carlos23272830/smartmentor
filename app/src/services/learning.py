@@ -106,16 +106,15 @@ def path_rows(path: PathDetail, *, fixed: bool) -> list[PathRow]:
 
 
 def savings_label(path: PathDetail) -> str:
-    """Tiempo ahorrado por los temas omitidos, o «—» si la API no lo conoce.
+    """Tiempo ahorrado por los temas omitidos, o «—» si no hay minutos que mostrar.
 
     La API suma `estimated_minutes` de los temas omitidos; el syllabus extraído con IA suele dejar
-    ese dato en `null`, y entonces la suma da 0 aunque haya temas omitidos. «0 min» parecería que
-    omitir no ahorró nada (B-039).
+    ese dato en `null`, y entonces la suma da 0 aunque haya temas omitidos (B-039). Con una
+    inscripción nueva (nada omitido) también llega 0. En ambos casos no hay dato de minutos:
+    «0 min» parecería un dato real, así que se muestra «—» (B-052).
     """
-    savings = path.savings
-    if savings.skipped_topics and not savings.skipped_minutes:
-        return "—"
-    return duration(savings.skipped_minutes)
+    minutes = path.savings.skipped_minutes
+    return duration(minutes) if minutes > 0 else "—"
 
 
 def progress_line(enrollment: Enrollment, path: PathDetail) -> str:

@@ -262,3 +262,39 @@ def test_e9_offline() -> None:
     at = learner_app("learner_offline", FINAL_RESULT)
     no_exception(at)
     assert at.error
+
+
+# --- B-052 · número de criterios en U1d ----------------------------------------------------------
+
+
+def _grading_final(summary: str | None) -> AppTest:
+    at = learner_app("learner_final_ready", FINAL, script=LearnerScript({**GRADE}))
+    client = client_of(at)
+    original = client.get_attempt
+
+    def attempt(attempt_id: int) -> Attempt:
+        doc = original(attempt_id)
+        last = doc.items[-1].model_copy(
+            update={"item_type": "short_answer", "options": [], "rubric_summary": summary}
+        )
+        return doc.model_copy(update={"items": [*doc.items[:-1], last]})
+
+    client.get_attempt = attempt  # type: ignore[method-assign]
+    for step in range(8):
+        at.radio[0].set_value(at.radio[0].options[0]).run()
+        button(at, "Siguiente" if step < 7 else "Enviar evaluación").click().run()
+    return at
+
+
+def test_u1d_names_the_real_number_of_criteria_b052() -> None:
+    at = _grading_final("Se califica con una rúbrica de 2 criterios: (1) a y (2) b.")
+    no_exception(at)
+    texts = page_texts(at)
+    assert "Calificando tu respuesta corta" in texts
+    assert "En curso · Aplicar la rúbrica de 2 criterios a tu respuesta corta" in texts
+
+
+def test_u1d_without_the_criteria_count_has_no_number_b052() -> None:
+    at = _grading_final(None)
+    no_exception(at)
+    assert "En curso · Aplicar la rúbrica a tu respuesta corta" in page_texts(at)

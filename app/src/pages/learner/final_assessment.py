@@ -25,6 +25,7 @@ from core.errors import show_action_error
 from core.learner_flow import (
     JobScreen,
     current_enrollment,
+    grading_screen,
     idempotency_key,
     redirect_unless,
     wait_for_job,
@@ -40,17 +41,6 @@ BANNER = (
     "Evaluación final · Sin ayuda de IA ni apuntes · Preguntas generadas con IA a partir de los "
     "resultados de aprendizaje y revisadas por tu instructor"
 )
-GRADING = JobScreen(
-    key="final-grade",
-    title="Calificando tu respuesta corta",
-    steps=(
-        "Calificar las preguntas de opción múltiple",
-        "Aplicar la rúbrica de 3 criterios a tu respuesta corta",
-        "Preparar tu retroalimentación",
-    ),
-    error_message="No pudimos calificar tu respuesta corta. Tus respuestas están guardadas.",
-)
-
 PREPARE = JobScreen(
     key="final-prepare",
     title="Preparando preguntas nuevas para tu evaluación final",
@@ -113,7 +103,13 @@ if state.quiz_job_id and state.quiz_job_kind == "final-prepare":
 # --- U1d · Calificando la evaluación final -------------------------------------------------------
 
 if state.quiz_job_id and state.quiz_job_kind == "final-grade":
-    job = wait_for_job(client, state.quiz_job_id, GRADING, on_retry=_regrade)
+    grading = grading_screen(
+        client,
+        key="final-grade",
+        attempt_id=action.attempt_id or state.pending_final_attempt_id or state.final_attempt_id,
+        error_message="No pudimos calificar tu respuesta corta. Tus respuestas están guardadas.",
+    )
+    job = wait_for_job(client, state.quiz_job_id, grading, on_retry=_regrade)
     if job is None:
         st.stop()
     state.quiz_job_id = state.pending_final_attempt_id = None

@@ -382,7 +382,10 @@ def test_e5_confirmed_path_does_not_offer_to_edit_the_objective() -> None:
     at = learner_app("learner_path", PATH)
     no_exception(at)
     assert "path-edit-objective" not in {b.key for b in at.button}
-    assert "El objetivo se fija al confirmar la ruta" in page_texts(at)
+    texts = page_texts(at)
+    assert "El objetivo quedó fijado al confirmar tu ruta" in texts
+    assert "El objetivo se fija al confirmar la ruta" not in texts
+    assert "TU OBJETIVO · PROPUESTO CON IA Y CONFIRMADO POR TI" in texts
 
 
 def test_e5_pending_objective_still_opens_the_editor() -> None:
@@ -390,7 +393,12 @@ def test_e5_pending_objective_still_opens_the_editor() -> None:
     for enrollment in client_of(at)._enrollments:
         enrollment.status = "objective_pending"
     at.run()
-    assert "El objetivo se fija al confirmar la ruta" not in page_texts(at)
+    texts = page_texts(at)
+    # B-051: sin confirmar la ruta no se dice «confirmado por ti» ni que ya quedó fijado.
+    assert "El objetivo se fija al confirmar la ruta" in texts
+    assert "El objetivo quedó fijado al confirmar tu ruta" not in texts
+    assert "TU OBJETIVO · PROPUESTO CON IA, SIN CONFIRMAR" in texts
+    assert not any("CONFIRMADO POR TI" in t for t in texts)
     button(at, "Editar objetivo").click().run()
     no_exception(at)
     assert button(at, "Guardar objetivo")
