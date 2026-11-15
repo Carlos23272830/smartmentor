@@ -98,8 +98,9 @@ with st.expander("Verificación pública"):
         f"Emitido por **{assertion.badge.issuer.name}**"
         + (f" el {short_date(badge.issued_at.date())}." if badge.issued_at else ".")
     )
-    if assertion.evidence.narrative:
-        st.caption(assertion.evidence.narrative)
+    for evidence in assertion.evidence:
+        if evidence.narrative:
+            st.caption(evidence.narrative)
     st.caption(
         "Tu correo no aparece en el badge: la API publica solo un hash con sal "
         f"({'protegido' if assertion.recipient.hashed else 'en claro'})."

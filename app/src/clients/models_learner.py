@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Any, Protocol
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from clients.models import ApiModel
 
@@ -47,7 +47,18 @@ class BadgeAssertion(ApiModel):
     recipient: ObRecipient
     badge: ObBadgeClass
     issued_on: str = Field(alias="issuedOn")
-    evidence: ObEvidence
+    # La API manda una lista (`"evidence": [{"narrative": …}]`); Open Badges 2.0 también admite un
+    # solo objeto, así que se acepta y se envuelve en una lista (B-034).
+    evidence: list[ObEvidence] = Field(default_factory=list)
+
+    @field_validator("evidence", mode="before")
+    @classmethod
+    def _evidence_as_list(cls, value: Any) -> Any:
+        if value is None:
+            return []
+        if isinstance(value, dict):
+            return [value]
+        return value
 
 
 class StudyGoals(ApiModel):

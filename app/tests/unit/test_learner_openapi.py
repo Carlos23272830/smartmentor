@@ -19,6 +19,7 @@ from support import FIXTURES_DIR, REPO_ROOT
 
 from clients import models
 from clients.models import Page
+from clients.models_learner import BadgeAssertion
 
 OPENAPI = json.loads((REPO_ROOT / "docs" / "contracts" / "openapi-api.json").read_text("utf-8"))
 
@@ -45,8 +46,10 @@ SCHEMAS: dict[str, tuple[str, bool]] = {
     "goals": ("StudyGoalsResponse", False),
     "after-job": ("NextActionResponse", False),
 }
-# `badge.v1` (Open Badges) lo arma la IA: la API lo sirve como objeto libre.
+# `badge.v1` (Open Badges) no tiene esquema propio: la API lo sirve como objeto libre y se valida
+# contra la respuesta de su ruta (`ASSERTION_PATH`).
 WITHOUT_SCHEMA = {"assertion"}
+ASSERTION_PATH = "/api/v1/badges/{public_id}/assertion.json"
 FILES = sorted([*FIXTURES_DIR.glob("*.json"), *(FIXTURES_DIR / "learner").glob("*.json")])
 
 
@@ -56,9 +59,17 @@ def _validator(name: str, *, is_list: bool) -> Draft202012Validator:
     return Draft202012Validator({**schema, "components": OPENAPI["components"]})
 
 
+def _response_validator(path: str) -> Draft202012Validator:
+    """Esquema en línea de la respuesta 200 de una ruta (para las que no tienen modelo propio)."""
+    schema = OPENAPI["paths"][path]["get"]["responses"]["200"]["content"]["application/json"]
+    return Draft202012Validator({**schema["schema"], "components": OPENAPI["components"]})
+
+
 @pytest.mark.parametrize("path", FILES, ids=lambda p: f"{p.parent.name}/{p.stem}")
 def test_fixture_has_the_shape_of_the_api(path: Path) -> None:
     if path.stem in WITHOUT_SCHEMA:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        assert not list(_response_validator(ASSERTION_PATH).iter_errors(data))
         return
     prefixes = [prefix for prefix in SCHEMAS if path.stem.startswith(prefix)]
     assert prefixes, f"{path.name}: sin esquema del OpenAPI"
@@ -148,6 +159,37 @@ REAL_JOB: dict[str, Any] = {
     "error": None,
 }
 
+# Lo que arma `build_assertion` en la API (`api/app/domains/assessments/badges.py`) y sirve
+# `with_base_url`: la evidencia es una **lista** de objetos con `narrative` (B-034).
+REAL_ASSERTION: dict[str, Any] = {
+    "@context": "https://w3id.org/openbadges/v2",
+    "type": "Assertion",
+    "id": "http://localhost:8000/api/v1/badges/6f1c2a8e-0000-4000-8000-000000000001/assertion.json",
+    "recipient": {"type": "email", "hashed": True, "salt": "a1b2c3d4", "identity": "sha256$ab12"},
+    "badge": {
+        "type": "BadgeClass",
+        "id": "http://localhost:8000/api/v1/badges/6f1c2a8e-0000-4000-8000-000000000001"
+        "/assertion.json#badge",
+        "name": "Extraccion Y Almacenamiento De Datos",
+        "description": "Completó la ruta de aprendizaje «Ruta 2026-2».",
+        "image": "http://localhost:8000/api/v1/badges/6f1c2a8e-0000-4000-8000-000000000001"
+        "/image.png",
+        "criteria": {"narrative": "Completar todos los temas de la ruta…"},
+        "issuer": {
+            "type": "Profile",
+            "id": "http://localhost:8501#issuer",
+            "name": "SmartMentor",
+            "url": "http://localhost:8501",
+        },
+        "tags": ["Arquitecturas"],
+    },
+    "issuedOn": "2026-11-14T22:10:00Z",
+    "verification": {"type": "hosted"},
+    "evidence": [
+        {"narrative": "Aprobó la evaluación final de la ruta «Ruta 2026-2» con 90 % (umbral 80 %)."}
+    ],
+}
+
 REAL_RESPONSES: list[tuple[str, Any, dict[str, Any] | list[Any]]] = [
     ("ProfileResponse", models.Profile, REAL_PROFILE),
     ("Page_LearningPathCard_", Page[models.LearningPathCard], REAL_CATALOG),
@@ -167,3 +209,25 @@ def test_real_api_response_is_readable_by_the_interface(
 
 def test_null_recalculated_ids_read_as_empty() -> None:
     assert models.Profile.model_validate(REAL_PROFILE).recalculated_enrollment_ids == []
+
+
+def test_real_badge_assertion_is_readable_by_the_interface() -> None:
+    """B-034: E10 y E12 fallaban con `ValidationError` porque la app esperaba un objeto."""
+    assert not list(_response_validator(ASSERTION_PATH).iter_errors(REAL_ASSERTION))
+    assertion = BadgeAssertion.model_validate(REAL_ASSERTION)
+    assert [e.narrative for e in assertion.evidence] == [REAL_ASSERTION["evidence"][0]["narrative"]]
+
+
+def test_fixture_assertion_has_evidence_as_a_list_like_the_api() -> None:
+    data = json.loads((FIXTURES_DIR / "learner" / "assertion.json").read_text(encoding="utf-8"))
+    assert isinstance(data["evidence"], list)
+    assert data.keys() == REAL_ASSERTION.keys()
+    assert data["badge"].keys() == REAL_ASSERTION["badge"].keys()
+
+
+@pytest.mark.parametrize("evidence", [{"narrative": "Uno."}, None])
+def test_assertion_tolerates_a_single_or_missing_evidence(evidence: Any) -> None:
+    """Open Badges 2.0 admite un solo objeto de evidencia; se lee como lista de uno."""
+    data = {**REAL_ASSERTION, "evidence": evidence}
+    expected = ["Uno."] if evidence else []
+    assert [e.narrative for e in BadgeAssertion.model_validate(data).evidence] == expected

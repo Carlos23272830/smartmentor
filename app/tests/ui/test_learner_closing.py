@@ -37,6 +37,8 @@ def test_e10_public_verification_and_share() -> None:
     button(at, "Compartir").click().run()
     assert at.code
     assert "Verificación pública" in [e.label for e in at.expander]
+    # La evidencia llega como lista (B-034) y su narrativa se muestra.
+    assert any("con 88 % (umbral 80 %)" in text for text in page_texts(at))
 
 
 def test_e10_survey_card_opens_the_survey() -> None:
