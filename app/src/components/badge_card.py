@@ -11,10 +11,18 @@ def render_badge_hero(title: str, subtitle: str) -> None:
         st.caption(subtitle, width="content")
 
 
-def render_badge_slot(name: str, caption: str, *, obtained: bool, key: str) -> None:
-    """Casilla de logro: obtenida (con su fecha) o bloqueada (con lo que falta), con texto."""
+def render_badge_slot(
+    name: str, caption: str, *, obtained: bool, key: str, action_label: str | None = None
+) -> bool:
+    """Casilla de logro: obtenida (con su fecha) o bloqueada (con lo que falta).
+
+    El estado va una sola vez, en el texto de `caption` y en el ícono (V-052). Con `action_label`
+    se dibuja dentro de la tarjeta un botón («Ver badge») y se devuelve si se pulsó.
+    """
     with st.container(key=f"card-badge-{key}", border=False):
         icon = ":material/workspace_premium:" if obtained else ":material/lock:"
         st.markdown(f"#### {icon} {name}")
         st.caption(caption)
-        st.badge("Obtenida" if obtained else "Bloqueada", color="green" if obtained else "gray")
+        if action_label is None:
+            return False
+        return st.button(action_label, key=f"view-badge-{key}")

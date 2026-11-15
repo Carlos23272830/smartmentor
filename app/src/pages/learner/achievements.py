@@ -29,23 +29,28 @@ except ApiError as error:
     st.stop()
 
 names = {badge.learning_path_name for badge in badges}
-for badge in badges:
-    with st.container(key=f"achievement-{badge.public_id}"):
-        render_badge_slot(
-            badge.learning_path_name,
-            f"Obtenido {short_date(badge.issued_at.date())}" if badge.issued_at else "Obtenido",
-            obtained=True,
-            key=badge.public_id,
-        )
-        if st.button("Ver badge", key=f"view-badge-{badge.public_id}"):
-            session.selected_enrollment_id = badge.enrollment_id
-            st.switch_page(BADGE_PAGE)
-
-for card in catalog.items:
-    if card.name not in names:
-        render_badge_slot(
-            card.name,
-            "Bloqueado · inscríbete para obtenerlo",
-            obtained=False,
-            key=f"path-{card.id}",
-        )
+# Rejilla de dos columnas, como en Figma: primero los badges obtenidos y luego los bloqueados.
+slots: list[tuple[str, str, bool, str, str | None, int | None]] = [
+    (
+        badge.learning_path_name,
+        f"Obtenido {short_date(badge.issued_at.date())}" if badge.issued_at else "Obtenido",
+        True,
+        badge.public_id,
+        "Ver badge",
+        badge.enrollment_id,
+    )
+    for badge in badges
+]
+slots += [
+    (card.name, "Bloqueado · inscríbete para obtenerlo", False, f"path-{card.id}", None, None)
+    for card in catalog.items
+    if card.name not in names
+]
+for start in range(0, len(slots), 2):
+    for column, (name, caption, obtained, key, action, enrollment_id) in zip(
+        st.columns(2), slots[start : start + 2], strict=False
+    ):
+        with column:
+            if render_badge_slot(name, caption, obtained=obtained, key=key, action_label=action):
+                session.selected_enrollment_id = enrollment_id
+                st.switch_page(BADGE_PAGE)

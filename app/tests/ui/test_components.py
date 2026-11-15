@@ -24,7 +24,9 @@ def badges(at: AppTest) -> set[str]:
 
 
 def texts(at: AppTest) -> list[str]:
-    values = [plain(e.value) for e in [*at.markdown, *at.caption, *at.subheader, *at.error]]
+    values = [
+        plain(e.value) for e in [*at.markdown, *at.caption, *at.subheader, *at.error, *at.success]
+    ]
     return values + [plain(b.label) for b in at.button]
 
 
@@ -101,7 +103,7 @@ def _objective() -> None:
 def test_objective_editor_disables_save_without_criterion() -> None:
     at = run(_objective)
     assert at.button(key="e4b-save").disabled
-    assert "Con este objetivo tu ruta tiene 4 temas." in texts(at)
+    assert any("Con este objetivo tu ruta tiene 4 temas." in t for t in texts(at))
     assert any("El 80 % para obtener el badge" in t for t in texts(at))
 
 
@@ -477,11 +479,14 @@ def _badges() -> None:
 
 
 def test_badge_slots_say_obtained_or_locked() -> None:
+    """V-052: el estado va una sola vez (texto e ícono), sin insignia repetida."""
     at = run(_badges)
-    assert badges(at) == {
-        "Obtenida",
-        "Bloqueada",
-    }
+    assert badges(at) == set()
+    assert [e.value for e in at.caption][-2:] == ["Obtenida el 7 nov 2026", "Aprueba los 5 temas"]
+    assert [e.value for e in at.markdown][-2:] == [
+        "#### :material/workspace_premium: Fundamentos de ML",
+        "#### :material/lock: Estadística",
+    ]
     assert at.header[0].value == "¡Ruta completada!"
 
 
