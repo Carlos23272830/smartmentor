@@ -1,5 +1,6 @@
 """E10, E11, E11b, E12, E13a y E13b: badge, progreso, autorizaciones, logros y encuesta."""
 
+import pytest
 from apptest import button, page_texts, session_of
 from learner_support import (
     ACHIEVEMENTS,
@@ -17,6 +18,13 @@ from streamlit.testing.v1 import AppTest
 
 from clients.base import ApiError
 from clients.models_learner import StudyGoals
+from core import features
+
+
+@pytest.fixture
+def retention_on(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Enciende el interruptor de la prueba de retención (B-042) para las pruebas que la usan."""
+    monkeypatch.setattr(features, "RETENTION_AVAILABLE", True)
 
 
 def test_e10_follows_figma() -> None:
@@ -299,6 +307,7 @@ def test_e13_skip_returns_to_the_badge() -> None:
 # --- E14 (P2) ------------------------------------------------------------------------------------
 
 
+@pytest.mark.usefixtures("retention_on")
 def test_e14_is_only_offered_when_the_route_is_completed() -> None:
     at = learner_app("learner_path", RETENTION)
     no_exception(at)
@@ -306,6 +315,7 @@ def test_e14_is_only_offered_when_the_route_is_completed() -> None:
     assert "Prueba de retención" not in page_texts(at)
 
 
+@pytest.mark.usefixtures("retention_on")
 def test_e14_shows_the_retention_questions() -> None:
     at = learner_app("learner_badge", RETENTION)
     no_exception(at)
@@ -322,6 +332,7 @@ def test_e14_shows_the_retention_questions() -> None:
     assert skip.key == "retention-skip"
 
 
+@pytest.mark.usefixtures("retention_on")
 def test_e11_offers_the_retention_test_after_completing_the_route() -> None:
     at = learner_app("learner_badge", PROGRESS)
     assert "Prueba de retención disponible · opcional" in page_texts(at)
@@ -330,9 +341,42 @@ def test_e11_offers_the_retention_test_after_completing_the_route() -> None:
     assert "Prueba de retención" in page_texts(at)
 
 
+# --- B-042: interruptor apagado (la API aún rechaza la retención) --------------------------------
+
+
+def test_b042_e11_hides_the_retention_card_while_the_switch_is_off() -> None:
+    at = learner_app("learner_badge", PROGRESS)
+    no_exception(at)
+    assert "Prueba de retención disponible · opcional" not in page_texts(at)
+    assert "Empezar prueba" not in page_texts(at)
+    for key in ("card-retention", "progress-retention"):
+        with pytest.raises(KeyError):
+            at.get_by_key(key)
+
+
+def test_b042_e14_by_url_only_warns_and_never_calls_the_api() -> None:
+    at = learner_app("learner_badge", RETENTION, run=False)
+    client = client_of(at)
+    calls: list[str] = []
+
+    def spy(*_: object, **__: object) -> object:
+        calls.append("create_attempt")
+        raise AssertionError("no debe llamar a la API")
+
+    client.create_attempt = spy  # type: ignore[method-assign]
+    at.run()
+    no_exception(at)
+    assert [e.value for e in at.info] == ["La prueba de retención todavía no está disponible."]
+    assert "Volver a Mi progreso" in page_texts(at)
+    with pytest.raises(KeyError):
+        at.get_by_key("retention-chips")
+    assert calls == []
+
+
 # --- B-037: varias rutas -------------------------------------------------------------------------
 
 
+@pytest.mark.usefixtures("retention_on")
 def test_b037_e11_defaults_to_the_most_recent_route_in_progress() -> None:
     at = learner_app("learner_multi_path", PROGRESS)
     no_exception(at)
@@ -344,6 +388,7 @@ def test_b037_e11_defaults_to_the_most_recent_route_in_progress() -> None:
     assert "Prueba de retención disponible · opcional" not in texts
 
 
+@pytest.mark.usefixtures("retention_on")
 def test_b037_e11_selector_changes_the_cards() -> None:
     at = learner_app("learner_multi_path", PROGRESS)
     at.selectbox[0].set_value(8).run()
@@ -373,6 +418,7 @@ def test_b037_e12_enrolled_routes_are_not_shown_as_not_enrolled() -> None:
     assert texts.count("Bloqueado · inscríbete para obtenerlo") == 3
 
 
+@pytest.mark.usefixtures("retention_on")
 def test_b037_e14_is_enabled_by_any_completed_route() -> None:
     at = learner_app("learner_multi_path", RETENTION)
     no_exception(at)
@@ -381,6 +427,7 @@ def test_b037_e14_is_enabled_by_any_completed_route() -> None:
     assert session_of(at).selected_enrollment_id == 7
 
 
+@pytest.mark.usefixtures("retention_on")
 def test_b037_e14_stays_closed_when_no_route_is_completed() -> None:
     at = learner_app("learner_path", RETENTION)
     assert at.info
