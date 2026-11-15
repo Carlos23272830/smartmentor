@@ -315,7 +315,8 @@ def test_e14_shows_the_retention_questions() -> None:
     assert any(t.startswith("Pregunta 1 de 5") for t in texts)
     assert at.get_by_key("retention-chips")
     assert at.get_by_key("card-quiz-retention")
-    assert any(i.value.startswith("Preguntas equivalentes") for i in at.info)
+    assert at.get_by_key("notice-info")  # render_notice(tone="info"): caja azul suave
+    assert any(t.startswith("Preguntas equivalentes") for t in texts)
     assert not at.progress
     skip = button(at, "Ahora no")
     assert skip.key == "retention-skip"
