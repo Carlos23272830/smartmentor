@@ -193,7 +193,7 @@ Campos sin valor van en `null`. `screen` es una ayuda para la app (código de Fi
 | `GET /badges/{public_id}/image.png` | público | — | `200 image/png` | `404` | E10 |
 | `POST /me/video-feedback` | learner | `{"video_candidate_id": 9, "enrollment_id": 7, "rating": "useful", "comment": null, "watched_fully": true}` | `201` | `404` | E6 |
 | `POST /me/enrollments/{id}/surveys/final` | learner | `{"likert": {"q1": 5}, "sus_items": [4,2,5,1,4,2,5,1,4,2], "comment": "…"}` | `201 {sus_score: 85.0}` | `409 SURVEY_ALREADY_SUBMITTED`, `422` | E13a, E13b |
-| `POST /me/events` | learner | `{"events": [{"enrollment_id", "event_type", "topic_id", "occurred_at", "payload"}]}` (≤ 100) | `202 {accepted: n}` | `422` | — |
+| `POST /me/events` | learner | `{"events": [{"enrollment_id", "event_type", "topic_id", "occurred_at", "payload"}]}` (≤ 100; tipos en [4.2](#42-eventos-de-uso-post-meevents)) | `202 {accepted: n}` | `404 ENROLLMENT_NOT_FOUND`, `422` | — |
 | `GET /me/enrollments/{id}/steps/{step_id}/attempts` | learner | — | `200 [AttemptHistoryItem]` (intentos calificados del tema) | `404 ENROLLMENT_NOT_FOUND`, `STEP_NOT_FOUND` | E7c |
 | `GET /me/enrollments/{id}/final/attempts` | learner | — | `200 [AttemptHistoryItem]` (intentos calificados de la final) | `404 ENROLLMENT_NOT_FOUND` | E9, E9c |
 | `GET /me/study-goals` | learner | — | `200 StudyGoals`; `404 NOT_FOUND` si aún no hay metas | — | E11 (P2) |
@@ -290,6 +290,32 @@ Los ítems de `Diagnostic` y `Attempt` traen además `topic_name`, `bloom_level`
 ```
 
 `score` del intento = promedio de los `score` de sus respuestas (0 a 100). Una respuesta corta es correcta si `criteria_met / criteria_total ≥ learning_paths.short_answer_min_ratio` (2/3 por defecto, DEF-21).
+
+### 4.2 Eventos de uso (`POST /me/events`)
+
+La app registra el uso para el tiempo en tarea (m27, [`metrics.md`](../evaluation/metrics.md#tiempo-en-tarea-m27)) en `interaction_events` (solo inserción). La API valida la forma (`event_type` con el patrón `^[a-z][a-z0-9_.]*$`, hasta 60 caracteres; `topic_id` opcional; `payload` objeto libre) y que cada `enrollment_id` sea del usuario; no valida el tipo ni el `payload`. Los tipos y campos los fija la app (`app/src/core/usage_events.py`):
+
+| Pantalla | `event_type` | `topic_id` | `payload` |
+| --- | --- | --- | --- |
+| E5, E5b | `path.view` | — | `screen`, `steps_total` |
+| E5, E5b | `path.close` | — | lo de `path.view` + cierre |
+| E6 | `topic.open` | tema | `screen`, `step_id`, `step_status` |
+| E6 | `resource.view` | tema | `screen`, `step_id` y `resource`: `explanation` con `resource_id`, o `video` con `video_candidate_id` y `duration_seconds`. Sale con la misma hora que `topic.open` |
+| E6 | `topic.close` | tema | lo de `topic.open` + cierre |
+| E6b, E6c | `quiz.start` | tema | `attempt_id`, `step_id`, `attempt_number`, `screen` |
+| E6b, E6c | `quiz.pause` | tema | lo de `quiz.start` + cierre |
+| E6b, E6c | `quiz.submit` | tema | lo de `quiz.start` + cierre + `items`, `grading` (`done` o `job`) |
+| E8 | `final.start`, `final.pause`, `final.submit` | — | igual que el quiz, sin `step_id` |
+
+Reglas:
+
+- Todo evento lleva `enrollment_id` y `occurred_at` en UTC. La pantalla abre una **visita** y manda su evento de apertura una sola vez, aunque Streamlit vuelva a ejecutar la página.
+- **Cierre**: `payload.seconds` (entero, el tramo en esa pantalla) y `payload.started_at` (inicio de la visita, ISO 8601). En `path.view` y `topic.open`, `started_at` es igual al `occurred_at` de la apertura. Se cierra al pasar a otra página y, en el quiz y la final, también al entregar. Salir del quiz o de la final sin entregar manda `*.pause`; volver abre otra visita sin repetir `*.start` (que sale una vez por intento).
+- Un tramo de más de 3600 s se recorta a 3600 y lleva `capped: true`.
+- Los tramos no se solapan: sumar `payload.seconds` por `topic_id` o por `enrollment_id` da el tiempo total. `resource.view` no es un tramo.
+- Si la API no responde (`503`), la app guarda el lote en la sesión y lo reenvía con el siguiente; un fallo nunca bloquea la pantalla.
+
+Limitaciones conocidas: si se cierra la pestaña la visita queda abierta (apertura sin cierre); no se mide el tiempo inactivo dentro de un tramo; `resource.view` significa «mostrado», no «reproducido»; el endpoint no es idempotente, así que un reenvío puede duplicar eventos. El cálculo de m27 imputa las visitas abiertas y cuenta una vez los cierres repetidos.
 
 ## 5. Rutas del instructor
 
