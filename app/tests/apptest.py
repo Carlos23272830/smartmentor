@@ -127,6 +127,11 @@ def _blocks(block: Block) -> Iterator[Any]:
             yield from _blocks(child)
 
 
+def container_keys(at: AppTest) -> list[str]:
+    """`key` de los contenedores de `st.container(key=...)`, también los de una ventana modal."""
+    return [child.key for child in _blocks(at._tree) if isinstance(child, Block) and child.key]
+
+
 def _role_container(at: AppTest) -> Block | None:
     """Contenedor `role-<rol>` de `main.py` (barra superior + página); None sin sesión."""
     for child in at.main.children.values():

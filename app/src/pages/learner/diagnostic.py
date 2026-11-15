@@ -9,7 +9,7 @@ import streamlit as st
 
 from clients.base import ApiError
 from clients.models import Diagnostic, LearnerAnswer
-from components.layout import eyebrow, render_page_header
+from components.layout import eyebrow
 from core.container import get_client
 from core.errors import show_action_error
 from core.learner_flow import (
@@ -108,7 +108,7 @@ def _sheet() -> None:
         f"PASO 3 DE 4 · DIAGNÓSTICO · {enrollment.learning_path.name.upper()} · "
         f"Pregunta {position} de {len(diagnostic.items)}"
     )
-    render_page_header("Diagnóstico")
+    # Sin título «Diagnóstico»: en Figma el antetítulo va seguido de la barra y la pregunta.
     render_question_sheet(
         diagnostic.items,
         state.sheet,

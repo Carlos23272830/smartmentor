@@ -53,6 +53,7 @@ render_stat_tiles(
         (savings_label(path), "Ahorrados"),
     ],
     key="badge",
+    single_card=True,
 )
 st.caption("Formato Open Badges · imagen PNG + archivo JSON descargables")
 
@@ -72,13 +73,6 @@ with st.container(horizontal=True):
         mime="image/png",
         type="primary",
         key="badge-download",
-    )
-    st.download_button(
-        "Descargar JSON",
-        data=json.dumps(assertion.model_dump(by_alias=True), ensure_ascii=False, indent=2),
-        file_name=f"badge-{badge.public_id}.json",
-        mime="application/json",
-        key="badge-download-json",
     )
     if st.button("Ver mis logros", key="badge-achievements"):
         st.switch_page(ACHIEVEMENTS_PAGE)
@@ -105,6 +99,14 @@ with st.expander("Verificación pública"):
     for evidence in assertion.evidence:
         if evidence.narrative:
             st.caption(evidence.narrative)
+    # Dentro del expansor (decisión del dueño, V-049): Figma no dibuja este botón.
+    st.download_button(
+        "Descargar JSON",
+        data=json.dumps(assertion.model_dump(by_alias=True), ensure_ascii=False, indent=2),
+        file_name=f"badge-{badge.public_id}.json",
+        mime="application/json",
+        key="badge-download-json",
+    )
     st.caption(
         "Tu correo no aparece en el badge: la API publica solo un hash con sal "
         f"({'protegido' if assertion.recipient.hashed else 'en claro'})."

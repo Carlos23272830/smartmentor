@@ -61,3 +61,8 @@
 [class*="st-key-card-rubric-"] p {
   color: var(--text-primary);
 }
+
+/* «No lo sé» en la fila de navegación (E3): enlace azul, como en Figma. */
+[class*="st-key-action-row-nav-"] [class*="-dont-know-"] button {
+  color: var(--learner-accent);
+}

@@ -5,3 +5,10 @@
   border-radius: var(--radius-card);
   padding: var(--space-14);
 }
+
+/* E10: las tres cifras del badge van juntas en una tarjeta compacta y centrada (V-049). */
+.st-key-card-badge-stats {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-16);
+}
