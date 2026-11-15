@@ -10,7 +10,7 @@ import streamlit as st
 
 from clients.base import ApiError
 from clients.models import AssessmentItem, Attempt, AttemptResult, LearnerAnswer
-from components.layout import render_page_header
+from components.layout import render_notice, render_page_header
 from core.container import get_client
 from core.errors import show_action_error
 from core.learner_flow import (
@@ -214,7 +214,7 @@ open_view(
     payload=quiz_payload,
 )
 
-st.caption(
+render_notice(
     f"Quiz del tema · Sin ayuda de IA ni apuntes. Apruebas con "
     f"{round(content.quiz_rules.pass_threshold)} %. Intento {attempt_number} de {total_attempts}."
 )
@@ -265,4 +265,6 @@ render_question_sheet(
     notes=_notes,
     context=_context,
     hint="Responde en 2 a 4 frases.",
+    card=True,
+    notes_style="chip",
 )
