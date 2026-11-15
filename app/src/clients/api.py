@@ -166,11 +166,10 @@ class ApiClient(LearnerApiOps, StaffApiOps):
         if idempotency_key is not None:
             headers["Idempotency-Key"] = idempotency_key
         try:
-            response = self._http.post(
-                f"{API_PREFIX}{path}", files=files, data=data, headers=headers
-            )
             with loading_indicator():
-                response = self._http.post(f"{API_PREFIX}{path}", files=files, headers=headers)
+                response = self._http.post(
+                    f"{API_PREFIX}{path}", files=files, data=data, headers=headers
+                )
         except httpx.HTTPError as error:
             raise ApiError(503, "SERVICE_UNAVAILABLE", "API unreachable") from error
         if response.is_error:
