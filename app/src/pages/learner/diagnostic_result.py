@@ -69,10 +69,21 @@ def _save(chosen: Objective) -> None:
     go_to_action(updated.next_action)
 
 
+def _forget_editor_fields() -> None:
+    """Borra lo escrito en el editor (E4b).
+
+    E4 termina en `st.stop()` y Streamlit 1.67 conserva el estado de un widget con `key` aunque
+    no se dibuje; sin esto, al volver a editar se veía lo cancelado en vez del objetivo.
+    """
+    for suffix in ("verb", "content", "criterion"):
+        st.session_state.pop(f"objective-{suffix}", None)
+
+
 if not state.edit_objective and objective is not None:
     edit_col, confirm_col = st.columns(2)
     if edit_col.button("Editar el objetivo", key="objective-edit"):
         state.edit_objective = True
+        _forget_editor_fields()
         st.rerun()
     if confirm_col.button("Confirmar y ver mi ruta", type="primary", key="objective-confirm"):
         _save(objective)
@@ -96,10 +107,10 @@ editor = render_objective_editor(
 if editor.cancel:
     state.edit_objective = False
     st.session_state.pop("objective-use-proposal", None)
+    _forget_editor_fields()
     st.rerun()
 if editor.reset_to_proposal:
-    for suffix in ("verb", "content", "criterion"):
-        st.session_state.pop(f"objective-{suffix}", None)
+    _forget_editor_fields()
     st.session_state["objective-use-proposal"] = True
     st.rerun()
 if editor.save:
