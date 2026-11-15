@@ -199,17 +199,21 @@ render_page_header(
         "próximo intento trae preguntas nuevas."
     ),
 )
-_review()
 explanation = content.explanation
-if explanation is not None and explanation.resource_id == result.remedial_resource_id:
-    with st.container(key="card-alternate"):
-        eyebrow("OTRA FORMA DE VERLO · GENERADO CON IA")
-        st.markdown(f"**{explanation_title(explanation)}**")
-        st.markdown(explanation_text(explanation.content))
-        st.caption(source_note(explanation, alternate=True))
+review_col, alternate_col = st.columns([3, 2])
+with review_col:
+    _review()
+with alternate_col:
+    if explanation is not None and explanation.resource_id == result.remedial_resource_id:
+        with st.container(key="card-alt-view"):
+            eyebrow("OTRA FORMA DE VERLO · GENERADO CON IA")
+            st.markdown(f"**{explanation_title(explanation)}**")
+            st.markdown(explanation_text(explanation.content))
+            st.caption(source_note(explanation, alternate=True))
 with st.container(key="card-next-attempt"):
-    st.markdown("**Tu próximo intento**")
-    st.markdown(f"**Intento {used + 1} de {maximum}**")
+    with st.container(horizontal=True, vertical_alignment="center", key="attempts-title-next"):
+        st.markdown("**Tu próximo intento**")
+        st.badge(f"Intento {used + 1} de {maximum}", color="blue")
     st.markdown(
         f"•  {len(attempt.items)} preguntas nuevas sobre los mismos resultados de aprendizaje, "
         "no las mismas que ya viste."

@@ -1,5 +1,7 @@
 """E6, E6b, E6c, U1b, U1c, E7, E7b y E7c: tema, quiz y resultado."""
 
+import re
+
 from apptest import button, page_texts, session_of
 from learner_support import (
     QUIZ,
@@ -379,6 +381,14 @@ def test_e7b_follows_figma() -> None:
             "Demo: ver el estado con los 3 intentos agotados",
         ),
     )
+
+
+def test_e7b_next_attempt_badge_and_review_link() -> None:
+    at = _result("learner_quiz_failed")
+    assert "Intento 2 de 3" in {
+        m.group(1) for e in at.markdown if (m := re.fullmatch(r":blue-badge\[(.*)\]", e.value))
+    }
+    assert at.button(key="request-review-1005").proto.type == "tertiary"
 
 
 def test_e7b_retry_with_new_questions_opens_the_quiz() -> None:
