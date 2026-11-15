@@ -216,7 +216,7 @@ database/scripts/remote-sync.sh push         # exporta las dos bases locales y l
 
 ## Modelo de datos (v2.0.0)
 
-39 tablas de negocio y de IA, más 34 tablas `_audit`. Los grupos siguen el orden de entrega de los changesets.
+39 tablas de negocio y de IA, más 34 tablas `_audit`. Los grupos siguen el orden de entrega de los changesets. La v2.0.1 suma `course_materials` (40 tablas y 35 `_audit`; ver «Cambios de la v2.0.1»).
 
 ### Grupo A · Identidad y cursos (changesets 004 a 017)
 
@@ -276,6 +276,12 @@ database/scripts/remote-sync.sh push         # exporta las dos bases locales y l
 | `source_documents` | Documentos fuente del RAG | Único `(course_id, sha256)` |
 | `document_chunks` | Fragmentos de los documentos | El vector va en `ai_embeddings`; **sin `_audit`** |
 | `llm_call_logs` | Registro de cada llamada al LLM | `status`: `success`, `error`, `invalid_output`, `budget_exceeded`; solo inserción; **sin `_audit`** |
+
+### Cambios de la v2.0.1
+
+| Tabla | Propósito | Notas |
+| --- | --- | --- |
+| `course_materials` (changeset 008, R-004) | Apuntes y lecturas que el instructor sube en D1b como fuentes del RAG, además del syllabus | La escribe la API y `ai/` solo la lee (ADR 0009). Guarda el texto ya extraído; `source_type` (`pdf`, `text`), `origin` (`own_notes`, `open_license`, `permitted`, que hace de licencia); el mismo archivo no se repite entre los activos del curso (índice único parcial `(course_id, file_sha256) WHERE active`); con `_audit` |
 
 ### Vistas de solo lectura (changeset 044)
 

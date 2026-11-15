@@ -12,6 +12,7 @@ from app.domains.ai_gateway.models import AiJobModel
 from app.domains.courses.entities import (
     Course,
     CourseCounts,
+    CourseMaterial,
     LearningOutcome,
     SyllabusDocument,
     SyllabusExtraction,
@@ -19,6 +20,7 @@ from app.domains.courses.entities import (
     TopicPrerequisite,
 )
 from app.domains.courses.models import (
+    CourseMaterialModel,
     CourseModel,
     LearningOutcomeModel,
     SyllabusDocumentModel,
@@ -141,6 +143,52 @@ class SqlAlchemyLearningPathRepository(SqlAlchemyCrudRepository[LearningPathMode
 class _DocumentRepository(SqlAlchemyCrudRepository[SyllabusDocumentModel, SyllabusDocument]):
     model = SyllabusDocumentModel
     entity = SyllabusDocument
+
+
+class SqlAlchemyMaterialRepository(SqlAlchemyCrudRepository[CourseMaterialModel, CourseMaterial]):
+    model = CourseMaterialModel
+    entity = CourseMaterial
+    constraint_messages: ClassVar[dict[str, tuple[str, str]]] = {
+        "course_materials_course_sha256_active_uq": (
+            "MATERIAL_DUPLICATE",
+            "The course already has this material.",
+        ),
+    }
+
+    async def list_for_course(self, course_id: int) -> list[CourseMaterial]:
+        rows = (
+            (
+                await self._session.execute(
+                    select(CourseMaterialModel)
+                    .where(
+                        CourseMaterialModel.course_id == course_id,
+                        CourseMaterialModel.active.is_(True),
+                    )
+                    .order_by(CourseMaterialModel.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return [self.to_entity(row) for row in rows]
+
+    async def find_active(self, course_id: int, file_sha256: str) -> CourseMaterial | None:
+        row = (
+            (
+                await self._session.execute(
+                    select(CourseMaterialModel)
+                    .where(
+                        CourseMaterialModel.course_id == course_id,
+                        CourseMaterialModel.file_sha256 == file_sha256,
+                        CourseMaterialModel.active.is_(True),
+                    )
+                    .limit(1)
+                )
+            )
+            .scalars()
+            .first()
+        )
+        return None if row is None else self.to_entity(row)
 
 
 class _ExtractionRepository(SqlAlchemyCrudRepository[SyllabusExtractionModel, SyllabusExtraction]):

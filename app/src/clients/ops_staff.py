@@ -48,6 +48,7 @@ from clients.models_staff import (
     Course,
     CourseCreate,
     CourseEvaluator,
+    CourseMaterial,
     CourseTopic,
     CourseTopics,
     Dashboard,
@@ -59,6 +60,7 @@ from clients.models_staff import (
     LearnerDetail,
     LlmCallLog,
     LlmSummary,
+    MaterialOrigin,
     MetricsEvaluation,
     Resource,
     ReviewItem,
@@ -100,6 +102,16 @@ def _parse[M: BaseModel](model: type[M], data: Any) -> M:
         raise ApiError(502, "INVALID_RESPONSE", model.__name__) from error
 
 
+def _material_content_type(file_name: str) -> str:
+    """Tipo del apunte para el multipart; la API decide por la extensión (PDF, TXT o MD)."""
+    lower = file_name.lower()
+    if lower.endswith(".pdf"):
+        return "application/pdf"
+    if lower.endswith((".md", ".markdown")):
+        return "text/markdown"
+    return "text/plain"
+
+
 def _page[M: BaseModel](model: type[M], data: Any) -> Page[M]:
     page_model: type[Page[M]] = Page[model]  # type: ignore[valid-type]
     return _parse(page_model, data)
@@ -120,7 +132,11 @@ class StaffApiOps:
         raise NotImplementedError
 
     def _multipart(
-        self, path: str, files: dict[str, tuple[str, bytes, str]], idempotency_key: str
+        self,
+        path: str,
+        files: dict[str, tuple[str, bytes, str]],
+        idempotency_key: str | None,
+        data: dict[str, str] | None = None,
     ) -> httpx.Response:
         raise NotImplementedError
 
@@ -188,6 +204,25 @@ class StaffApiOps:
         return self._send(
             JobAccepted, "POST", f"/courses/{course_id}/extractions", body, key=idempotency_key
         )
+
+    def upload_material(
+        self, course_id: int, *, file: tuple[str, bytes], origin: MaterialOrigin
+    ) -> CourseMaterial:
+        """Sube un apunte; la API no duplica el mismo archivo (responde el que ya existía)."""
+        name, content = file
+        response = self._multipart(
+            f"/courses/{course_id}/materials",
+            {"file": (name, content, _material_content_type(name))},
+            None,
+            data={"origin": origin},
+        )
+        return _parse(CourseMaterial, _json(response))
+
+    def list_materials(self, course_id: int) -> list[CourseMaterial]:
+        data = _json(self._request("GET", f"/courses/{course_id}/materials"))
+        if not isinstance(data, list):
+            raise ApiError(502, "INVALID_RESPONSE", "CourseMaterial list")
+        return [_parse(CourseMaterial, item) for item in data]
 
     def poll_job(self, job_id: str) -> Job:
         return self._get(Job, f"/jobs/{job_id}")
@@ -540,6 +575,31 @@ class StaffFixturesOps:
     ) -> JobAccepted:
         del course_id, confirm_discard_review, idempotency_key
         return self._model(JobAccepted, "job_accepted")
+
+    def _materials(self) -> list[CourseMaterial]:
+        """Eco mínimo de «Subir apuntes»: los apuntes subidos en esta sesión de fixtures."""
+        if not hasattr(self, "_uploaded_materials"):
+            self._uploaded_materials: list[CourseMaterial] = []
+        return self._uploaded_materials
+
+    def upload_material(
+        self, course_id: int, *, file: tuple[str, bytes], origin: MaterialOrigin
+    ) -> CourseMaterial:
+        name, content = file
+        if self.staff_scenario == "no_text":
+            raise ApiError(422, "MATERIAL_NO_TEXT", "no selectable text")
+        material = self._model(CourseMaterial, "material")
+        material.id = len(self._materials()) + 1
+        material.course_id = course_id
+        material.file_name = name
+        material.origin = origin
+        material.byte_size = len(content)
+        material.source_type = "pdf" if name.lower().endswith(".pdf") else "text"
+        self._materials().append(material)
+        return material
+
+    def list_materials(self, course_id: int) -> list[CourseMaterial]:
+        return [m for m in self._materials() if m.course_id == course_id]
 
     def poll_job(self, job_id: str) -> Job:
         """«loading»: siempre en curso; «failed»: falla; si no, en curso la primera vez."""
