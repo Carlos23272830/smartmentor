@@ -116,20 +116,25 @@ def grading_screen(
     """Pantalla «Calificando tu respuesta corta» (U1c y U1d).
 
     El paso de la rúbrica dice cuántos criterios tiene la pregunta si el intento los informa; si no
-    se puede leer el intento, el paso no lleva número.
+    se puede leer el intento, el paso no lleva número. El paso se calcula una sola vez por intento
+    (se guarda en la sesión): la pantalla se repite cada 2 s y no debe sumar una consulta por sondeo.
     """
-    items = []
-    if attempt_id is not None:
-        try:
-            items = client.get_attempt(attempt_id).items
-        except ApiError:
-            items = []
+    rubric_step = st.session_state.get(f"grading-rubric-step-{attempt_id}")
+    if rubric_step is None:
+        items = []
+        if attempt_id is not None:
+            try:
+                items = client.get_attempt(attempt_id).items
+            except ApiError:
+                items = []
+        rubric_step = grading_rubric_step(items)
+        st.session_state[f"grading-rubric-step-{attempt_id}"] = rubric_step
     return JobScreen(
         key=key,
         title="Calificando tu respuesta corta",
         steps=(
             "Calificar las preguntas de opción múltiple",
-            grading_rubric_step(items),
+            rubric_step,
             "Preparar tu retroalimentación",
         ),
         error_message=error_message,

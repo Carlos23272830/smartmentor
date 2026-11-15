@@ -651,3 +651,29 @@ def test_u1c_without_the_criteria_count_has_no_number_b052() -> None:
     at = _quiz_with_summary(None)
     no_exception(at)
     assert "En curso · Aplicar la rúbrica a tu respuesta corta" in page_texts(at)
+
+
+def test_grading_screen_reads_the_attempt_once_per_attempt_b052() -> None:
+    """La pantalla de espera se repite cada 2 s: el paso de la rúbrica no suma una consulta por sondeo."""
+    calls: list[int] = []
+
+    def app() -> None:
+        import streamlit as st
+
+        from clients.fixtures import FixturesClient
+        from core.learner_flow import grading_screen
+
+        client = FixturesClient()
+        original = client.get_attempt
+
+        def counting(attempt_id: int):  # type: ignore[no-untyped-def]
+            st.session_state.setdefault("calls", []).append(attempt_id)
+            return original(attempt_id)
+
+        client.get_attempt = counting  # type: ignore[method-assign]
+        for _ in range(3):  # tres sondeos seguidos del mismo intento
+            grading_screen(client, key="g", attempt_id=1, error_message="x")
+
+    at = AppTest.from_function(app).run()
+    assert not at.exception
+    assert len(at.session_state["calls"]) == 1
