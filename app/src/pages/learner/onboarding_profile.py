@@ -8,7 +8,7 @@ indica la API (el diagnóstico), como promete E2b («si ya la tuvieras, este pas
 import streamlit as st
 
 from clients.base import ApiError
-from components.layout import render_page_header
+from components.layout import render_action_row, render_page_header
 from core.container import get_client
 from core.errors import show_action_error
 from core.identity import refresh_me
@@ -43,15 +43,18 @@ description = st.text_area(
     key="profile-description",
 )
 
-back_col, next_col = st.columns([1, 1])
-if back_col.button("Atrás", key="profile-back"):
+_, actions = render_action_row("profile")
+with actions:
+    back = st.button("Atrás", key="profile-back")
+    proceed = st.button(
+        "Continuar a la hoja de vida",
+        type="primary",
+        key="profile-next",
+        disabled=not description.strip(),
+    )
+if back:
     st.switch_page(CATALOG)
-if next_col.button(
-    "Continuar a la hoja de vida",
-    type="primary",
-    key="profile-next",
-    disabled=not description.strip(),
-):
+if proceed:
     enrollment_id = get_session().selected_enrollment_id
     try:
         save_description(client, profile, description)
