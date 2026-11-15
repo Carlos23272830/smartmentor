@@ -32,6 +32,20 @@ class SyllabusDocumentModel(PublicTableModel):
     extracted_text: Mapped[str | None] = mapped_column(Text)
 
 
+class CourseMaterialModel(PublicTableModel):
+    __tablename__ = "course_materials"
+
+    course_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("courses.id"))
+    source_type: Mapped[str] = mapped_column(String(10))
+    origin: Mapped[str] = mapped_column(String(20))
+    file_name: Mapped[str | None] = mapped_column(String(300))
+    file_sha256: Mapped[str] = mapped_column(String(64))
+    byte_size: Mapped[int | None] = mapped_column(Integer)
+    page_count: Mapped[int | None] = mapped_column(Integer)
+    extracted_char_count: Mapped[int | None] = mapped_column(Integer)
+    extracted_text: Mapped[str] = mapped_column(Text)
+
+
 class SyllabusExtractionModel(UpdatableTableModel):
     __tablename__ = "syllabus_extractions"
 

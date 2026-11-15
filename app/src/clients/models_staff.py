@@ -71,6 +71,24 @@ class Course(ApiModel):
     extraction_job_id: str | None = None
 
 
+MaterialOrigin = Literal["own_notes", "open_license", "permitted"]
+"""Origen de un apunte (R-004); la API lo guarda como la licencia de la fuente del RAG."""
+
+
+class CourseMaterial(ApiModel):
+    """Apunte o lectura del curso (`POST`/`GET /courses/{id}/materials`, R-004)."""
+
+    id: int
+    course_id: int
+    file_name: str | None = None
+    source_type: Literal["pdf", "text"]
+    origin: MaterialOrigin
+    byte_size: int | None = None
+    page_count: int | None = None
+    extracted_char_count: int | None = None
+    created_at: datetime | None = None
+
+
 class CourseCreate(ApiModel):
     """Cuerpo de `POST /courses`."""
 

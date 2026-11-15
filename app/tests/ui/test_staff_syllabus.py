@@ -46,6 +46,28 @@ def test_d1b_form_texts_and_disabled_submit() -> None:
     assert submit.disabled
 
 
+def test_d1b_materials_card_is_optional() -> None:
+    """R-004: la tarjeta de apuntes aparece y no bloquea «Extraer temas con IA»."""
+    at = _fill_paste_form()
+    assert_no_exception(at)
+    texts = page_texts(at)
+    assert "Apuntes y lecturas · opcional" in texts
+    assert any("Sin apuntes, usa solo el syllabus" in t for t in texts)
+    assert any("PDF, TXT o MD, hasta 5 archivos de 10 MB cada uno" in t for t in texts)
+    assert any("Los apuntes se usan después" in t for t in texts)
+    submit = next(b for b in at.button if b.label == "Extraer temas con IA")
+    assert not submit.disabled
+
+
+def test_d1c_warns_about_the_materials_that_could_not_be_used() -> None:
+    at = _fill_paste_form("loading")
+    at.session_state["nc-material-skipped"] = ["escaneado.pdf"]
+    at = click(at, "Extraer temas con IA")
+    assert_no_exception(at)
+    warnings = [w.value for w in at.warning]
+    assert any("«escaneado.pdf»" in w and "Los demás quedaron guardados" in w for w in warnings)
+
+
 def test_d1c_extraction_shows_progress_while_the_job_runs() -> None:
     at = _fill_paste_form("loading")
     at = click(at, "Extraer temas con IA")
@@ -206,9 +228,15 @@ def test_d1b_ai_note_is_an_info_box_under_two_columns() -> None:
     assert len(at.columns) == 2
     assert [i.value for i in at.info] == [
         "El syllabus se procesa con IA para extraer temas, prerrequisitos y resultados de "
-        "aprendizaje. Tú revisas, corriges y apruebas todo antes de publicar."
+        "aprendizaje. Los apuntes se usan después, al generar la explicación de cada tema. Tú "
+        "revisas, corriges y apruebas todo antes de publicar."
     ]
-    assert [s.value for s in at.subheader] == ["Datos del curso", "Syllabus"]
+    # R-004: la tarjeta de apuntes va a todo el ancho, debajo de las dos columnas de Figma.
+    assert [s.value for s in at.subheader] == [
+        "Datos del curso",
+        "Syllabus",
+        "Apuntes y lecturas · opcional",
+    ]
 
 
 def test_d1c_has_no_page_title_and_shows_the_retry_pill() -> None:

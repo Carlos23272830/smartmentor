@@ -6,6 +6,7 @@ from app.common.repository import CrudRepository
 from app.domains.courses.entities import (
     Course,
     CourseCounts,
+    CourseMaterial,
     LearningOutcome,
     SyllabusDocument,
     SyllabusExtraction,
@@ -50,6 +51,18 @@ class SyllabusRepository(Protocol):
 
     async def resolve_ai_job_id(self, public_id: str) -> int | None:
         """`id` interno de `ai_jobs` para el `job_id` del contrato (solo lectura)."""
+        ...
+
+
+class MaterialRepository(Protocol):
+    async def add(self, material: CourseMaterial) -> CourseMaterial: ...
+
+    async def list_for_course(self, course_id: int) -> list[CourseMaterial]:
+        """Apuntes activos del curso, del más antiguo al más nuevo."""
+        ...
+
+    async def find_active(self, course_id: int, file_sha256: str) -> CourseMaterial | None:
+        """El apunte activo del curso con ese contenido, si ya se subió."""
         ...
 
 
