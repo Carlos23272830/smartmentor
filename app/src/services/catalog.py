@@ -20,6 +20,8 @@ CONTINUE_LABEL = "Continuar ruta"
 class CatalogView:
     paths: list[PathCardView]
     applied_ai: list[PathCardView]
+    # Rutas en las que la persona ya está inscrita (`enrolled` del catálogo).
+    enrolled_path_ids: frozenset[int] = frozenset()
 
     @property
     def is_empty(self) -> bool:
@@ -48,18 +50,28 @@ def load_catalog(client: SmartMentorClient) -> CatalogView:
     page = client.list_learning_paths(limit=100)
     paths = [card_view(c) for c in page.items if c.section == "paths"]
     applied = [card_view(c) for c in page.items if c.section == "applied_ai"]
-    return CatalogView(paths=paths, applied_ai=applied)
+    enrolled = frozenset(c.id for c in page.items if c.enrolled)
+    return CatalogView(paths=paths, applied_ai=applied, enrolled_path_ids=enrolled)
 
 
-def open_path(client: SmartMentorClient, learning_path_id: int) -> Enrollment:
-    """Inscribe a la persona en la ruta o, si ya estaba inscrita, devuelve su inscripción."""
-    try:
-        return client.create_enrollment(learning_path_id)
-    except ApiError as error:
-        if error.code != "ENROLLMENT_ALREADY_EXISTS":
-            raise
+def open_path(
+    client: SmartMentorClient, learning_path_id: int, *, enrolled: bool = False
+) -> Enrollment:
+    """Inscribe a la persona en la ruta o, si ya estaba inscrita, devuelve su inscripción.
+
+    Con `enrolled` (el catálogo ya sabe que existe) no se manda el `POST`, que respondería 409.
+    """
+    if not enrolled:
+        try:
+            return client.create_enrollment(learning_path_id)
+        except ApiError as error:
+            if error.code != "ENROLLMENT_ALREADY_EXISTS":
+                raise
     page = client.list_enrollments(limit=100)
     for enrollment in page.items:
         if enrollment.learning_path.id == learning_path_id:
             return enrollment
+    if enrolled:
+        # El catálogo estaba desactualizado: se intenta inscribir de verdad.
+        return open_path(client, learning_path_id)
     raise ApiError(404, "ENROLLMENT_NOT_FOUND", "existing enrollment not found")

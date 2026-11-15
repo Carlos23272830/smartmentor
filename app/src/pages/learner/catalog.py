@@ -80,6 +80,6 @@ if catalog.applied_ai:
 
 if selected is not None:
     try:
-        _go_to(open_path(client, selected))
+        _go_to(open_path(client, selected, enrolled=selected in catalog.enrolled_path_ids))
     except ApiError as error:
         show_action_error(error)
