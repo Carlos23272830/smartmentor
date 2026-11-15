@@ -163,6 +163,7 @@ jobs:
         run: |
           url=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.13/postgresql-42.7.13.jar
           for intento in 1 2 3; do
+            echo "== Descarga ${intento} de 3"
             curl -sS -o /tmp/pg.jar -D /tmp/pg.headers -w 'HTTP %{http_code} · %{size_download} bytes · %{remote_ip}\n' "$url" || true
             grep -i -E '^(HTTP|content-type|content-length|x-cache|x-served-by|age|retry-after|server)' /tmp/pg.headers || true
             sha256sum /tmp/pg.jar
