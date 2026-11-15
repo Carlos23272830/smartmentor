@@ -170,4 +170,3 @@ Revisión con `gh` y `git` del estado real de `dev`, sin subir nada.
 - **Pruebas locales:** las 9 ramas fusionadas juntas en una copia: app 792 en verde, ai 474 en verde y 10 omitidas, Ruff, formato y mypy en verde, y `check-env-coherence.py` coherente. Se fusionan sin conflictos en cualquier orden. Al probarlas juntas apareció que R-001 no documentaba sus variables: se corrigió en `1354d20`
 - **CI:** se anota al fusionar
 - **Quién aprobó la subida:** el dueño, en el chat («Abro un PR por rama y tú fusionas»)
-
