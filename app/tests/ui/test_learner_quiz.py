@@ -1,5 +1,6 @@
 """E6, E6b, E6c, U1b, U1c, E7, E7b y E7c: tema, quiz y resultado."""
 
+import ast
 import re
 
 from apptest import button, page_texts, session_of
@@ -14,6 +15,7 @@ from learner_support import (
     no_exception,
 )
 from streamlit.testing.v1 import AppTest
+from support import SRC_DIR
 
 from clients.base import ApiError
 from clients.models import NextAction
@@ -143,6 +145,39 @@ def test_e6_without_video_says_so_b046() -> None:
 def test_e6_with_all_content_has_no_missing_notices_b046() -> None:
     joined = " ".join(page_texts(_open_topic()))
     assert "todavía no tiene" not in joined
+
+
+def test_e6_video_and_rating_live_in_a_fragment_b046() -> None:
+    """Cada clic en la valoración redibuja solo el fragmento (no pide 3 endpoints otra vez).
+
+    `AppTest` siempre reejecuta todo el guion, así que no puede medir las lecturas de una
+    reejecución parcial: se verifica que la página declare el fragmento y que lo use.
+    """
+    tree = ast.parse((SRC_DIR / "pages/learner/topic.py").read_text(encoding="utf-8"))
+    fragments = [
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef)
+        and any(ast.unparse(d) == "st.fragment" for d in node.decorator_list)
+    ]
+    assert [f.name for f in fragments] == ["_video_block"]
+    used = {ast.unparse(n.func) for n in ast.walk(fragments[0]) if isinstance(n, ast.Call)}
+    assert {"render_video", "render_video_feedback"} <= used
+    # Dentro del fragmento no se lee la API salvo para enviar la valoración.
+    reads = {c for c in used if c.startswith("client.")}
+    assert reads == {"client.send_video_feedback"}
+
+
+def test_e6_rating_replaces_the_card_with_the_thanks_without_rerun_b046() -> None:
+    at = _open_topic()
+    sent: list[object] = []
+    client_of(at).send_video_feedback = lambda **kw: sent.append(kw)  # type: ignore[method-assign,assignment]
+    at.button_group[0].set_value("useful").run()
+    button(at, "Enviar calificación").click().run()
+    no_exception(at)
+    assert len(sent) == 1
+    assert any("Gracias" in s.value for s in at.success)
+    assert "Enviar calificación" not in page_texts(at)
 
 
 def test_e6_api_error_is_friendly() -> None:
