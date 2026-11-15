@@ -10,7 +10,6 @@ from clients.models_staff import (
     ItemReviewStatus,
     MasteryStatus,
     MetricStatus,
-    PilotStatus,
     QualityStatus,
     ResourceKind,
     ResourceReviewStatus,
@@ -128,21 +127,11 @@ PILOT_ARM_BADGE: dict[PilotArm, BadgeStyle] = {
     "personalized": (PILOT_ARM_TEXT["personalized"], "blue"),
     "fixed": (PILOT_ARM_TEXT["fixed"], "violet"),
 }
+# Evaluador que además es el dueño del curso (B-036): lo asigna la API al publicar.
+EVALUATOR_OWNER_BADGE: BadgeStyle = ("Dueño del curso", "green")
 CONSENT_BADGE: dict[bool, BadgeStyle] = {
     True: ("Aceptado", "green"),
     False: ("Pendiente", "orange"),
-}
-PILOT_STATUS_BADGE: dict[PilotStatus, BadgeStyle] = {
-    "draft": ("Borrador", "gray"),
-    "randomized": ("Sorteado", "blue"),
-    "running": ("En curso", "green"),
-    "closed": ("Cerrado", "gray"),
-}
-READINESS_TEXT: dict[str, str] = {
-    "min_consents": "Faltan aprendices con consentimiento informado",
-    "item_bank": "El banco de preguntas (quiz, diagnóstico o final) está incompleto",
-    "dates": "Faltan las fechas del piloto",
-    "fixed_group": "Falta el grupo de ruta fija",
 }
 
 ROLE_TEXT: dict[Role, str] = {"learner": "Aprendiz", "instructor": "Instructor", "admin": "Admin"}

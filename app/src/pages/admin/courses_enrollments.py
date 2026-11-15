@@ -1,7 +1,8 @@
 """AD5 · Cursos, rutas e inscripciones.
 
 El administrador ve todos los cursos (`GET /courses?mine=false`), asigna instructor
-(`PATCH /courses/{id}/owner`) y gestiona inscripciones: inscribir, retirar y mover de ruta. Los
+(`PATCH /courses/{id}/owner`), ve y asigna sus evaluadores (`/courses/{id}/evaluators`, B-036) y
+gestiona inscripciones: inscribir, retirar y mover de ruta. Los
 cursos y las inscripciones no se eliminan, para no perder el historial de intentos; mover o retirar
 a un aprendiz lo saca del análisis del piloto (lo aplica la API).
 """
@@ -17,6 +18,7 @@ from components.staff_theme import (
     ADMIN_ENROLLMENT_BADGE,
     CONSENT_BADGE,
     COURSE_BADGE,
+    EVALUATOR_OWNER_BADGE,
     PILOT_ARM_BADGE,
 )
 from components.table import Actions, Row, render_table
@@ -83,7 +85,13 @@ course_rows = [
             COURSE_BADGE[course.status],
             str(course.enrolled_count),
             Actions(
-                (("owner", "Cambiar instructor" if _owner_name(course) else "Asignar instructor"),)
+                (
+                    (
+                        "owner",
+                        "Cambiar instructor" if _owner_name(course) else "Asignar instructor",
+                    ),
+                    ("evaluators", "Evaluadores"),
+                )
             ),
         ],
     )
@@ -97,7 +105,7 @@ clicked = render_table(
     empty_text="Todavía no hay cursos.",
 )
 if clicked is not None:
-    st.session_state["ce-panel"] = ("owner", int(clicked[0]))
+    st.session_state["ce-panel"] = (clicked[1], int(clicked[0]))
 
 st.subheader("Inscripciones", anchor=False)
 enrollment_rows = [
@@ -150,6 +158,68 @@ def _run(call: Callable[..., object], *args: object) -> None:
     _close()
 
 
+def _refresh(call: Callable[..., object], *args: object, done: str) -> None:
+    """Como `_run`, pero deja el panel abierto (evaluadores: se asignan o quitan varios)."""
+    try:
+        call(*args)
+    except ApiError as error:
+        show_staff_error(error)
+        return
+    st.toast(done)
+    st.rerun()
+
+
+def _evaluators_panel(course: Course) -> None:
+    """Evaluadores del curso (B-036): el dueño queda al publicar; se suman otros instructores."""
+    st.subheader(f"Evaluadores de «{course.name}»", anchor=False)
+    st.caption(
+        "Anotan las preguntas y califican a mano las respuestas cortas del curso. El instructor "
+        "dueño queda como evaluador al publicar el curso; puedes sumar a otros instructores."
+    )
+    try:
+        current = client.list_course_evaluators(course.id)
+    except ApiError as error:
+        show_staff_error(error)
+        return
+    owner_id = course.owner.id if course.owner is not None else course.owner_user_id
+    rows = [
+        Row(
+            key=str(evaluator.id),
+            cells=[
+                user_names.get(evaluator.user_id, f"Usuario {evaluator.user_id}"),
+                EVALUATOR_OWNER_BADGE if evaluator.user_id == owner_id else "—",
+                Actions((("remove", "Quitar"),)),
+            ],
+        )
+        for evaluator in current
+    ]
+    removed = render_table(
+        ["Evaluador", "En el curso", "Acciones"],
+        [4, 3, 2],
+        rows,
+        key="course-evaluators",
+        empty_text="Este curso todavía no tiene evaluadores.",
+    )
+    if removed is not None:
+        _refresh(client.remove_course_evaluator, int(removed[0]), done="Evaluador quitado")
+    assigned = {e.user_id for e in current}
+    candidates = {u.id: u.full_name for u in instructors if u.id not in assigned}
+    candidate = st.selectbox(
+        "Instructor",
+        list(candidates),
+        format_func=lambda i: candidates[i],
+        index=None,
+        placeholder="Elige un instructor" if candidates else "No hay más instructores",
+        disabled=not candidates,
+        key="ce-evaluator",
+    )
+    if (
+        st.button("Asignar evaluador", type="primary", key="ce-evaluator-ok")
+        and candidate is not None
+    ):
+        _refresh(client.assign_course_evaluator, course.id, candidate, done="Evaluador asignado")
+
+
 panel = st.session_state.get("ce-panel")
 if panel is not None:
     kind, target = panel
@@ -168,6 +238,10 @@ if panel is not None:
             confirm = st.button("Guardar instructor", type="primary", key="ce-owner-ok")
             if confirm and course is not None:
                 _run(client.set_course_owner, course.id, owner)
+        elif kind == "evaluators":
+            course = next((c for c in courses if c.id == target), None)
+            if course is not None:
+                _evaluators_panel(course)
         elif kind == "move":
             st.subheader("Cambiar de ruta", anchor=False)
             new_path = st.selectbox(

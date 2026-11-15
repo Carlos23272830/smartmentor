@@ -20,19 +20,16 @@ from clients.models_staff import (
     AttemptGrant,
     Course,
     CourseCreate,
+    CourseEvaluator,
     CourseTopics,
     Dashboard,
     ExtractionMetrics,
-    FixedPathPreview,
     GradingQueue,
     HumanGradingResult,
     LearnerDetail,
     LlmCallLog,
     LlmSummary,
     MetricsEvaluation,
-    Pilot,
-    PilotReadiness,
-    RandomizeResult,
     Resource,
     ReviewItem,
     TopicGraphDoc,
@@ -69,10 +66,6 @@ MODELS: dict[str, Any] = {
     "llm_summary": LlmSummary,
     "llm_logs": Page[LlmCallLog],
     "metrics": MetricsEvaluation,
-    "pilot": Pilot,
-    "pilot_readiness": PilotReadiness,
-    "randomize_result": RandomizeResult,
-    "fixed_path_preview": FixedPathPreview,
     "admin_enrollments": Page[AdminEnrollment],
     "attempt_grant": AttemptGrant,
 }
@@ -96,10 +89,11 @@ def _base_name(stem: str) -> str:
 def test_every_staff_fixture_validates_against_the_models(path: Any) -> None:
     data = json.loads(path.read_text(encoding="utf-8"))
     name = _base_name(path.stem)
-    if name in {"resources"}:
+    list_models: dict[str, Any] = {"resources": Resource, "course_evaluators": CourseEvaluator}
+    if name in list_models:
         assert isinstance(data, list)
         for item in data:
-            Resource.model_validate(item)
+            _strict(list_models[name]).model_validate(item)
         return
     model = MODELS[name]
     strict = _strict(model)

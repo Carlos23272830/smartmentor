@@ -1,9 +1,10 @@
 """Evaluación humana: evaluadores por curso, anotación ciega de ítems y calificación a mano.
 
-Reglas (DEF-15, DEF-24, D5b, D5c):
+Reglas (DEF-15, DEF-24, B-036, D5b, D5c):
 
-- Evaluador = instructor asignado en `course_evaluators` a un curso que **no** es suyo. El dueño del
-  curso no evalúa sus propios ítems y un administrador sin esa asignación tampoco.
+- Evaluador = instructor activo asignado en `course_evaluators`. Desde B-036 (decisión del dueño
+  del 2026-11-15) el dueño del curso queda asignado al publicarlo (`OwnerEvaluatorAssigner`) y el
+  administrador puede sumar a cualquier otro instructor. Un administrador sin asignación no evalúa.
 - Anotación ciega: la cola y las respuestas solo traen la anotación del propio evaluador.
 - La nota del LLM se devuelve solo después de guardar la calificación humana.
 """
@@ -84,12 +85,7 @@ class EvaluatorAdminService:
     async def assign(
         self, user: CurrentUser, course_id: int, evaluator_user_id: int
     ) -> CourseEvaluator:
-        course = await load_course(self._courses, user, course_id)
-        if course.owner_user_id == evaluator_user_id:
-            raise BusinessRuleError(
-                "The course owner cannot be an evaluator of the same course.",
-                code="BUSINESS_RULE_VIOLATION",
-            )
+        await load_course(self._courses, user, course_id)
         if not await self._evaluators.has_role(evaluator_user_id, RoleCode.INSTRUCTOR):
             raise BusinessRuleError(
                 "An evaluator must be an active instructor.", code="BUSINESS_RULE_VIOLATION"
@@ -119,6 +115,36 @@ class EvaluatorAdminService:
         updated = await self._evaluators.update(evaluator_id, {"active": False})
         await self._uow.commit()
         return updated or found
+
+
+class OwnerEvaluatorAssigner:
+    """Deja al dueño de un curso como evaluador activo (B-036). No confirma: lo hace quien llama.
+
+    Es idempotente: si ya es evaluador activo no hace nada; si tenía una asignación desactivada la
+    reactiva; si el dueño ya no es instructor activo no lo asigna.
+    """
+
+    def __init__(self, evaluators: EvaluatorRepository) -> None:
+        self._evaluators = evaluators
+
+    async def ensure_owner_evaluator(
+        self, course_id: int, owner_user_id: int, assigned_by_user_id: int
+    ) -> None:
+        if not await self._evaluators.has_role(owner_user_id, RoleCode.INSTRUCTOR):
+            return
+        existing = await self._evaluators.find(course_id, owner_user_id)
+        if existing is None:
+            await self._evaluators.add(
+                CourseEvaluator(
+                    course_id=course_id,
+                    user_id=owner_user_id,
+                    assigned_by_user_id=assigned_by_user_id,
+                )
+            )
+        elif not existing.active:
+            await self._evaluators.update(
+                require_id(existing), {"active": True, "assigned_by_user_id": assigned_by_user_id}
+            )
 
 
 # --- Anotación ciega (D5b) --------------------------------------------------------------------
@@ -219,7 +245,7 @@ class AnnotationService:
             if course.owner_user_id == user.id or user.has_any_role(RoleCode.ADMIN):
                 # Quien ve el ítem por ser suyo sabe que existe: se le dice por qué no puede.
                 raise ForbiddenError(
-                    "You cannot evaluate the items of your own course.",
+                    "You are not assigned as an evaluator of this course.",
                     code="EVALUATOR_NOT_ASSIGNED",
                 )
             raise NotFoundError("Item", item_id, code="ITEM_NOT_FOUND")

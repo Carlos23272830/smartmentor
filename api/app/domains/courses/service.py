@@ -8,7 +8,7 @@ import hashlib
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Protocol
 
 from app.common.constants import (
     CourseStatus,
@@ -72,6 +72,21 @@ async def load_course(courses: CourseRepository, user: CurrentUser, course_id: i
     return course
 
 
+class OwnerEvaluators(Protocol):
+    """Lo implementa el dominio de evaluación: deja al dueño como evaluador del curso (B-036).
+
+    No confirma la transacción; el caso de uso que lo llama la confirma junto con su cambio.
+    """
+
+    async def ensure_owner_evaluator(
+        self, course_id: int, owner_user_id: int, assigned_by_user_id: int
+    ) -> None: ...
+
+
+# Un curso ya publicado (o generando su contenido) tiene a su dueño como evaluador.
+OWNER_EVALUATES_STATUSES = frozenset({CourseStatus.GENERATING_CONTENT, CourseStatus.PUBLISHED})
+
+
 def _require_editable(course: Course) -> None:
     if course.status == CourseStatus.EXTRACTING:
         raise ConflictError(
@@ -103,12 +118,14 @@ class CourseService:
         users: UserRepository,
         ai: AiServicePort,
         uow: UnitOfWork,
+        owner_evaluators: OwnerEvaluators | None = None,
     ) -> None:
         self._courses = courses
         self._paths = paths
         self._users = users
         self._ai = ai
         self._uow = uow
+        self._owner_evaluators = owner_evaluators
 
     async def create(
         self,
@@ -197,7 +214,7 @@ class CourseService:
     async def assign_owner(
         self, user: CurrentUser, course_id: int, owner_user_id: int | None
     ) -> CourseView:
-        await load_course(self._courses, user, course_id)
+        course = await load_course(self._courses, user, course_id)
         if owner_user_id is not None:
             owner = await self._users.get(owner_user_id)
             roles = await self._users.get_role_codes(owner_user_id) if owner else frozenset()
@@ -207,6 +224,14 @@ class CourseService:
                     code="OWNER_NOT_FOUND",
                 )
         await self._courses.update(course_id, {"owner_user_id": owner_user_id})
+        # B-036: el nuevo dueño de un curso ya publicado también queda como evaluador. El dueño
+        # anterior conserva su asignación; el administrador la quita si hace falta (AD5).
+        if (
+            owner_user_id is not None
+            and self._owner_evaluators is not None
+            and course.status in OWNER_EVALUATES_STATUSES
+        ):
+            await self._owner_evaluators.ensure_owner_evaluator(course_id, owner_user_id, user.id)
         await self._uow.commit()
         return await self.get(user, course_id)
 
@@ -662,6 +687,7 @@ class PublicationService:
         prerequisites: PrerequisiteRepository,
         ai: AiServicePort,
         uow: UnitOfWork,
+        owner_evaluators: OwnerEvaluators | None = None,
     ) -> None:
         self._courses = courses
         self._paths = paths
@@ -670,6 +696,7 @@ class PublicationService:
         self._prerequisites = prerequisites
         self._ai = ai
         self._uow = uow
+        self._owner_evaluators = owner_evaluators
 
     async def publish(self, user: CurrentUser, course_id: int) -> JobRef:
         """Valida el DAG y la revisión y dispara la generación del contenido (D2)."""
@@ -726,6 +753,11 @@ class PublicationService:
             course_id,
             {"status": CourseStatus.GENERATING_CONTENT, "extraction_error_code": None},
         )
+        # B-036: al publicar, el dueño queda como evaluador (idempotente, misma transacción).
+        if course.owner_user_id is not None and self._owner_evaluators is not None:
+            await self._owner_evaluators.ensure_owner_evaluator(
+                course_id, course.owner_user_id, user.id
+            )
         await self._uow.commit()
         return job
 

@@ -1,7 +1,7 @@
-"""Administración (AD1 a AD5, C4): textos y vistas a partir de la API, sin reglas de negocio.
+"""Administración (AD1 a AD3, AD5 y C4): textos y vistas desde la API, sin reglas de negocio.
 
-Quién puede quedar sin rol de administrador, qué piloto está listo o qué inscripción sale del
-análisis lo decide la API (`LAST_ADMIN`, `PILOT_NOT_READY`...).
+Quién puede quedar sin rol de administrador o qué inscripción sale del análisis lo decide la API
+(`LAST_ADMIN`...).
 """
 
 from collections.abc import Sequence
@@ -82,7 +82,3 @@ def llm_totals(summary: LlmSummary) -> LlmTotals:
         latency_p95=seconds(worst_p95),
         invalid_json=f"{decimal(rate)} %",
     )
-
-
-def plural_learners(count: int) -> str:
-    return f"{count} aprendiz" if count == 1 else f"{count} aprendices"

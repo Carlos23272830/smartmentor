@@ -79,7 +79,6 @@ class SqlAlchemyEvaluatorRepository(
                 CourseEvaluatorModel.user_id == user_id,
                 CourseEvaluatorModel.active.is_(True),
                 CourseModel.active.is_(True),
-                CourseModel.owner_user_id.is_distinct_from(user_id),
             )
             .order_by(CourseEvaluatorModel.course_id)
         )

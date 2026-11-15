@@ -1,4 +1,4 @@
-"""Correcciones visuales frente a Figma v3: A1, D3b, D4b, D4c, AD4b y C4 (V-058 a V-087)."""
+"""Correcciones visuales frente a Figma v3: A1, D3b, D4b, D4c y C4 (V-058 a V-087)."""
 
 import re
 
@@ -16,7 +16,6 @@ from services.staff_prompts import PROMPTS
 
 DASHBOARD = "pages/instructor/path_dashboard.py"
 DETAIL = "pages/instructor/learner_detail.py"
-PILOT = "pages/admin/pilot.py"
 CATALOG = "pages/admin/prompt_catalog.py"
 STYLES = APP_DIR / "src" / "static" / "styles" / "components"
 
@@ -108,35 +107,6 @@ def test_d4c_defaults_to_three_attempts_and_shows_the_note_in_an_info_box() -> N
     at = click(at, "Habilitar nuevos intentos")
     assert at.selectbox(key="ld-n").value == 3
     assert any("Cada intento trae preguntas nuevas" in i.value for i in at.info)
-
-
-# --- AD4b --------------------------------------------------------------------------------------
-
-
-def _preview():  # type: ignore[no-untyped-def]
-    at = staff_app("admin", page=PILOT)
-    return click(at, "Vista previa de la ruta fija (solo lectura)")
-
-
-def test_ad4b_topics_are_listed_with_bold_name_and_a_note_below() -> None:
-    at = _preview()
-    assert_no_exception(at)
-    markdown = [m.value for m in at.markdown]
-    assert "**Regresión lineal**" in markdown
-    notes = [c.value for c in at.caption if c.value.startswith("Incluido para todos")]
-    assert len(notes) == 5
-    assert "1" in markdown and "5" in markdown
-    css = _css("pilot_preview.css")
-    assert ".st-key-preview-list" in css and "var(--bg-page)" in css
-
-
-def test_ad4b_read_only_badge_is_violet_note_is_blue_and_close_is_primary() -> None:
-    at = _preview()
-    markdown = [m.value for m in at.markdown]
-    assert ":violet-badge[Solo lectura]" in markdown
-    assert at.button(key="p-preview-close").proto.type == "primary"
-    assert any(m.startswith("Ruta personalizada: cada aprendiz omite") for m in markdown)
-    assert "Vista previa · ruta fija" in page_texts(at)
 
 
 # --- C4 ----------------------------------------------------------------------------------------

@@ -1257,7 +1257,7 @@
               ],
               "query": []
             },
-            "description": "Assign Evaluator\n\nAsigna un instructor (que no es el dueño) como evaluador del curso (DEF-24).",
+            "description": "Assign Evaluator\n\nAsigna un instructor activo como evaluador del curso (DEF-24); puede ser el dueño (B-036).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"user_id\": 1\n}",
@@ -1898,7 +1898,7 @@
               ],
               "query": []
             },
-            "description": "Start Final Attempt\n\nIntento de la final: solo con todos los pasos `passed` o `skipped` (E8)."
+            "description": "Start Final Attempt\n\nIntento de la final: solo con todos los pasos `passed` o `skipped` (E8).\n\n`202` si un reintento no tiene suficientes preguntas no vistas: se generan más bajo demanda."
           }
         },
         {
@@ -2794,7 +2794,7 @@
                 }
               ]
             },
-            "description": "Evaluation Metrics\n\nMétricas del brief calculables en SQL. El administrador ve todo; el instructor, sus rutas."
+            "description": "Evaluation Metrics\n\nMétricas del brief calculables en SQL. El administrador ve todo; el instructor, sus rutas.\n\n`groups` (aditivo, 2026-11-12) es el catálogo de AD3: cada métrica con su meta y su estado."
           }
         }
       ]

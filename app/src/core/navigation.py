@@ -101,7 +101,6 @@ PAGES: tuple[PageSpec, ...] = (
     PageSpec(USERS, "Usuarios y roles", "users", "admin", "Usuarios"),
     PageSpec("pages/admin/llm_logs.py", "Log LLM y costos", "llm-logs", "admin", "Log LLM"),
     PageSpec("pages/admin/metrics.py", "Métricas globales", "metrics", "admin", "Métricas"),
-    PageSpec("pages/admin/pilot.py", "Piloto", "pilot"),
     PageSpec("pages/admin/courses_enrollments.py", "Cursos e inscripciones", "courses-enrollments"),
     PageSpec("pages/admin/prompt_catalog.py", "Catálogo de prompts", "prompt-catalog"),
 )

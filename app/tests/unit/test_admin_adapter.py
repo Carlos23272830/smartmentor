@@ -10,21 +10,16 @@ from support import REPO_ROOT
 
 from clients.admin_adapter import (
     admin_enrollment_from_api,
-    fixed_path_preview_from_api,
     llm_log_from_api,
     llm_summary_from_api,
     metrics_from_api,
-    pilot_from_api,
-    pilot_to_show,
 )
 from clients.api import ApiClient
 from clients.models_staff import (
     AdminEnrollment,
-    FixedPathPreview,
     LlmCallLog,
     LlmSummary,
     MetricsEvaluation,
-    Pilot,
     UserCreate,
 )
 from services.staff_admin import metric_text
@@ -233,109 +228,6 @@ def test_the_http_client_reads_the_real_logs() -> None:
     assert client.get_llm_summary().by_task[0].calls == 4
 
 
-# --- AD4 y AD4b · Piloto ---------------------------------------------------------------------
-
-API_PILOT: dict[str, Any] = {
-    "id": 4,
-    "learning_path_id": 7,
-    "starts_on": "2026-12-01",
-    "ends_on": "2026-12-20",
-    "delayed_posttest_on": None,
-    "random_seed": 2026,
-    "status": "randomized",
-    "arms": {"personalized": 12, "fixed": 11},
-    "created_at": CREATED,
-    "updated_at": None,
-    "learning_path": {"id": 7, "name": "Datos", "group_label": "Piloto"},
-}
-API_READINESS: dict[str, Any] = {
-    "ready": False,
-    "missing": ["item_bank"],
-    "consents_accepted": 23,
-    "consents_total": 25,
-    "topics_total": 5,
-    "topics_with_items": 4,
-    "topics_with_equivalent_items": 3,
-}
-API_PREVIEW: dict[str, Any] = {
-    "algorithm": "topological_threshold v1",
-    "mastery_skip_threshold": 80.0,
-    "pilot_arm": "fixed",
-    "final_pass_threshold": 80.0,
-    "steps": [
-        {"step_order": 1, "topic_id": "101", "name": "Bases", "status": "pending"},
-        {"step_order": 2, "topic_id": "102", "name": "ETL", "status": "blocked"},
-    ],
-}
-
-
-def test_the_pilot_samples_are_valid_api_responses() -> None:
-    assert _valid("PilotResponse", API_PILOT) == []
-    assert _valid("ReadinessResponse", API_READINESS) == []
-    assert _valid("Page_PilotResponse_", _page([API_PILOT])) == []
-
-
-def test_the_newest_open_pilot_is_shown() -> None:
-    closed = {**API_PILOT, "id": 9, "status": "closed"}
-    assert pilot_to_show([API_PILOT, closed, {**API_PILOT, "id": 2}]) == 4
-    assert pilot_to_show([closed]) == 9
-    assert pilot_to_show([]) is None
-
-
-def test_a_pilot_becomes_the_screen_model() -> None:
-    pilot = Pilot.model_validate(pilot_from_api(API_PILOT, API_READINESS))
-    assert (pilot.learning_path.name, pilot.learning_path.group_label) == ("Datos", "Piloto")
-    assert pilot.status == "randomized"
-    assert pilot.groups is not None and (pilot.groups.personalized, pilot.groups.fixed) == (12, 11)
-    assert (pilot.consents.accepted, pilot.consents.total) == (23, 25)
-    # Ítems equivalentes = versiones paralelas (`equivalence_group`), no temas con preguntas.
-    assert (pilot.equivalent_items_topics, pilot.topics_total) == (3, 5)
-
-
-def test_a_draft_pilot_has_no_groups_yet() -> None:
-    draft = {**API_PILOT, "status": "draft", "arms": {"personalized": 0, "fixed": 0}}
-    assert Pilot.model_validate(pilot_from_api(draft, API_READINESS)).groups is None
-
-
-def test_the_fixed_preview_becomes_the_screen_model() -> None:
-    preview = FixedPathPreview.model_validate(fixed_path_preview_from_api(API_PREVIEW))
-    assert [(s.step_order, s.topic_id, s.name) for s in preview.steps] == [
-        (1, 101, "Bases"),
-        (2, 102, "ETL"),
-    ]
-    assert (preview.final_pass_threshold, preview.mastery_skip_threshold) == (80, 80)
-
-
-def test_the_pilot_fixtures_pass_unchanged() -> None:
-    preview = json.loads(
-        (REPO_ROOT / "app" / "tests" / "fixtures" / "staff" / "fixed_path_preview.json").read_text(
-            "utf-8"
-        )
-    )
-    assert fixed_path_preview_from_api(preview) == preview
-
-
-@respx.mock
-def test_the_http_client_finds_and_reads_the_real_pilot() -> None:
-    respx.get(f"{BASE}/api/v1/pilots").mock(
-        return_value=httpx.Response(200, json=_page([API_PILOT]))
-    )
-    respx.get(f"{BASE}/api/v1/pilots/4").mock(return_value=httpx.Response(200, json=API_PILOT))
-    respx.get(f"{BASE}/api/v1/pilots/4/readiness").mock(
-        return_value=httpx.Response(200, json=API_READINESS)
-    )
-    respx.get(f"{BASE}/api/v1/pilots/4/fixed-path-preview").mock(
-        return_value=httpx.Response(200, json=API_PREVIEW)
-    )
-    client = _client()
-    pilot_id = client.find_pilot_id()
-    assert pilot_id == 4
-    pilot = client.get_pilot(4)
-    assert pilot.consents.accepted == 23
-    assert client.get_pilot_readiness(4).missing == ["item_bank"]
-    assert client.get_fixed_path_preview(4).steps[1].name == "ETL"
-
-
 # --- AD5 · Inscripciones -------------------------------------------------------------------
 
 API_ENROLLMENT: dict[str, Any] = {
@@ -450,3 +342,37 @@ def test_the_http_client_reads_the_real_metrics() -> None:
     assert client.get_evaluation_metrics().groups[0].metrics[0].code == "m7"
     client.get_evaluation_metrics(7)
     assert route.calls.last.request.url.params["learning_path_id"] == "7"
+
+
+# --- AD5 · Evaluadores de un curso (B-036) ----------------------------------------------------
+
+API_EVALUATOR: dict[str, Any] = {
+    "id": 5,
+    "course_id": 2,
+    "user_id": 12,
+    "assigned_by_user_id": 12,
+    "created_at": CREATED,
+}
+
+
+def test_the_evaluator_sample_is_a_valid_api_response() -> None:
+    assert _valid("EvaluatorResponse", API_EVALUATOR) == []
+
+
+@respx.mock
+def test_the_http_client_lists_assigns_and_removes_evaluators() -> None:
+    respx.get(f"{BASE}/api/v1/courses/2/evaluators").mock(
+        return_value=httpx.Response(200, json=[API_EVALUATOR])
+    )
+    assign = respx.post(f"{BASE}/api/v1/courses/2/evaluators").mock(
+        return_value=httpx.Response(201, json={**API_EVALUATOR, "id": 6, "user_id": 13})
+    )
+    remove = respx.patch(f"{BASE}/api/v1/course-evaluators/5/deactivate").mock(
+        return_value=httpx.Response(200, json=API_EVALUATOR)
+    )
+    client = _client()
+    assert [(e.id, e.user_id) for e in client.list_course_evaluators(2)] == [(5, 12)]
+    assert client.assign_course_evaluator(2, 13).user_id == 13
+    assert json.loads(assign.calls.last.request.content) == {"user_id": 13}
+    assert client.remove_course_evaluator(5).id == 5
+    assert remove.called

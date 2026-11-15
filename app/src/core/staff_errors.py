@@ -16,16 +16,16 @@ STAFF_MESSAGES: dict[str, str] = {
     "INVALID_STATE_TRANSITION": "Esa acción no está disponible en el estado actual.",
     "COURSE_NOT_FOUND": "No encontramos ese curso.",
     "PILOT_RUNNING": "Hay un piloto en curso: confirma el cambio para continuar.",
-    "PILOT_ALREADY_STARTED": "El piloto ya inició y no admite este cambio.",
-    "PILOT_NOT_READY": "El piloto todavía no está listo para iniciar.",
-    "PILOT_CONSENT_REQUIRED": "Se necesitan aprendices con consentimiento para sortear.",
     "LAST_ADMIN": "Debe quedar al menos un administrador.",
     "ROLE_ALREADY_ASSIGNED": "La persona ya tiene ese rol.",
     "EMAIL_ALREADY_REGISTERED": "Ese correo ya está registrado.",
     "OWNER_NOT_FOUND": "No encontramos a ese instructor.",
     "ANNOTATION_ALREADY_EXISTS": "Ya anotaste esta pregunta.",
     "EVALUATOR_SLOTS_FULL": "Esta pregunta ya tiene sus dos evaluadores.",
-    "EVALUATOR_NOT_ASSIGNED": "No estás asignado como evaluador de este curso.",
+    "EVALUATOR_NOT_ASSIGNED": (
+        "No estás asignado como evaluador de este curso. El dueño queda asignado al publicarlo; "
+        "a otros instructores los asigna un administrador en «Cursos e inscripciones»."
+    ),
     "HUMAN_GRADING_ALREADY_EXISTS": "Ya calificaste esta respuesta.",
     "CONSENT_REQUIRED": "El aprendiz no ha aceptado el tratamiento de datos.",
 }

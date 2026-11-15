@@ -8,9 +8,14 @@ from app.common.exceptions import (
     InvalidStateTransitionError,
     NotFoundError,
 )
-from app.domains.courses.service import OutcomeDraft, TopicDraft
+from app.domains.courses.service import (
+    CourseService,
+    OutcomeDraft,
+    PublicationService,
+    TopicDraft,
+)
 from app.domains.courses.syllabus_text import extract_from_text
-from tests.unit.conftest import INSTRUCTOR_ID, LEARNER_ID, World
+from tests.unit.conftest import INSTRUCTOR_ID, LEARNER_ID, OTHER_INSTRUCTOR_ID, World
 
 SYLLABUS_TEXT = "Tema 1 fundamentos. Tema 2 regresión lineal. Tema 3 regresión logística."
 
@@ -520,3 +525,65 @@ async def test_publishing_twice_with_the_same_content_reuses_the_same_job(world:
     assert first.job_id == second.job_id
     # la extracción, una sola generación y un solo banco del diagnóstico
     assert len(world.ai.jobs) == 3
+
+
+# --- dueño como evaluador (B-036) -------------------------------------------------------------
+
+
+class RecordingOwnerEvaluators:
+    """Registra las asignaciones automáticas del dueño como evaluador."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[int, int, int]] = []
+
+    async def ensure_owner_evaluator(
+        self, course_id: int, owner_user_id: int, assigned_by_user_id: int
+    ) -> None:
+        self.calls.append((course_id, owner_user_id, assigned_by_user_id))
+
+
+def _with_owner_evaluators(world: World) -> RecordingOwnerEvaluators:
+    recorder = RecordingOwnerEvaluators()
+    world.publication_service = PublicationService(
+        world.courses,
+        world.paths,
+        world.topics,
+        world.outcomes,
+        world.prerequisites,
+        world.ai,
+        world.uow,
+        owner_evaluators=recorder,
+    )
+    world.course_service = CourseService(
+        world.courses, world.paths, world.users, world.ai, world.uow, owner_evaluators=recorder
+    )
+    return recorder
+
+
+async def test_publishing_assigns_the_owner_as_evaluator(world: World) -> None:
+    recorder = _with_owner_evaluators(world)
+    course_id = await course_in_review(world)
+    world.ai.auto_complete = False
+    await world.publication_service.publish(world.instructor, course_id)
+    assert recorder.calls == [(course_id, INSTRUCTOR_ID, INSTRUCTOR_ID)]
+
+
+async def test_publishing_a_course_without_owner_assigns_nobody(world: World) -> None:
+    recorder = _with_owner_evaluators(world)
+    course_id = await course_in_review(world)
+    await world.courses.update(course_id, {"owner_user_id": None})
+    world.ai.auto_complete = False
+    await world.publication_service.publish(world.admin, course_id)
+    assert recorder.calls == []
+
+
+async def test_a_new_owner_of_a_published_course_becomes_evaluator(world: World) -> None:
+    recorder = _with_owner_evaluators(world)
+    draft_id = await new_course(world)
+    await world.course_service.assign_owner(world.admin, draft_id, OTHER_INSTRUCTOR_ID)
+    assert recorder.calls == []  # en borrador lo asigna la publicación
+    published_id = await new_course(world, "Publicado")
+    await world.courses.update(published_id, {"status": "published"})
+    await world.course_service.assign_owner(world.admin, published_id, OTHER_INSTRUCTOR_ID)
+    await world.course_service.assign_owner(world.admin, published_id, None)
+    assert recorder.calls == [(published_id, OTHER_INSTRUCTOR_ID, world.admin.id)]

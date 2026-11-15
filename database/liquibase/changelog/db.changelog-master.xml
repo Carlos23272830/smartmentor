@@ -41,4 +41,7 @@
     <!-- v2.0.1-006: propuesta de objetivo guardada aparte del objetivo confirmado (B-033). -->
     <include file="v2.0.1/006-objective-proposal.xml" relativeToChangelogFile="true"/>
 
+    <!-- v2.0.1-007: el dueño del curso también es evaluador (B-036): sin trigger y con backfill. -->
+    <include file="v2.0.1/007-course-owner-evaluator.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

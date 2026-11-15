@@ -25,6 +25,7 @@ from app.domains.evaluation.service import (
     EvaluatorAdminService,
     GradingInput,
     GradingService,
+    OwnerEvaluatorAssigner,
 )
 from tests.unit.conftest import World, current
 from tests.unit.fakes import InMemoryRepository
@@ -50,7 +51,7 @@ class InMemoryEvaluators(InMemoryRepository[CourseEvaluator]):
         out = []
         for e in self.items.values():
             course = await self._courses.get(e.course_id)
-            if e.user_id == user_id and e.active and course and course.owner_user_id != user_id:
+            if e.user_id == user_id and e.active and course and course.active:
                 out.append(e.course_id)
         return out
 
@@ -172,7 +173,7 @@ async def ew(world: World) -> EvalWorld:
             correct_option="1",
         )
     )
-    evaluators = InMemoryEvaluators(world.courses, {EVAL_A, EVAL_B, EVAL_C})
+    evaluators = InMemoryEvaluators(world.courses, {OWNER, EVAL_A, EVAL_B, EVAL_C})
     annotations = InMemoryAnnotations(items)
     gradings = InMemoryGradings()
     access = EvaluatorAccess(evaluators)
@@ -195,14 +196,16 @@ async def ew(world: World) -> EvalWorld:
 ANNOTATION = AnnotationInput(True, True, True, True, "valid", None)
 
 
-async def test_the_admin_assigns_evaluators_but_not_the_owner_nor_a_learner(ew: EvalWorld) -> None:
+async def test_the_admin_assigns_any_instructor_including_the_owner_but_not_a_learner(
+    ew: EvalWorld,
+) -> None:
     from app.common.exceptions import BusinessRuleError
 
     admin = ew.base.admin
     created = await ew.admin_service.assign(admin, ew.course_id, EVAL_A)
     assert created.assigned_by_user_id == admin.id
-    with pytest.raises(BusinessRuleError):
-        await ew.admin_service.assign(admin, ew.course_id, OWNER)
+    owner = await ew.admin_service.assign(admin, ew.course_id, OWNER)  # B-036
+    assert owner.user_id == OWNER
     with pytest.raises(BusinessRuleError):
         await ew.admin_service.assign(admin, ew.course_id, 99)
     with pytest.raises(ConflictError):
@@ -273,7 +276,37 @@ async def test_the_queue_brings_the_topic_the_slot_and_the_progress(ew: EvalWorl
     assert await ew.annotation_service.annotated_count(ew.user(EVAL_A), course_id=None) == 1
 
 
+async def test_the_owner_assigner_is_idempotent_and_reactivates(ew: EvalWorld) -> None:
+    assigner = OwnerEvaluatorAssigner(ew.evaluators)
+    await assigner.ensure_owner_evaluator(ew.course_id, OWNER, OWNER)
+    await assigner.ensure_owner_evaluator(ew.course_id, OWNER, OWNER)
+    listed = await ew.evaluators.list_for_course(ew.course_id)
+    assert [(e.user_id, e.assigned_by_user_id) for e in listed] == [(OWNER, OWNER)]
+    await ew.admin_service.remove(ew.base.admin, require_id(listed[0]))
+    await assigner.ensure_owner_evaluator(ew.course_id, OWNER, ew.base.admin.id)
+    again = await ew.evaluators.list_for_course(ew.course_id)
+    assert [(e.user_id, e.active) for e in again] == [(OWNER, True)]
+    # Quien no es instructor activo no queda asignado.
+    await assigner.ensure_owner_evaluator(ew.course_id, 99, OWNER)
+    assert len(await ew.evaluators.list_for_course(ew.course_id)) == 1
+
+
+async def test_an_owner_assigned_as_evaluator_annotates_and_grades(ew: EvalWorld) -> None:
+    await OwnerEvaluatorAssigner(ew.evaluators).ensure_owner_evaluator(ew.course_id, OWNER, OWNER)
+    created = await ew.annotation_service.annotate(ew.user(OWNER), ew.item_id, ANNOTATION)
+    assert created.evaluator_slot == 1
+    ew.gradings.answers[1] = _answer(ew.course_id)
+    queue, total = await ew.grading_service.queue(
+        ew.user(OWNER), sample="random", limit=5, offset=0
+    )
+    assert total == 1
+    assert queue[0].answer_id == 1
+    data = GradingInput([{"criterion": "x", "met": True, "points_awarded": 1}], 80, "random")
+    assert (await ew.grading_service.grade(ew.user(OWNER), 1, data)).llm.score == 66.0
+
+
 async def test_the_owner_an_admin_and_strangers_cannot_annotate(ew: EvalWorld) -> None:
+    """Sin asignación (por ejemplo, el administrador la quitó) el dueño tampoco anota."""
     await ew.admin_service.assign(ew.base.admin, ew.course_id, EVAL_A)
     for who in (ew.user(OWNER), ew.base.admin):
         with pytest.raises(ForbiddenError) as denied:

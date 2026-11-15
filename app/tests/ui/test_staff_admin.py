@@ -118,7 +118,14 @@ def test_ad2_empty_forbidden() -> None:
 
 def test_ad3_matches_figma() -> None:
     at = staff_app("admin", page=METRICS)
-    assert_matches_figma(at, "AD3")
+    # Diferencias aceptadas (F-013): el piloto se define fuera de la app, así que no hay botón
+    # «Configurar piloto» y la insignia dice solo «Valores de ejemplo».
+    assert_matches_figma(
+        at,
+        "AD3",
+        accepted=("Valores de ejemplo hasta que corra el piloto", "Configurar piloto"),
+    )
+    assert "Valores de ejemplo" in page_texts(at)
 
 
 def test_ad3_empty() -> None:
