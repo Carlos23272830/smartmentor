@@ -4,9 +4,9 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
-        logicalFilePath="v2.0.1/004-course-owner-evaluator.xml">
+        logicalFilePath="v2.0.1/007-course-owner-evaluator.xml">
 
-    <changeSet id="v2.0.1-004-allow-owner-evaluator" author="eduar.troyano">
+    <changeSet id="v2.0.1-007-allow-owner-evaluator" author="eduar.troyano">
         <comment>B-036 (decisión del dueño del 2026-11-15): el instructor dueño de un curso queda asignado como evaluador al publicarlo y puede sumarse cualquier otro instructor. Se retira el trigger que rechazaba al dueño en course_evaluators y se actualizan las descripciones de la tabla y de la columna.</comment>
         <sql>DROP TRIGGER IF EXISTS course_evaluators_not_owner_trg ON course_evaluators</sql>
         <sql>DROP FUNCTION IF EXISTS course_evaluators_check_not_owner()</sql>
@@ -27,7 +27,7 @@ $$</sql>
         </rollback>
     </changeSet>
 
-    <changeSet id="v2.0.1-004-backfill-owner-evaluators" author="eduar.troyano">
+    <changeSet id="v2.0.1-007-backfill-owner-evaluators" author="eduar.troyano">
         <comment>B-036: asigna como evaluador al dueño de cada curso activo ya publicado (o generando contenido) que no tenga ninguna fila en course_evaluators, siempre que el dueño siga activo con el rol instructor. Es idempotente (NOT EXISTS sobre el par curso-usuario) y solo inserta; assigned_by_user_id es el propio dueño porque la asignación es automática.</comment>
         <sql>INSERT INTO course_evaluators (course_id, user_id, assigned_by_user_id)
 SELECT c.id, c.owner_user_id, c.owner_user_id
