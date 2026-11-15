@@ -25,8 +25,16 @@ def test_ad1_matches_figma() -> None:
     assert_matches_figma(
         at,
         "AD1",
-        # Las acciones de cada fila son botones separados («Cambiar rol» y «Desactivar»).
-        accepted=("Cambiar rol · Desactivar", "Cambiar rol · Desactivar"),
+        # Las acciones de cada fila son botones separados («Cambiar rol» y «Desactivar»). Los
+        # correos de Figma usan @universidad.edu.co; los datos de ejemplo usan un dominio neutro.
+        accepted=(
+            "elena.ramirez@universidad.edu.co",
+            "Cambiar rol · Desactivar",
+            "laura.martinez@universidad.edu.co",
+            "Cambiar rol · Desactivar",
+            "julian.perez@universidad.edu.co",
+            "admin@universidad.edu.co",
+        ),
     )
 
 
@@ -66,7 +74,7 @@ def test_ad1_create_user() -> None:
     at = click(at, "Crear usuario")
     assert next(b for b in at.button if b.label == "Crear").disabled
     at.text_input(key="u-new-name").set_value("Nuevo").run()
-    at.text_input(key="u-new-email").set_value("nuevo@universidad.edu.co").run()
+    at.text_input(key="u-new-email").set_value("nuevo@organizacion.example").run()
     at = click(at, "Crear")
     assert_no_exception(at)
     assert not at.error

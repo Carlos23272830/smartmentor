@@ -304,7 +304,8 @@ def test_a3c_rights_follow_figma_and_use_the_organization_name() -> None:
     texts = page_texts(at)
     assert "Tus datos y tus derechos" in texts
     assert any("La organización responsable es la responsable" in t for t in texts)
-    # Figma dice «la universidad»; el texto usa ORGANIZATION_NAME (ADR 0021): diferencia aceptada.
+    # Figma v3 aún dice «la universidad» en A3c (no se ha actualizado a «organización»);
+    # el texto usa ORGANIZATION_NAME (ADR 0021): diferencia aceptada hasta que Figma se actualice.
     missing = missing_in_order(figma_texts("A3c", skip_brand=True), texts)
     assert all("universidad" in text for text in missing)
     assert len(missing) <= 2
