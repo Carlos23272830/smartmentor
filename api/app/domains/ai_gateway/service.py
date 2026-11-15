@@ -91,8 +91,12 @@ class JobService:
             raise AiJobNotFoundError(job_id)
         return await self._process(job, ingestor)
 
-    async def sweep_one(self, pending: PendingJob) -> None:
-        """Ingesta del barrido: sin usuario; los errores se registran y no detienen el barrido."""
+    async def sweep_one(self, pending: PendingJob) -> bool:
+        """Ingesta del barrido: sin usuario; los errores se registran y no detienen el barrido.
+
+        Devuelve `False` si el trabajo no se pudo ingerir (falló, es huérfano o su salida es
+        inválida); el barrido cuenta esos intentos para dejar de insistir.
+        """
         try:
             job = await self._ai.get_job(pending.job_id)
             await self._process(job, self._registry.get(job.job_type))
@@ -100,6 +104,8 @@ class JobService:
             logger.warning(
                 "sweep could not ingest the job", extra={"code": exc.code, "job_id": pending.job_id}
             )
+            return False
+        return True
 
     async def pending(self) -> list[PendingJob]:
         found: list[PendingJob] = []
