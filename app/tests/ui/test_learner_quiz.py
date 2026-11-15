@@ -1,5 +1,6 @@
 """E6, E6b, E6c, U1b, U1c, E7, E7b y E7c: tema, quiz y resultado."""
 
+import ast
 import re
 
 from apptest import button, page_texts, session_of
@@ -14,6 +15,7 @@ from learner_support import (
     no_exception,
 )
 from streamlit.testing.v1 import AppTest
+from support import SRC_DIR
 
 from clients.base import ApiError
 from clients.models import NextAction
@@ -112,6 +114,70 @@ def test_e6_exhausted_attempts_block_the_quiz() -> None:
     texts = page_texts(at)
     assert "Empezar quiz" not in texts
     assert any("Usaste todos los intentos" in w.value for w in at.warning)
+
+
+def _topic_without(**fields: object) -> AppTest:
+    """E6 con el contenido que diría la API si faltaran la explicación o el video."""
+    at = learner_app("learner_path", TOPIC, run=False)
+    session_of(at).learner.step_id = 813
+    client = client_of(at)
+    original = client.get_step_content
+    client.get_step_content = lambda *a, **k: original(*a, **k).model_copy(update=fields)  # type: ignore[method-assign]
+    at.run()
+    no_exception(at)
+    return at
+
+
+def test_e6_without_explanation_says_so_b046() -> None:
+    texts = page_texts(_topic_without(explanation=None))
+    assert "Este tema todavía no tiene explicación en texto." in " ".join(texts)
+    assert "Explicación" not in texts
+    assert "Este tema todavía no tiene video." not in " ".join(texts)
+
+
+def test_e6_without_video_says_so_b046() -> None:
+    texts = page_texts(_topic_without(video=None))
+    assert "Este tema todavía no tiene video." in " ".join(texts)
+    assert "Explicación" in texts
+    assert "Este tema todavía no tiene explicación en texto." not in " ".join(texts)
+
+
+def test_e6_with_all_content_has_no_missing_notices_b046() -> None:
+    joined = " ".join(page_texts(_open_topic()))
+    assert "todavía no tiene" not in joined
+
+
+def test_e6_video_and_rating_live_in_a_fragment_b046() -> None:
+    """Cada clic en la valoración redibuja solo el fragmento (no pide 3 endpoints otra vez).
+
+    `AppTest` siempre reejecuta todo el guion, así que no puede medir las lecturas de una
+    reejecución parcial: se verifica que la página declare el fragmento y que lo use.
+    """
+    tree = ast.parse((SRC_DIR / "pages/learner/topic.py").read_text(encoding="utf-8"))
+    fragments = [
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef)
+        and any(ast.unparse(d) == "st.fragment" for d in node.decorator_list)
+    ]
+    assert [f.name for f in fragments] == ["_video_block"]
+    used = {ast.unparse(n.func) for n in ast.walk(fragments[0]) if isinstance(n, ast.Call)}
+    assert {"render_video", "render_video_feedback"} <= used
+    # Dentro del fragmento no se lee la API salvo para enviar la valoración.
+    reads = {c for c in used if c.startswith("client.")}
+    assert reads == {"client.send_video_feedback"}
+
+
+def test_e6_rating_replaces_the_card_with_the_thanks_without_rerun_b046() -> None:
+    at = _open_topic()
+    sent: list[object] = []
+    client_of(at).send_video_feedback = lambda **kw: sent.append(kw)  # type: ignore[method-assign,assignment]
+    at.button_group[0].set_value("useful").run()
+    button(at, "Enviar calificación").click().run()
+    no_exception(at)
+    assert len(sent) == 1
+    assert any("Gracias" in s.value for s in at.success)
+    assert "Enviar calificación" not in page_texts(at)
 
 
 def test_e6_api_error_is_friendly() -> None:
@@ -399,6 +465,22 @@ def test_e7_passed_shows_the_review_and_the_rubric() -> None:
     assert any(t.startswith("Puntaje: 2 de 3 criterios") for t in texts)
     assert "Pedir revisión del instructor" in texts
     assert "Siguiente tema" in texts
+
+
+def test_e7_after_the_last_topic_the_button_follows_the_next_action_b046() -> None:
+    """Aprobar el último tema no ofrece «Siguiente tema»: lleva a la evaluación final."""
+    at = _result("learner_path")
+    session_of(at).learner.attempt_id = 9002
+    client = client_of(at)
+    original = client.get_attempt_result
+    client.get_attempt_result = lambda attempt_id: original(attempt_id).model_copy(  # type: ignore[method-assign]
+        update={"next_action": NextAction(type="take_final", screen="E8")}
+    )
+    at.run()
+    no_exception(at)
+    texts = page_texts(at)
+    assert "Presentar evaluación final" in texts
+    assert "Siguiente tema" not in texts
 
 
 def test_e7_review_request_is_sent() -> None:

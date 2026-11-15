@@ -155,6 +155,18 @@ def continue_label(action: NextAction, path: PathDetail, *, fixed: bool) -> str:
     return f"Continuar con {next_step}" if fixed and next_step else CONTINUE_TOPIC
 
 
+NEXT_TOPIC = "Siguiente tema"
+# Acciones que sí llevan a otro tema; para el resto el botón dice a dónde va (B-046).
+_TOPIC_ACTIONS: frozenset[NextActionType] = frozenset({"study_topic", "continue_attempt"})
+
+
+def passed_next_label(action: NextAction) -> str:
+    """Texto del botón de E7 tras aprobar: «Siguiente tema» solo si hay otro tema que estudiar."""
+    if action.type in _TOPIC_ACTIONS:
+        return NEXT_TOPIC
+    return CONTINUE_LABELS.get(action.type, "Continuar")
+
+
 def step_name(path: PathDetail, step_id: int | None) -> str | None:
     for step in path.steps:
         if step.step_id == step_id:

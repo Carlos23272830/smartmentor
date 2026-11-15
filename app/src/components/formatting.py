@@ -23,6 +23,11 @@ def integer(value: int) -> str:
     return f"{value:,}".replace(",", ".")
 
 
+def plural(count: int, one: str, many: str) -> str:
+    """Cantidad con su unidad en singular o plural: 1 -> «1 día», 3 -> «3 días»."""
+    return f"{count} {one if count == 1 else many}"
+
+
 def usd(value: float, digits: int = 2) -> str:
     return f"US$ {decimal(value, digits)}"
 

@@ -54,6 +54,9 @@ CLOSED_NOTES = {
     "passed": "Ya aprobaste este tema.",
     "skipped": "Este tema se omitió porque tu diagnóstico mostró que ya lo dominas.",
 }
+# B-046: si la API no trae explicación o video no se deja el hueco sin aviso ni se inventa nada.
+NO_EXPLANATION_NOTE = ":material/info: Este tema todavía no tiene explicación en texto."
+NO_VIDEO_NOTE = ":material/info: Este tema todavía no tiene video."
 
 try:
     path: PathDetail = client.get_path(enrollment.id)
@@ -144,38 +147,55 @@ open_view(
 # del quiz a la derecha.
 left, right = st.columns([2, 1])
 
-with left:
-    if content.video is not None:
-        render_video(
-            title=content.video.title,
-            duration_label=video_duration(content.video),
-            url=youtube_url(content.video),
-        )
-        sent_key = f"video-feedback-sent-{content.video.video_candidate_id}"
-        if st.session_state.get(sent_key):
-            st.success("¡Gracias! Tu calificación llegó a tu instructor sin tu nombre.")
+
+@st.fragment
+def _video_block() -> None:
+    """Video y valoración. Va en un fragmento: cada clic en las etiquetas, el comentario o «Enviar»
+    solo redibuja este bloque y no vuelve a pedir inscripción, ruta y contenido a la API (B-046).
+    El contenido del tema no cambia mientras se está en la pantalla: no queda desactualizado."""
+    video = content.video
+    if video is None:
+        st.caption(NO_VIDEO_NOTE)
+        return
+    render_video(
+        title=video.title,
+        duration_label=video_duration(video),
+        url=youtube_url(video),
+    )
+    sent_key = f"video-feedback-sent-{video.video_candidate_id}"
+    if st.session_state.get(sent_key):
+        st.success("¡Gracias! Tu calificación llegó a tu instructor sin tu nombre.")
+        return
+    # La tarjeta va en un hueco: al enviar se reemplaza por el agradecimiento sin otra ejecución.
+    slot = st.empty()
+    with slot.container():
+        feedback = render_video_feedback(key=f"video-{video.video_candidate_id}")
+    if feedback.submit and feedback.rating is not None:
+        try:
+            client.send_video_feedback(
+                video_candidate_id=video.video_candidate_id,
+                enrollment_id=enrollment.id,
+                rating=feedback.rating,
+                comment=feedback.comment,
+                watched_fully=False,
+            )
+        except ApiError as error:
+            show_action_error(error)
         else:
-            feedback = render_video_feedback(key=f"video-{content.video.video_candidate_id}")
-            if feedback.submit and feedback.rating is not None:
-                try:
-                    client.send_video_feedback(
-                        video_candidate_id=content.video.video_candidate_id,
-                        enrollment_id=enrollment.id,
-                        rating=feedback.rating,
-                        comment=feedback.comment,
-                        watched_fully=False,
-                    )
-                except ApiError as error:
-                    show_action_error(error)
-                else:
-                    st.session_state[sent_key] = True
-                    st.rerun()
+            st.session_state[sent_key] = True
+            slot.success("¡Gracias! Tu calificación llegó a tu instructor sin tu nombre.")
+
+
+with left:
+    _video_block()
 
     if content.explanation is not None:
         render_explanation(
             explanation_text(content.explanation.content),
             source_note=source_note(content.explanation),
         )
+    else:
+        st.caption(NO_EXPLANATION_NOTE)
     if content.personal_example:
         st.markdown(f"**{content.personal_example.get('title', 'Ejemplo para ti')}**")
         st.markdown(str(content.personal_example.get("body", "")))

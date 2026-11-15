@@ -74,3 +74,57 @@ def test_apptest_runs_inside_a_script() -> None:
     app = AppTest.from_function(_slow_script).run()
     assert not app.exception
     assert app.markdown[0].value == "hecho"
+
+
+def _wait_mode_script() -> None:
+    """Dibuja tres peticiones: normal, en modo espera y tras consumir el trabajo."""
+    from contextlib import contextmanager
+
+    import streamlit as st
+
+    from components.loading import loading_indicator
+    from core import polling
+    from core.session import get_session
+
+    drawn: list[str] = []
+
+    @contextmanager
+    def fake_spinner(text: str):  # type: ignore[no-untyped-def]
+        drawn.append(text)
+        yield
+
+    original = st.spinner
+    st.spinner = fake_spinner  # type: ignore[assignment]
+    try:
+        learner = get_session().learner
+        with loading_indicator():
+            pass
+        learner.diagnostic_job_id = "job-1"
+        polling.enter_wait_mode("job-1")
+        with loading_indicator():
+            pass
+        learner.diagnostic_job_id = None  # la página consumió el trabajo
+        with loading_indicator():
+            pass
+        polling.enter_wait_mode("job-1")
+        learner.quiz_job_id = "job-1"
+        polling.leave_wait_mode()  # al navegar a otra pantalla el spinner vuelve
+        with loading_indicator():
+            pass
+    finally:
+        st.spinner = original  # type: ignore[assignment]
+    st.session_state["drawn"] = drawn
+
+
+def test_wait_mode_silences_the_spinner_only_while_the_job_is_awaited() -> None:
+    app = AppTest.from_function(_wait_mode_script).run()
+    assert not app.exception
+    # Dibuja la 1.ª (sin espera), calla la 2.ª (espera activa), dibuja la 3.ª (trabajo consumido)
+    # y la 4.ª (se salió del modo espera).
+    assert app.session_state["drawn"] == ["Cargando…"] * 3
+
+
+def test_polling_registers_the_wait_mode_probe() -> None:
+    from core import polling
+
+    assert loading._quiet_probe is polling.in_wait_mode  # lo registra al importarse

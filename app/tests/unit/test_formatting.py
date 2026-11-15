@@ -2,7 +2,7 @@
 
 import pytest
 
-from components.formatting import file_size
+from components.formatting import file_size, plural
 
 
 @pytest.mark.parametrize(
@@ -17,3 +17,11 @@ from components.formatting import file_size
 )
 def test_file_size(size: int, expected: str) -> None:
     assert file_size(size) == expected
+
+
+@pytest.mark.parametrize(
+    ("count", "expected"),
+    [(0, "0 días"), (1, "1 día"), (2, "2 días"), (30, "30 días")],
+)
+def test_plural(count: int, expected: str) -> None:
+    assert plural(count, "día", "días") == expected

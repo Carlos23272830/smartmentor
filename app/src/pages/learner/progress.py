@@ -10,7 +10,7 @@ import streamlit as st
 from clients.base import ApiError
 from clients.models import Enrollment, PathDetail
 from clients.models_learner import StudyGoals, StudyGoalsUpdate
-from components.formatting import decimal, short_date
+from components.formatting import decimal, plural, short_date
 from components.layout import render_notice, render_page_header
 from components.stat_tiles import render_stat_tiles
 from core import features
@@ -24,6 +24,7 @@ from services.learning import savings_label, step_name
 DATA_RIGHTS_PAGE = "pages/common/data_rights.py"
 RETENTION_PAGE = "pages/learner/retention_test.py"
 ARM_LABEL = {"personalized": "ruta personalizada", "fixed": "ruta fija"}
+NO_GOAL_YET = "Aún no elegiste tu meta"
 LEAVE_PILOT = "Salir del piloto"
 REVOKE_ALL = "Revocar la autorización y borrar mis datos"
 NO_GOALS = StudyGoals(
@@ -117,14 +118,17 @@ def _goal_card(
             st.markdown(f"**{title}**")
             with st.container(key=f"goal-right-unit-{key}"):
                 st.caption(unit)
+        if new:
+            # Sin meta elegida no hay cifra que mostrar: un «0» parecería un avance real.
+            st.caption(NO_GOAL_YET)
+            return
         with st.container(horizontal=True, vertical_alignment="bottom"):
             st.markdown(f"## {done}")
-            if not new:
-                st.caption(goal_text)
+            st.caption(goal_text)
             if missing_text:
                 with st.container(key=f"goal-right-missing-{key}"):
                     st.caption(missing_text)
-        if goal > 0 and not new:
+        if goal > 0:
             st.progress(min(done / goal, 1.0))
 
 
@@ -137,7 +141,7 @@ def _goals(current: StudyGoals, *, new: bool) -> tuple[int | None, int | None]:
     if new:
         st.caption("Todavía no tienes metas. Elige una para hoy y otra para este mes.")
     else:
-        st.badge(f"Racha de {current.streak_days} días", color="gray")
+        st.badge(f"Racha de {plural(current.streak_days, 'día', 'días')}", color="gray")
     today, month = st.columns(2)
     missing = max(current.daily_minutes_goal - current.daily_minutes_done, 0)
     left = max(current.monthly_topics_goal - current.monthly_topics_done, 0)

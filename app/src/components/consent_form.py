@@ -58,6 +58,17 @@ def render_consent_form(
     return ConsentFormResult(data, pilot, read, submit)
 
 
+def pilot_description(pilot_window: str) -> str:
+    """Primer párrafo de A3b; la ventana del piloto es configurable y puede venir vacía (B-046)."""
+    window = pilot_window.strip()
+    # Con ventana: «Entre el 2 y el 15 de …, evaluamos»; sin ella: «En este piloto evaluamos».
+    opening = window[:1].upper() + window[1:] if window else "En este piloto"
+    return (
+        "SmartMentor es el prototipo de un proyecto de grado de la Maestría en Ciencia de Datos. "
+        f"{opening} evaluamos si las rutas personalizadas con IA ayudan a aprender."
+    )
+
+
 def render_informed_consent(
     *,
     key: str,
@@ -77,9 +88,7 @@ def render_informed_consent(
     with left:
         _card(
             "Qué es el piloto",
-            "SmartMentor es el prototipo de un proyecto de grado de la Maestría en Ciencia de "
-            f"Datos. {pilot_window[:1].upper() + pilot_window[1:]} evaluamos si las rutas "
-            "personalizadas con IA ayudan a aprender.",
+            pilot_description(pilot_window),
             f"{key}-what",
         )
         _card(

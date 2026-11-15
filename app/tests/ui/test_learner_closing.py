@@ -131,6 +131,17 @@ def test_e11_shows_progress_bars_and_badges_v050() -> None:
     assert any("Piloto: " in text for text in badges)
 
 
+def test_e11_streak_of_one_day_is_singular_b046() -> None:
+    at = learner_app("learner_path", PROGRESS, run=False)
+    client = client_of(at)
+    original = client.get_study_goals
+    client.get_study_goals = lambda: original().model_copy(update={"streak_days": 1})  # type: ignore[method-assign,union-attr]
+    at.run()
+    no_exception(at)
+    badges = [e.value for e in at.markdown if "-badge[" in e.value]
+    assert any("Racha de 1 día" in text and "1 días" not in text for text in badges)
+
+
 def test_e11_without_goals_they_can_be_chosen_b028() -> None:
     """La API responde 404 hasta que hay metas: la sección se muestra vacía y se pueden elegir."""
     at = learner_app("learner_path", PROGRESS, run=False)
@@ -151,6 +162,10 @@ def test_e11_without_goals_they_can_be_chosen_b028() -> None:
     texts = page_texts(at)
     assert "Mis metas · opcional" in texts
     assert "Todavía no tienes metas. Elige una para hoy y otra para este mes." in texts
+    # B-046: sin meta elegida no se ven ceros, se dice que falta elegirla.
+    assert texts.count("Aún no elegiste tu meta") == 2
+    assert "0" not in [e.value.removeprefix("## ") for e in at.markdown if e.value.startswith("##")]
+    assert not at.get("progress")[1:]  # solo la barra del curso
     at.segmented_control(key="goal-daily").set_value(30).run()
     assert saved == []  # falta la meta del mes
     at.segmented_control(key="goal-monthly").set_value(3).run()
