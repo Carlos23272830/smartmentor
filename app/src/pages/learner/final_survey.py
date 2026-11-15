@@ -37,7 +37,7 @@ def _submit() -> None:
             enrollment.id,
             likert=state.survey_likert,
             sus_items=[state.survey_sus[i] for i in range(1, 11)],
-            comment=(st.session_state.get("survey-comment") or "").strip() or None,
+            comment=state.survey_comment.strip() or None,
         )
     except ApiError as error:
         show_action_error(error)
@@ -86,8 +86,9 @@ else:
     for index in range(6, 11):
         _scale(index)
     st.markdown("**Comentario (opcional)**")
-    st.text_area(
+    state.survey_comment = st.text_area(
         "¿Qué mejorarías?",
+        value=state.survey_comment,
         max_chars=500,
         placeholder="¿Qué mejorarías?",
         key="survey-comment",

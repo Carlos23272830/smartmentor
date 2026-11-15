@@ -45,6 +45,7 @@ class LearnerState:
     survey_step: int = 1
     survey_likert: dict[str, int] = field(default_factory=dict)
     survey_sus: dict[int, int] = field(default_factory=dict)
+    survey_comment: str = ""
     manage_consents: bool = False
 
     def forget_position(self) -> None:

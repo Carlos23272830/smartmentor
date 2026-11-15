@@ -298,3 +298,14 @@ def test_e11_offers_the_retention_test_after_completing_the_route() -> None:
     button(at, "Empezar prueba").click().run()
     no_exception(at)
     assert "Prueba de retención" in page_texts(at)
+
+
+def test_e13b_back_keeps_the_comment() -> None:
+    at = learner_app("learner_completed", SURVEY)
+    _fill(at, 8)
+    button(at, "Siguiente").click().run()
+    _fill(at, 5)
+    at.text_area(key="survey-comment").set_value("Más ejemplos.").run()
+    button(at, "Anterior").click().run()
+    button(at, "Siguiente").click().run()
+    assert at.text_area(key="survey-comment").value == "Más ejemplos."
