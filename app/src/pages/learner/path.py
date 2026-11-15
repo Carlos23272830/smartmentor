@@ -27,6 +27,8 @@ ORIGIN_LABEL = {
     "path_default": "TU OBJETIVO · DEFINIDO POR LA RUTA",
 }
 DEFAULT_ORIGIN_LABEL = "TU OBJETIVO"
+OBJECTIVE_PENDING = "objective_pending"
+OBJECTIVE_FIXED_NOTE = "El objetivo se fija al confirmar la ruta"
 
 client = get_client()
 state = get_session().learner
@@ -74,7 +76,11 @@ else:
         with st.container(key="card-objective"):
             eyebrow(ORIGIN_LABEL.get(enrollment.objective.origin or "", DEFAULT_ORIGIN_LABEL))
             st.markdown(enrollment.objective.statement)
-            if st.button("Editar objetivo", key="path-edit-objective"):
+            # La API solo acepta el objetivo en `objective_pending`; con la ruta confirmada
+            # respondería `409 INVALID_STATE_TRANSITION` (B-032, decisión del 2026-11-15).
+            if enrollment.status != OBJECTIVE_PENDING:
+                st.caption(OBJECTIVE_FIXED_NOTE)
+            elif st.button("Editar objetivo", key="path-edit-objective"):
                 state.edit_objective = True
                 st.switch_page(DIAGNOSTIC_RESULT_PAGE)
 

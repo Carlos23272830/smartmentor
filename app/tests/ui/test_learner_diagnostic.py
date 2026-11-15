@@ -244,6 +244,8 @@ def test_e5_follows_figma() -> None:
         at,
         "E5",
         accepted=(
+            # Con la ruta confirmada el objetivo no se edita (B-032): va una nota en su lugar.
+            "Editar objetivo",
             # Un tema omitido no se repasa desde la ruta: la API no entrega su contenido (409).
             "Puedes repasarlo cuando quieras",
             # El API no dice de qué tema es prerrequisito, ni el último puntaje (solo el mejor).
@@ -280,8 +282,20 @@ def test_e5_continue_follows_next_action() -> None:
     assert "Regresión logística" in page_texts(at)
 
 
-def test_e5_edit_objective_opens_the_editor() -> None:
+def test_e5_confirmed_path_does_not_offer_to_edit_the_objective() -> None:
+    """Con la ruta confirmada la API rechaza el objetivo (409): E5 no ofrece editarlo (B-032)."""
     at = learner_app("learner_path", PATH)
+    no_exception(at)
+    assert "path-edit-objective" not in {b.key for b in at.button}
+    assert "El objetivo se fija al confirmar la ruta" in page_texts(at)
+
+
+def test_e5_pending_objective_still_opens_the_editor() -> None:
+    at = learner_app("learner_path", PATH, run=False)
+    for enrollment in client_of(at)._enrollments:
+        enrollment.status = "objective_pending"
+    at.run()
+    assert "El objetivo se fija al confirmar la ruta" not in page_texts(at)
     button(at, "Editar objetivo").click().run()
     no_exception(at)
     assert button(at, "Guardar objetivo")
