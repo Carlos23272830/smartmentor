@@ -28,6 +28,8 @@ ORIGIN_LABEL = {
     "path_default": "OBJETIVO DE LA RUTA",
 }
 DEFAULT_ORIGIN_LABEL = "TU OBJETIVO"
+# Porcentaje de la nota verde de E4b, tal como aparece en Figma (V-041).
+PASS_THRESHOLD_NOTE = 80
 
 client = get_client()
 state = get_session().learner
@@ -56,7 +58,7 @@ render_levels(
 if objective is not None:
     with st.container(key="card-objective"):
         eyebrow(ORIGIN_LABEL.get(objective.origin or "", DEFAULT_ORIGIN_LABEL))
-        st.markdown(f"**{objective.statement}**")
+        st.markdown(objective.statement)
 
 
 def _save(chosen: Objective) -> None:
@@ -79,7 +81,52 @@ def _forget_editor_fields() -> None:
         st.session_state.pop(f"objective-{suffix}", None)
 
 
-if not state.edit_objective and objective is not None:
+# --- E4b · Editar el objetivo (ventana modal) ---------------------------------------------------
+
+
+def _close_editor() -> None:
+    """Cierra la ventana (también con la «x» o Esc) y descarta lo escrito."""
+    state.edit_objective = False
+    st.session_state.pop("objective-use-proposal", None)
+    _forget_editor_fields()
+
+
+@st.dialog("Editar tu objetivo", width="medium", on_dismiss=_close_editor)
+def _edit_dialog() -> None:
+    proposal = result.proposed_objective
+    base = (proposal if st.session_state.get("objective-use-proposal") else None) or objective
+    draft = (
+        ObjectiveDraft(base.bloom_verb, base.content, base.criterion)
+        if base
+        else ObjectiveDraft("", "", "")
+    )
+    editor = render_objective_editor(
+        draft,
+        key="objective",
+        can_reset=proposal is not None,
+        topics_count=sum(1 for t in result.level_by_topic if t.classification != "mastered"),
+        pass_threshold=PASS_THRESHOLD_NOTE,
+    )
+    if editor.cancel:
+        _close_editor()
+        st.rerun()
+    if editor.reset_to_proposal:
+        _forget_editor_fields()
+        st.session_state["objective-use-proposal"] = True
+        st.rerun()
+    if editor.save:
+        _save(
+            Objective(
+                statement=editor.draft.statement,
+                bloom_verb=editor.draft.bloom_verb,
+                content=editor.draft.content,
+                criterion=editor.draft.criterion,
+                origin="learner_edited",
+            )
+        )
+
+
+if objective is not None:
     edit_col, confirm_col = st.columns(2)
     if edit_col.button("Editar el objetivo", key="objective-edit"):
         state.edit_objective = True
@@ -87,39 +134,6 @@ if not state.edit_objective and objective is not None:
         st.rerun()
     if confirm_col.button("Confirmar y ver mi ruta", type="primary", key="objective-confirm"):
         _save(objective)
-    st.stop()
 
-# --- E4b · Editar el objetivo -------------------------------------------------------------------
-
-proposal = result.proposed_objective
-base = (proposal if st.session_state.get("objective-use-proposal") else None) or objective
-draft = (
-    ObjectiveDraft(base.bloom_verb, base.content, base.criterion)
-    if base
-    else ObjectiveDraft("", "", "")
-)
-editor = render_objective_editor(
-    draft,
-    key="objective",
-    can_reset=proposal is not None,
-    topics_count=sum(1 for t in result.level_by_topic if t.classification != "mastered"),
-)
-if editor.cancel:
-    state.edit_objective = False
-    st.session_state.pop("objective-use-proposal", None)
-    _forget_editor_fields()
-    st.rerun()
-if editor.reset_to_proposal:
-    _forget_editor_fields()
-    st.session_state["objective-use-proposal"] = True
-    st.rerun()
-if editor.save:
-    _save(
-        Objective(
-            statement=editor.draft.statement,
-            bloom_verb=editor.draft.bloom_verb,
-            content=editor.draft.content,
-            criterion=editor.draft.criterion,
-            origin="learner_edited",
-        )
-    )
+if state.edit_objective:
+    _edit_dialog()

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 import streamlit as st
 
+from components.layout import render_notice
 from components.theme import BLOOM_VERBS
 
 
@@ -46,9 +47,9 @@ def render_objective_editor(
 ) -> ObjectiveEditorResult:
     """Formulario de las tres partes.
 
+    El título «Editar tu objetivo» lo pone la ventana modal (`st.dialog`) de la página (V-041).
     `topics_count` alimenta «Con este objetivo tu ruta tiene N temas».
     """
-    st.markdown("#### Editar tu objetivo")
     st.caption("Redáctalo como un resultado medible: verbo de Bloom + contenido + criterio.")
     verbs = list(BLOOM_VERBS)
     if draft.bloom_verb and draft.bloom_verb not in verbs:
@@ -71,13 +72,16 @@ def render_objective_editor(
     with st.container(key=f"panel-{key}-preview"):
         st.caption("**VISTA PREVIA**")
         st.markdown(f"**{current.statement}**" if current.is_complete else "—")
+    if topics_count is not None or pass_threshold is not None:
+        lines = []
         if topics_count is not None:
-            st.markdown(f"**Con este objetivo tu ruta tiene {topics_count} temas.**")
+            lines.append(f"**Con este objetivo tu ruta tiene {topics_count} temas.**")
         if pass_threshold is not None:
-            st.caption(
+            lines.append(
                 f"El {pass_threshold} % para obtener el badge lo define tu instructor y no "
                 "cambia con tu objetivo."
             )
+        render_notice("\n\n".join(lines), tone="success")
     reset = (
         st.button("Volver a la propuesta de la IA", type="tertiary", key=f"{key}-reset")
         if can_reset

@@ -39,6 +39,7 @@ me = current_me()
 enrollment: Enrollment = current_enrollment(client)
 
 try:
+    enrollments = client.list_enrollments(limit=100).items
     path: PathDetail = client.get_path(enrollment.id)
     goals = client.get_study_goals()
 except ApiError as error:
@@ -48,6 +49,22 @@ except ApiError as error:
 role_label = label_for("learner")
 render_notice(f"Tu rol: {role_label} · Solo ves tu propio avance, nunca el de otros aprendices.")
 render_page_header("Mi progreso")
+
+if len(enrollments) > 1:
+    # B-037: con varias rutas se elige cuál mostrar. La clave lleva el id para que el selector
+    # parta de la ruta vigente aunque otra pantalla (Logros) haya cambiado la elegida.
+    names = {e.id: e.learning_path.name for e in enrollments}
+    chosen = st.selectbox(
+        "Ruta",
+        list(names),
+        index=list(names).index(enrollment.id) if enrollment.id in names else 0,
+        format_func=names.__getitem__,
+        label_visibility="collapsed",
+        key=f"progress-route-{enrollment.id}",
+    )
+    if chosen != enrollment.id:
+        get_session().selected_enrollment_id = chosen
+        st.rerun()
 
 tried = [s.attempts_used for s in path.steps if s.attempts_used > 0]
 progress = enrollment.progress
@@ -204,43 +221,52 @@ with st.container(key="card-data"):
             state.manage_consents = True
         st.page_link(DATA_RIGHTS_PAGE, label="Tus derechos y quién ve cada dato →")
 
-if state.manage_consents:
-    # E11b · Gestionar autorizaciones
-    with st.container(key="card-consents-manage", border=True):
-        st.subheader("Gestionar mis autorizaciones", anchor=False)
-        st.caption("Elige qué quieres cambiar. Puedes volver a autorizar más adelante.")
-        options = [LEAVE_PILOT, REVOKE_ALL] if status.pilot_research.granted else [REVOKE_ALL]
-        captions = {
-            LEAVE_PILOT: "Tus datos dejan de entrar al análisis desde hoy. Sigues con tu ruta, "
-            "tus intentos y tu badge.",
-            REVOKE_ALL: "Cerramos tu cuenta y borramos tu hoja de vida, tu diagnóstico y tus "
-            "intentos. Pierdes tu avance y no podrás descargar el badge.",
-        }
-        choice = st.radio(
-            "Gestionar mis autorizaciones",
-            options,
-            captions=[captions[o] for o in options],
-            index=None,
-            label_visibility="collapsed",
-            key="consents-choice",
+
+def _close_consents() -> None:
+    """Cierra la ventana (también con la «x» o Esc)."""
+    state.manage_consents = False
+
+
+@st.dialog("Gestionar mis autorizaciones", width="medium", on_dismiss=_close_consents)
+def _manage_consents() -> None:
+    """E11b · Gestionar autorizaciones (ventana modal, V-051)."""
+    st.caption("Elige qué quieres cambiar. Puedes volver a autorizar más adelante.")
+    options = [LEAVE_PILOT, REVOKE_ALL] if status.pilot_research.granted else [REVOKE_ALL]
+    captions = {
+        LEAVE_PILOT: "Tus datos dejan de entrar al análisis desde hoy. Sigues con tu ruta, "
+        "tus intentos y tu badge.",
+        REVOKE_ALL: "Cerramos tu cuenta y borramos tu hoja de vida, tu diagnóstico y tus "
+        "intentos. Pierdes tu avance y no podrás descargar el badge.",
+    }
+    choice = st.radio(
+        "Gestionar mis autorizaciones",
+        options,
+        captions=[captions[o] for o in options],
+        index=None,
+        label_visibility="collapsed",
+        key="consents-choice",
+    )
+    with st.container(horizontal=True):
+        if st.button("Cancelar", key="consents-cancel"):
+            state.manage_consents = False
+            st.rerun()
+        confirm = st.button(
+            "Confirmar", type="primary", key="consents-confirm", disabled=choice is None
         )
-        with st.container(horizontal=True):
-            if st.button("Cancelar", key="consents-cancel"):
-                state.manage_consents = False
-                st.rerun()
-            confirm = st.button(
-                "Confirmar", type="primary", key="consents-confirm", disabled=choice is None
-            )
-        if confirm:
-            try:
-                if choice == LEAVE_PILOT:
-                    client.revoke_consent("pilot_research")
-                else:
-                    client.create_data_subject_request("deletion", "Solicitud desde Mi progreso")
-                    client.revoke_consent("data_processing")
-            except ApiError as error:
-                show_action_error(error)
+    if confirm:
+        try:
+            if choice == LEAVE_PILOT:
+                client.revoke_consent("pilot_research")
             else:
-                state.manage_consents = False
-                refresh_me()
-                st.rerun()
+                client.create_data_subject_request("deletion", "Solicitud desde Mi progreso")
+                client.revoke_consent("data_processing")
+        except ApiError as error:
+            show_action_error(error)
+        else:
+            state.manage_consents = False
+            refresh_me()
+            st.rerun()
+
+
+if state.manage_consents:
+    _manage_consents()

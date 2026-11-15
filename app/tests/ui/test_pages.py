@@ -518,3 +518,14 @@ def test_a3_data_checkbox_survives_a_visit_to_a3c_by_url() -> None:
     at.switch_page(CONSENT).run()
     assert_no_exception(at)
     assert at.checkbox(key="consent-terms-data").value is True
+
+
+def test_header_marks_routes_as_active_in_the_learner_flow() -> None:
+    """V-044: el quiz y la evaluación final no tienen enlace propio y cuelgan de «Rutas»."""
+    from core.navigation import CATALOG, active_menu_path
+
+    assert active_menu_path("quiz", "learner") == CATALOG
+    assert active_menu_path("final-assessment", "learner") == CATALOG
+    assert active_menu_path("progress", "learner") == "pages/learner/progress.py"
+    assert active_menu_path("courses", "learner") is None
+    assert active_menu_path("quiz", "instructor") is None

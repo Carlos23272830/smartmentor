@@ -86,3 +86,16 @@
   margin: 0 auto;
   max-width: 420px;
 }
+
+/* Barra superior: el enlace activo va en azul y en negrita, sin fondo gris (V-044). */
+.st-key-nav-link-active a,
+.st-key-nav-link-active a > span {
+  /* !important: Streamlit pinta el fondo gris del enlace de la página actual con más peso. */
+  background: transparent !important;
+  color: var(--accent);
+  font-weight: 700;
+}
+.st-key-nav-link-active a p {
+  color: var(--accent);
+  font-weight: 700;
+}

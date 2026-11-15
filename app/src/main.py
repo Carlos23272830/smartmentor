@@ -18,6 +18,7 @@ from core.container import get_client
 from core.errors import describe_error
 from core.identity import active_role, current_me, label_for, load_me
 from core.navigation import (
+    active_menu_path,
     build_navigation,
     home_for,
     menu_links,
@@ -145,6 +146,7 @@ with st.container(key=f"role-{role}"):
         email=me.email,
         links=[] if me.requires_consent else menu_links(role),
         other_roles=other_roles,
+        active_path=active_menu_path(page.url_path, role),
     )
     _handle_header(action)
     try:

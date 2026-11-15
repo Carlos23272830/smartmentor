@@ -9,7 +9,7 @@ import streamlit as st
 from clients.base import ApiError
 from clients.models import PathDetail
 from components.formatting import percent_points
-from components.layout import eyebrow, render_page_header
+from components.layout import eyebrow, render_notice, render_page_header
 from components.path_rows import render_path_rows
 from core.container import get_client
 from core.errors import show_action_error
@@ -61,9 +61,10 @@ if fixed:
             "temas."
         ),
     )
-    st.caption(
+    render_notice(
         "Grupo asignado al azar para el piloto. El contenido, los quizzes y los umbrales son los "
-        "mismos de la ruta personalizada; solo cambia que no se omiten temas según el diagnóstico."
+        "mismos de la ruta personalizada; solo cambia que no se omiten temas según el diagnóstico.",
+        tone="info",
     )
 else:
     render_page_header(
@@ -72,12 +73,12 @@ else:
     if enrollment.objective is not None:
         with st.container(key="card-objective"):
             eyebrow(ORIGIN_LABEL.get(enrollment.objective.origin or "", DEFAULT_ORIGIN_LABEL))
-            st.markdown(f"**{enrollment.objective.statement}**")
+            st.markdown(enrollment.objective.statement)
             if st.button("Editar objetivo", key="path-edit-objective"):
                 state.edit_objective = True
                 st.switch_page(DIAGNOSTIC_RESULT_PAGE)
 
-opened = render_path_rows(rows)
+opened = render_path_rows(rows, grouped=fixed)
 if opened is not None:
     state.step_id = opened
     st.switch_page(TOPIC_PAGE)

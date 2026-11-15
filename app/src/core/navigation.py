@@ -172,6 +172,40 @@ def menu_links(role: Role) -> list[tuple[str, str]]:
     ]
 
 
+# Páginas del flujo del aprendiz que no tienen enlace propio: en Figma (E6b, E8…) la barra
+# superior marca «Rutas» como activo mientras la persona recorre su ruta (V-044).
+ROUTES_FLOW_URLS = frozenset(
+    {
+        "onboarding-profile",
+        "onboarding-resume",
+        "diagnostic",
+        "diagnostic-result",
+        "path",
+        "topic",
+        "quiz",
+        "quiz-result",
+        "final-assessment",
+        "final-result",
+        "badge",
+        "final-survey",
+        "retention-test",
+    }
+)
+
+
+def active_menu_path(url_path: str, role: Role) -> str | None:
+    """Archivo del enlace del menú que se marca como activo para la página `url_path`."""
+    links = menu_links(role)
+    for spec in registered_pages():
+        if spec.url_path != url_path:
+            continue
+        if spec.menu_role == role:
+            return spec.path
+        if role == "learner" and url_path in ROUTES_FLOW_URLS:
+            return CATALOG if any(path == CATALOG for path, _ in links) else None
+    return None
+
+
 def page_for_next_action(action: NextAction) -> str | None:
     """Página que atiende un `next_action`, o None si todavía no existe.
 

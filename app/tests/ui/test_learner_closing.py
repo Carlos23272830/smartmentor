@@ -185,8 +185,10 @@ def test_e11b_leave_the_pilot_revokes_only_the_pilot_consent() -> None:
 
     client.revoke_consent = spy  # type: ignore[method-assign]
     button(at, "Gestionar mis autorizaciones").click().run()
-    texts = page_texts(at)
-    assert "Elige qué quieres cambiar. Puedes volver a autorizar más adelante." in texts
+    # V-051: E11b es una ventana modal (`st.dialog`); sus textos no están en el cuerpo de la página.
+    assert "Elige qué quieres cambiar. Puedes volver a autorizar más adelante." in [
+        c.value for c in at.caption
+    ]
     assert button(at, "Confirmar").disabled
     at.radio(key="consents-choice").set_value("Salir del piloto").run()
     button(at, "Confirmar").click().run()
@@ -212,9 +214,9 @@ def test_e11b_cancel_closes_the_panel() -> None:
     at = learner_app("learner_path", PROGRESS)
     button(at, "Gestionar mis autorizaciones").click().run()
     button(at, "Cancelar").click().run()
-    assert "Elige qué quieres cambiar. Puedes volver a autorizar más adelante." not in page_texts(
-        at
-    )
+    assert "Elige qué quieres cambiar. Puedes volver a autorizar más adelante." not in [
+        c.value for c in at.caption
+    ]
 
 
 def test_e11_offline() -> None:
@@ -323,6 +325,62 @@ def test_e11_offers_the_retention_test_after_completing_the_route() -> None:
     button(at, "Empezar prueba").click().run()
     no_exception(at)
     assert "Prueba de retención" in page_texts(at)
+
+
+# --- B-037: varias rutas -------------------------------------------------------------------------
+
+
+def test_b037_e11_defaults_to_the_most_recent_route_in_progress() -> None:
+    at = learner_app("learner_multi_path", PROGRESS)
+    no_exception(at)
+    texts = page_texts(at)
+    assert session_of(at).selected_enrollment_id == 9
+    assert "1 de 4" in texts
+    assert "Python para análisis de datos" in texts
+    assert at.selectbox[0].value == 9
+    assert "Prueba de retención disponible · opcional" not in texts
+
+
+def test_b037_e11_selector_changes_the_cards() -> None:
+    at = learner_app("learner_multi_path", PROGRESS)
+    at.selectbox[0].set_value(8).run()
+    no_exception(at)
+    texts = page_texts(at)
+    assert session_of(at).selected_enrollment_id == 8
+    assert "3 de 5" in texts
+    assert "1 de 4" not in texts
+    assert at.selectbox[0].value == 8
+    at.selectbox[0].set_value(7).run()
+    assert "Prueba de retención disponible · opcional" in page_texts(at)
+
+
+def test_b037_e11_single_route_has_no_selector() -> None:
+    at = learner_app("learner_path", PROGRESS)
+    assert len(at.selectbox) == 0
+
+
+def test_b037_e12_enrolled_routes_are_not_shown_as_not_enrolled() -> None:
+    at = learner_app("learner_multi_path", ACHIEVEMENTS)
+    no_exception(at)
+    texts = page_texts(at)
+    assert "Obtenido 5 oct 2026" in texts
+    assert "En curso · 3 de 5 temas aprobados" in texts
+    assert "En curso · 1 de 4 temas aprobados" in texts
+    # Solo las rutas sin inscripción siguen diciendo que hay que inscribirse (Claude x3, Google).
+    assert texts.count("Bloqueado · inscríbete para obtenerlo") == 3
+
+
+def test_b037_e14_is_enabled_by_any_completed_route() -> None:
+    at = learner_app("learner_multi_path", RETENTION)
+    no_exception(at)
+    assert not at.info
+    assert "Prueba de retención" in page_texts(at)
+    assert session_of(at).selected_enrollment_id == 7
+
+
+def test_b037_e14_stays_closed_when_no_route_is_completed() -> None:
+    at = learner_app("learner_path", RETENTION)
+    assert at.info
 
 
 def test_e13b_back_keeps_the_comment() -> None:

@@ -23,6 +23,10 @@ POLL_SECONDS = 2
 ESTIMATE = "menos de 20 segundos"
 PATH_PAGE = "pages/learner/path.py"
 NO_ROUTE = "Todavía no tienes una ruta. Elige una en el catálogo."
+# Inscripciones que siguen vivas (no terminadas ni abandonadas), para elegir la de por omisión.
+OPEN_STATUSES = frozenset(
+    {"enrolled", "profiling", "diagnosing", "objective_pending", "in_path", "final_ready"}
+)
 
 
 def idempotency_key(name: str, *, fresh: bool = False) -> str:
@@ -33,8 +37,14 @@ def idempotency_key(name: str, *, fresh: bool = False) -> str:
     return keys[name]
 
 
+def default_enrollment(items: Sequence[Enrollment]) -> Enrollment:
+    """La inscripción por omisión: la más reciente en curso o, si no hay, la más reciente."""
+    open_items = [e for e in items if e.status in OPEN_STATUSES]
+    return max(open_items or items, key=lambda e: e.created_at)
+
+
 def current_enrollment(client: SmartMentorClient) -> Enrollment:
-    """La inscripción de la persona: la elegida o, si no hay, la primera que devuelva la API."""
+    """La inscripción de la persona: la elegida o, si no hay, la más reciente en curso."""
     session = get_session()
     try:
         if session.selected_enrollment_id is not None:
@@ -47,8 +57,9 @@ def current_enrollment(client: SmartMentorClient) -> Enrollment:
         st.info(NO_ROUTE)
         st.page_link(CATALOG, label="Ir al catálogo")
         st.stop()
-    session.selected_enrollment_id = page.items[0].id
-    return page.items[0]
+    chosen = default_enrollment(page.items)
+    session.selected_enrollment_id = chosen.id
+    return chosen
 
 
 def remember(action: NextAction) -> None:
