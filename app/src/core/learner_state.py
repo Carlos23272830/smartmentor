@@ -69,6 +69,9 @@ class LearnerState:
     quiz_job_id: str | None = None
     quiz_job_kind: str = "grade"
     final_attempt_id: int | None = None
+    # Intento de la final que E9 acaba de abrir (reintento o «Continuar»): E8 lo muestra aunque la
+    # inscripción leída todavía diga `review_final` (B-041). Se olvida al entregar o calificar.
+    pending_final_attempt_id: int | None = None
     sheet: AnswerSheet = field(default_factory=AnswerSheet)
     finished_jobs: dict[str, Job] = field(default_factory=dict)
     job_polls: dict[str, int] = field(default_factory=dict)
@@ -88,6 +91,7 @@ class LearnerState:
         otra. Los trabajos ya terminados se conservan porque se identifican por su id.
         """
         self.step_id = self.attempt_id = self.final_attempt_id = None
+        self.pending_final_attempt_id = None
         self.job_id = self.diagnostic_job_id = self.quiz_job_id = None
         self.quiz_job_kind = "grade"
         self.edit_objective = False

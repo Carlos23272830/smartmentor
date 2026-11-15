@@ -10,8 +10,10 @@ from learner_support import (
     matches_figma,
     no_exception,
 )
+from streamlit.testing.v1 import AppTest
 
 from clients.base import ApiError
+from clients.models import Attempt, JobAccepted, NextAction
 from clients.ops_learner import LearnerScript
 
 GRADE = {"submit_attempt": "learner/job_accepted_final_grading"}
@@ -169,7 +171,64 @@ def test_e9_retry_creates_a_new_final_attempt() -> None:
     at = learner_app("learner_final_failed", FINAL_RESULT)
     button(at, "Reintentar evaluación final").click().run()
     no_exception(at)
-    assert session_of(at).learner.final_attempt_id == 9100
+    assert session_of(at).learner.final_attempt_id == 9101
+
+
+def _on_new_final_attempt(at: AppTest) -> None:
+    """E8 con la primera pregunta del intento nuevo (9101), no E9 sin salida."""
+    no_exception(at)
+    texts = page_texts(at)
+    assert "Evaluación final" in texts
+    assert any("Pregunta 1 de 10" in t for t in texts)
+    assert "Todavía estamos calificando tu prueba." not in [e.value for e in at.error]
+    assert session_of(at).learner.final_attempt_id == 9101
+
+
+def test_e9_retry_opens_the_new_attempt_even_if_the_enrollment_is_stale_b041() -> None:
+    """B-041: la inscripción leída en E8 aún dice `review_final`; E8 no debe volver a E9."""
+    at = learner_app("learner_final_failed", FINAL_RESULT)
+    button(at, "Reintentar evaluación final").click().run()
+    _on_new_final_attempt(at)
+    # AppTest no conserva el `switch_page`: se abre E8 como lo haría el navegador. Reejecutar y
+    # responder no saca de E8 aunque la inscripción siga atrasada.
+    at.switch_page(FINAL).run()
+    _on_new_final_attempt(at)
+    at.radio[0].set_value(at.radio[0].options[0]).run()
+    button(at, "Siguiente").click().run()
+    no_exception(at)
+    assert any("Pregunta 2 de 10" in t for t in page_texts(at))
+
+
+def test_e9_retry_follows_continue_attempt_b041() -> None:
+    """B-041: con la inscripción al día (`continue_attempt`) también se llega a E8."""
+    at = learner_app("learner_final_failed", FINAL_RESULT)
+    client = client_of(at)
+    original = client.create_final_attempt
+
+    def create(enrollment_id: int, *, idempotency_key: str) -> Attempt | JobAccepted:
+        created = original(enrollment_id, idempotency_key=idempotency_key)
+        assert isinstance(created, Attempt)
+        client.echo_next_action(
+            NextAction(type="continue_attempt", attempt_id=created.id, screen="E8")
+        )
+        return created
+
+    client.create_final_attempt = create  # type: ignore[method-assign]
+    button(at, "Reintentar evaluación final").click().run()
+    _on_new_final_attempt(at)
+
+
+def test_e9_with_an_open_attempt_offers_to_continue_b041() -> None:
+    """B-041: si el intento pedido sigue abierto (409), E9 ofrece «Continuar evaluación final»."""
+    at = learner_app("learner_final_failed", FINAL_RESULT, run=False)
+    client = client_of(at)
+    client.create_final_attempt(7, idempotency_key="k")
+    session_of(at).learner.final_attempt_id = 9101
+    at.run()
+    no_exception(at)
+    assert "Continuar evaluación final" in [b.label for b in at.button]
+    button(at, "Continuar evaluación final").click().run()
+    _on_new_final_attempt(at)
 
 
 def test_e9c_exhausted_attempts_show_history_and_weak_topics() -> None:

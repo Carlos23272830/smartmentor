@@ -217,6 +217,8 @@ LEARNER_SCENARIOS: tuple[LearnerScenarioSpec, ...] = (
             {
                 "path": "learner/path_all_passed",
                 "attempt_result": "learner/attempt_result_final_failed",
+                # «Reintentar» abre un intento nuevo, distinto del calificado (B-041).
+                "final_attempt": "learner/attempt_final_retry",
             }
         ),
     ),
