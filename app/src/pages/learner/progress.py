@@ -39,6 +39,7 @@ me = current_me()
 enrollment: Enrollment = current_enrollment(client)
 
 try:
+    enrollments = client.list_enrollments(limit=100).items
     path: PathDetail = client.get_path(enrollment.id)
     goals = client.get_study_goals()
 except ApiError as error:
@@ -48,6 +49,22 @@ except ApiError as error:
 role_label = label_for("learner")
 render_notice(f"Tu rol: {role_label} · Solo ves tu propio avance, nunca el de otros aprendices.")
 render_page_header("Mi progreso")
+
+if len(enrollments) > 1:
+    # B-037: con varias rutas se elige cuál mostrar. La clave lleva el id para que el selector
+    # parta de la ruta vigente aunque otra pantalla (Logros) haya cambiado la elegida.
+    names = {e.id: e.learning_path.name for e in enrollments}
+    chosen = st.selectbox(
+        "Ruta",
+        list(names),
+        index=list(names).index(enrollment.id) if enrollment.id in names else 0,
+        format_func=names.__getitem__,
+        label_visibility="collapsed",
+        key=f"progress-route-{enrollment.id}",
+    )
+    if chosen != enrollment.id:
+        get_session().selected_enrollment_id = chosen
+        st.rerun()
 
 tried = [s.attempts_used for s in path.steps if s.attempts_used > 0]
 progress = enrollment.progress

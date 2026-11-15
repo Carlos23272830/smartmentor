@@ -10,6 +10,7 @@ from clients.base import ApiError
 from components.badge_card import render_badge_slot
 from components.formatting import short_date
 from components.layout import render_page_header
+from components.theme import ENROLLMENT_BADGE
 from core.container import get_client
 from core.errors import show_action_error
 from core.session import get_session
@@ -24,6 +25,7 @@ render_page_header("Logros", caption="Tus badges digitales: imagen PNG + archivo
 try:
     badges = client.list_badges()
     catalog = client.list_learning_paths(limit=100)
+    enrollments = client.list_enrollments(limit=100).items
 except ApiError as error:
     show_action_error(error)
     st.stop()
@@ -41,11 +43,17 @@ for badge in badges:
             session.selected_enrollment_id = badge.enrollment_id
             st.switch_page(BADGE_PAGE)
 
+enrolled = {e.learning_path.id: e for e in enrollments}
 for card in catalog.items:
-    if card.name not in names:
-        render_badge_slot(
-            card.name,
-            "Bloqueado · inscríbete para obtenerlo",
-            obtained=False,
-            key=f"path-{card.id}",
-        )
+    if card.name in names:
+        continue
+    enrollment = enrolled.get(card.id)
+    if enrollment is None:
+        caption = "Bloqueado · inscríbete para obtenerlo"
+    else:
+        # Inscrita pero sin badge: el estado y el avance de esa ruta, con los textos de E11.
+        caption = ENROLLMENT_BADGE[enrollment.status][0]
+        if enrollment.progress.steps_total:
+            progress = enrollment.progress
+            caption += f" · {progress.steps_done} de {progress.steps_total} temas aprobados"
+    render_badge_slot(card.name, caption, obtained=False, key=f"path-{card.id}")
