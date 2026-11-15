@@ -84,14 +84,16 @@ jobs:
         # Imagen oficial liquibase/liquibase con el driver de PostgreSQL (ver su Dockerfile).
         working-directory: .
         run: |
-          # El driver se descarga de Maven Central y a veces llega cortado en el runner: el SHA-256
-          # del Dockerfile lo rechaza («digest mismatch» con un hash distinto cada vez). Se reintenta
-          # hasta 3 veces sin relajar el checksum; si los tres fallan, la CI falla.
+          # El driver se descarga de Maven Central y a veces llega dañado al runner: el SHA-256
+          # del Dockerfile lo rechaza («digest mismatch»). BuildKit guarda la descarga de ADD en caché,
+          # así que antes de reintentar se vacía su caché para descargar de nuevo. Hasta 3 intentos y sin
+          # relajar el checksum; si los tres fallan, la CI falla.
           for intento in 1 2 3; do
             if docker build -t smartmentor-liquibase:ci database/liquibase; then
               exit 0
             fi
             echo "::warning::Falló la imagen de Liquibase (intento ${intento} de 3); se reintenta."
+            docker builder prune --all --force > /dev/null
             sleep $((intento * 10))
           done
           exit 1
@@ -159,27 +161,18 @@ jobs:
           --health-retries 12
     steps:
       - uses: actions/checkout@v7.0.1
-      - name: Diagnóstico temporal de la descarga del driver (PR 31)
-        run: |
-          url=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.13/postgresql-42.7.13.jar
-          for intento in 1 2 3; do
-            echo "== Descarga ${intento} de 3"
-            curl -sS -o /tmp/pg.jar -D /tmp/pg.headers -w 'HTTP %{http_code} · %{size_download} bytes · %{remote_ip}\n' "$url" || true
-            grep -i -E '^(HTTP|content-type|content-length|x-cache|x-served-by|age|retry-after|server)' /tmp/pg.headers || true
-            sha256sum /tmp/pg.jar
-            head -c 200 /tmp/pg.jar | tr -c '[:print:]\n' '.'
-            echo
-          done
       - name: Construir la imagen de Liquibase
         run: |
-          # El driver se descarga de Maven Central y a veces llega cortado en el runner: el SHA-256
-          # del Dockerfile lo rechaza («digest mismatch» con un hash distinto cada vez). Se reintenta
-          # hasta 3 veces sin relajar el checksum; si los tres fallan, la CI falla.
+          # El driver se descarga de Maven Central y a veces llega dañado al runner: el SHA-256
+          # del Dockerfile lo rechaza («digest mismatch»). BuildKit guarda la descarga de ADD en caché,
+          # así que antes de reintentar se vacía su caché para descargar de nuevo. Hasta 3 intentos y sin
+          # relajar el checksum; si los tres fallan, la CI falla.
           for intento in 1 2 3; do
             if docker build -t smartmentor-liquibase:ci database/liquibase; then
               exit 0
             fi
             echo "::warning::Falló la imagen de Liquibase (intento ${intento} de 3); se reintenta."
+            docker builder prune --all --force > /dev/null
             sleep $((intento * 10))
           done
           exit 1
@@ -247,14 +240,16 @@ jobs:
       - name: Construir la imagen de Liquibase
         working-directory: .
         run: |
-          # El driver se descarga de Maven Central y a veces llega cortado en el runner: el SHA-256
-          # del Dockerfile lo rechaza («digest mismatch» con un hash distinto cada vez). Se reintenta
-          # hasta 3 veces sin relajar el checksum; si los tres fallan, la CI falla.
+          # El driver se descarga de Maven Central y a veces llega dañado al runner: el SHA-256
+          # del Dockerfile lo rechaza («digest mismatch»). BuildKit guarda la descarga de ADD en caché,
+          # así que antes de reintentar se vacía su caché para descargar de nuevo. Hasta 3 intentos y sin
+          # relajar el checksum; si los tres fallan, la CI falla.
           for intento in 1 2 3; do
             if docker build -t smartmentor-liquibase:ci database/liquibase; then
               exit 0
             fi
             echo "::warning::Falló la imagen de Liquibase (intento ${intento} de 3); se reintenta."
+            docker builder prune --all --force > /dev/null
             sleep $((intento * 10))
           done
           exit 1
