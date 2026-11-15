@@ -23,6 +23,7 @@ from core.learner_flow import current_enrollment, go_to_action, idempotency_key
 from core.session import get_session
 from services.assessment import rubric_view
 from services.content import explanation_text, explanation_title, source_note
+from services.learning import passed_next_label
 
 PATH_PAGE = "pages/learner/path.py"
 TOPIC_PAGE = "pages/learner/topic.py"
@@ -195,7 +196,7 @@ if result.passed:
     _review()
     with st.container(horizontal=True):
         _back_to_path()
-        if st.button("Siguiente tema", type="primary", key="result-next"):
+        if st.button(passed_next_label(result.next_action), type="primary", key="result-next"):
             go_to_action(result.next_action)
     st.stop()
 

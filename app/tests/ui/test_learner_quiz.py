@@ -432,6 +432,22 @@ def test_e7_passed_shows_the_review_and_the_rubric() -> None:
     assert "Siguiente tema" in texts
 
 
+def test_e7_after_the_last_topic_the_button_follows_the_next_action_b046() -> None:
+    """Aprobar el último tema no ofrece «Siguiente tema»: lleva a la evaluación final."""
+    at = _result("learner_path")
+    session_of(at).learner.attempt_id = 9002
+    client = client_of(at)
+    original = client.get_attempt_result
+    client.get_attempt_result = lambda attempt_id: original(attempt_id).model_copy(  # type: ignore[method-assign]
+        update={"next_action": NextAction(type="take_final", screen="E8")}
+    )
+    at.run()
+    no_exception(at)
+    texts = page_texts(at)
+    assert "Presentar evaluación final" in texts
+    assert "Siguiente tema" not in texts
+
+
 def test_e7_review_request_is_sent() -> None:
     at = _result("learner_path")
     session_of(at).learner.attempt_id = 9002

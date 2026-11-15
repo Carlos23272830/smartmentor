@@ -19,7 +19,7 @@ from clients.models import (
 from components.formatting import approx_duration, duration, initials, percent, percent_points
 from services.assessment import rubric_view
 from services.catalog import card_view, load_catalog, open_path
-from services.learning import continue_label, progress_line, savings_label
+from services.learning import continue_label, passed_next_label, progress_line, savings_label
 from services.profile import resume_values, save_description, save_resume
 from services.staff_content import (
     video_link_markdown,
@@ -301,3 +301,19 @@ def test_fixed_path_names_the_next_topic() -> None:
     assert label == "Continuar con Regresión logística"
     final = continue_label(NextAction(type="take_final"), path, fixed=True)
     assert final == "Presentar evaluación final"
+
+
+@pytest.mark.parametrize(
+    ("action", "expected"),
+    [
+        (NextAction(type="study_topic", step_id=814), "Siguiente tema"),
+        (NextAction(type="continue_attempt", step_id=814, attempt_id=9), "Siguiente tema"),
+        (NextAction(type="take_final"), "Presentar evaluación final"),
+        (NextAction(type="view_badge"), "Ver badge"),
+        (NextAction(type="none"), "Continuar"),
+    ],
+)
+def test_passed_next_label_only_says_next_topic_when_there_is_one(
+    action: NextAction, expected: str
+) -> None:
+    assert passed_next_label(action) == expected
