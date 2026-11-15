@@ -14,7 +14,7 @@ from streamlit.errors import StreamlitInvalidLayoutContextError
 
 from clients.base import ApiError
 from clients.models import AssessmentItem, LearnerAnswer
-from components.layout import render_notice
+from components.layout import render_action_row, render_notice
 from components.quiz_form import render_options, render_stem
 from core.errors import defer_to_main, is_global, show_action_error
 from core.learner_state import AnswerSheet
@@ -224,8 +224,13 @@ def _sheet(
     is_last = index == len(items) - 1
     result: list[bool] = []
 
+    # Sin tarjeta (E3, V-037): «No lo sé» a la izquierda y «Anterior» y «Siguiente» a la derecha.
+    split_nav = not card and not chips
+    dont_know_in_nav: list[bool] = []
+
     def _nav(chip_notes: Sequence[str]) -> None:
         """«Anterior» y «Siguiente» (o entregar), con las notas en chip a la izquierda."""
+        exits = None
         if chips:
             # Chips a la izquierda y botones a la derecha (E6b y E8).
             left, right = st.columns([2, 1], vertical_alignment="center")
@@ -235,10 +240,20 @@ def _sheet(
             buttons = right.container(
                 horizontal=True, horizontal_alignment="right", key=f"nav-right-{key}"
             )
+        elif split_nav:
+            exits, buttons = render_action_row(f"nav-{key}")
         else:
             buttons = st.container(horizontal=True)
+        if exits is not None:
+            with exits:
+                if leading_action is not None:
+                    leading_action()
+                if allow_dont_know and item.item_type == "multiple_choice":
+                    dont_know_in_nav.append(
+                        st.button(DONT_KNOW_LABEL, key=f"{key}-dont-know-{item.item_id}")
+                    )
         with buttons:
-            if leading_action is not None:
+            if exits is None and leading_action is not None:
                 leading_action()
             back = st.button("Anterior", key=f"{key}-back", disabled=index == 0)
             forward = st.button(
@@ -256,6 +271,25 @@ def _sheet(
             elif not chips:
                 st.caption(note)
 
+    def _dont_know(pressed: bool) -> None:
+        """«No lo sé» cuenta como respuesta: guarda y pasa a la siguiente pregunta.
+
+        En la última se queda para que la persona entregue. Antes solo marcaba y no se veía ningún
+        cambio (B-019).
+        """
+        if not pressed:
+            return
+        sheet.answers[item.item_id] = LearnerAnswer(item_id=item.item_id, dont_know=True)
+        st.session_state.pop(f"option-{key}-{item.item_id}", None)
+        try:
+            save(list(sheet.answers.values()))
+        except ApiError as error:
+            _show_save_error(error)
+            return
+        if not is_last:
+            sheet.index = index + 1
+        _rerun(nav_scope)
+
     with st.container(key=f"card-quiz-{key}") if card else st.container():
         if line and not (card and is_short):
             st.badge(line, color="blue")
@@ -267,25 +301,12 @@ def _sheet(
         saved = sheet.answers.get(item.item_id)
         if saved is not None and saved.dont_know:
             st.caption(f"Respondiste «{DONT_KNOW_LABEL}». Puedes elegir una opción si la sabes.")
-        # «No lo sé» cuenta como respuesta: guarda y pasa a la siguiente pregunta (en la última se
-        # queda para que la persona entregue). Antes solo marcaba y no se veía ningún cambio
-        # (B-019).
-        dont_know = (
-            allow_dont_know
-            and item.item_type == "multiple_choice"
-            and st.button(DONT_KNOW_LABEL, key=f"{key}-dont-know-{item.item_id}")
-        )
-        if dont_know:
-            sheet.answers[item.item_id] = LearnerAnswer(item_id=item.item_id, dont_know=True)
-            st.session_state.pop(f"option-{key}-{item.item_id}", None)
-            try:
-                save(list(sheet.answers.values()))
-            except ApiError as error:
-                _show_save_error(error)
-                return
-            if not is_last:
-                sheet.index = index + 1
-            _rerun(nav_scope)
+        if not split_nav:
+            _dont_know(
+                allow_dont_know
+                and item.item_type == "multiple_choice"
+                and st.button(DONT_KNOW_LABEL, key=f"{key}-dont-know-{item.item_id}")
+            )
         if actions_in_card:
             _nav(item_notes)
     if card:
@@ -300,6 +321,8 @@ def _sheet(
     if not actions_in_card:
         outside_chips = item_notes if chips and not boxed_rubric else ()
         _nav(outside_chips)
+    if split_nav and dont_know_in_nav:
+        _dont_know(dont_know_in_nav[0])
     back, forward = result
     if not (back or forward):
         return

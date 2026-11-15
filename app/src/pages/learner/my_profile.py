@@ -7,7 +7,7 @@ pendientes y lo informa en `recalculated_enrollment_ids` (los temas aprobados no
 import streamlit as st
 
 from clients.base import ApiError
-from components.layout import render_page_header
+from components.layout import render_action_row, render_page_header
 from components.resume_form import render_resume_form, render_weights_card
 from core.container import get_client
 from core.errors import show_action_error
@@ -58,7 +58,10 @@ if result.added_tool and result.added_tool not in session.extra_tools:
 if wants_rights:
     st.switch_page(DATA_RIGHTS)
 
-if st.button("Guardar cambios", type="primary", key="my-profile-save"):
+_, actions = render_action_row("my-profile")
+with actions:
+    save = st.button("Guardar cambios", type="primary", key="my-profile-save")
+if save:
     try:
         saved = save_profile(client, profile, description, result.values)
         refresh_me()

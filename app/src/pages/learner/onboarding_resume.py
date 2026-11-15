@@ -7,7 +7,7 @@ diagnóstico. Al terminar, la página sigue por el `next_action` de la inscripci
 import streamlit as st
 
 from clients.base import ApiError
-from components.layout import render_page_header
+from components.layout import render_action_row, render_page_header
 from components.resume_form import render_resume_form, render_weights_card
 from core.container import get_client
 from core.errors import show_action_error
@@ -62,11 +62,14 @@ if result.added_tool and result.added_tool not in session.extra_tools:
 if wants_rights:
     st.switch_page(DATA_RIGHTS)
 
-later_col, save_col = st.columns([1, 1])
+_, actions = render_action_row("resume")
+with actions:
+    later = st.button("Completar más tarde", key="resume-later")
+    save = st.button("Guardar y continuar", type="primary", key="resume-save")
 try:
-    if later_col.button("Completar más tarde", key="resume-later"):
+    if later:
         _continue()
-    if save_col.button("Guardar y continuar", type="primary", key="resume-save"):
+    if save:
         save_resume(client, profile, result.values)
         refresh_me()
         _continue()
