@@ -491,3 +491,12 @@ def test_learner_scenarios_open_without_exceptions(scenario: str) -> None:
     for page in (CATALOG, PROFILE, RESUME, MY_PROFILE, RIGHTS):
         at = signed_in(scenario, page=page)
         assert_no_exception(at)
+
+
+def test_a3_data_checkbox_survives_a_visit_to_a3c_by_url() -> None:
+    at = signed_in("learner_new")
+    at.checkbox(key="consent-terms-data").check().run()
+    at.switch_page(RIGHTS).run()
+    at.switch_page(CONSENT).run()
+    assert_no_exception(at)
+    assert at.checkbox(key="consent-terms-data").value is True

@@ -196,6 +196,7 @@ def _extracting() -> bool:
     if action == "back":
         state.job_id = None
         st.session_state.pop("nc-view", None)
+        st.session_state.pop("nc-draft", None)
         st.switch_page(COURSES)
     if action == "retry" and state.course_id is not None:
         try:
