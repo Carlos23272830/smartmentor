@@ -12,6 +12,12 @@ DONT_KNOW = -1
 DONT_KNOW_LABEL = "No lo sé"
 
 
+def render_stem(stem: str, *, key: str) -> None:
+    """Enunciado de la pregunta: negrita grande como en Figma (V-033)."""
+    with st.container(key=f"question-stem-{key}"):
+        st.markdown(f"**{stem}**")
+
+
 def render_options(
     *,
     stem: str,
@@ -25,7 +31,8 @@ def render_options(
     index = selected if selected is not None and selected != DONT_KNOW else None
     if selected == DONT_KNOW and allow_dont_know:
         index = len(options)
-    choice = st.radio(stem, labels, index=index, key=f"option-{key}")
+    render_stem(stem, key=key)
+    choice = st.radio(stem, labels, index=index, label_visibility="collapsed", key=f"option-{key}")
     if choice is None:
         return None
     position = labels.index(choice)

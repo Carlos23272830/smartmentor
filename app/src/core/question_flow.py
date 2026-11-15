@@ -14,7 +14,7 @@ from streamlit.errors import StreamlitInvalidLayoutContextError
 
 from clients.base import ApiError
 from clients.models import AssessmentItem, LearnerAnswer
-from components.quiz_form import render_options
+from components.quiz_form import render_options, render_stem
 from core.errors import show_action_error
 from core.learner_state import AnswerSheet
 
@@ -62,7 +62,7 @@ def _question(
                 item_id=item.item_id, selected_option=choice
             )
         return
-    st.markdown(f"**{item.stem}**")
+    render_stem(item.stem, key=widget_key)
     if hint:
         st.caption(hint)
     text = st.text_area(
@@ -159,7 +159,7 @@ def _sheet(
     index = min(sheet.index, len(items) - 1)
     item = items[index]
     if context is not None and (line := context(item)):
-        st.caption(line)
+        st.badge(line, color="blue")
     _question(item, sheet, key, hint=hint, show_rubric=True)
     for note in notes(item) if callable(notes) else notes:
         st.caption(note)
