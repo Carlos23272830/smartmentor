@@ -15,7 +15,7 @@ from components.layout import HeaderAction, render_header, render_status_screen
 from core import auth
 from core.config import get_settings
 from core.container import get_client
-from core.errors import describe_error
+from core.errors import describe_error, pop_deferred_error
 from core.identity import active_role, current_me, label_for, load_me
 from core.navigation import (
     build_navigation,
@@ -33,6 +33,9 @@ inject_styles()
 
 settings = get_settings()
 session = get_session()
+# Error global que dejó un fragmento (B-031). Se lee antes de revisar el token: si el token venció,
+# lo atiende esa revisión (renovación o A7) y este error ya no se muestra.
+deferred_error = pop_deferred_error()
 
 
 def _logout() -> None:
@@ -148,6 +151,8 @@ with st.container(key=f"role-{role}"):
     )
     _handle_header(action)
     try:
+        if deferred_error is not None:
+            raise deferred_error
         page.run()
     except ApiError as error:
         _error_screen(error, page_title=page.title)
