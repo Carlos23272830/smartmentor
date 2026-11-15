@@ -608,6 +608,61 @@ async def test_a_final_retake_without_unseen_items_answers_202_until_they_are_in
     assert not {i["item_id"] for i in second.json()["items"]} & seen
 
 
+async def test_a_new_final_attempt_turns_review_final_into_continue_attempt(
+    client_for: ClientFactory, engine: AsyncEngine, path: PublishedPath
+) -> None:
+    """B-047: tras reprobar la final y crear otro intento, la inscripción apunta al intento
+    abierto (E8), no al resultado de la final reprobada (E9)."""
+    http = await learner_client(client_for, engine, "hugo")
+    enrollment_id = await final_ready_enrollment(http, engine, path)
+    first = await http.post(f"{API}/me/enrollments/{enrollment_id}/final-attempts", headers=key())
+    assert first.status_code == 201, first.text
+    await answer_attempt(http, engine, first.json(), correct=False)
+    failed = (await http.get(f"{API}/me/enrollments/{enrollment_id}")).json()
+    assert failed["status"] == "final_ready"
+    assert failed["next_action"] == {
+        "type": "review_final",
+        "step_id": None,
+        "attempt_id": first.json()["id"],
+        "job_id": None,
+        "screen": "E9",
+    }
+
+    retry = await http.post(f"{API}/me/enrollments/{enrollment_id}/final-attempts", headers=key())
+    assert retry.status_code == 201, retry.text
+    retry_id = retry.json()["id"]
+    assert retry_id != first.json()["id"]
+    continue_final = {
+        "type": "continue_attempt",
+        "step_id": None,
+        "attempt_id": retry_id,
+        "job_id": None,
+        "screen": "E8",
+    }
+    # Lectura inmediata del detalle y del listado: ninguna ventana con `review_final`
+    current = (await http.get(f"{API}/me/enrollments/{enrollment_id}")).json()
+    assert current["status"] == "final_ready"
+    assert current["next_action"] == continue_final
+    listed = (await http.get(f"{API}/me/enrollments")).json()
+    mine = next(e for e in listed["items"] if e["id"] == enrollment_id)
+    assert mine["next_action"] == continue_final
+    # El resultado de la final reprobada sigue consultable, pero su `next_action` ya es el actual
+    old_result = (await http.get(f"{API}/me/attempts/{first.json()['id']}/result")).json()
+    assert old_result["passed"] is False
+    assert old_result["next_action"]["type"] == "continue_attempt"
+    assert old_result["next_action"]["attempt_id"] == retry_id
+
+    # Con respuestas guardadas (intento `in_progress`) sigue siendo el mismo intento abierto
+    item = retry.json()["items"][0]
+    saved = await http.put(
+        f"{API}/me/attempts/{retry_id}/answers",
+        json={"answers": [{"item_id": item["item_id"], "selected_option": 1}]},
+    )
+    assert saved.status_code == 200, saved.text
+    in_progress = (await http.get(f"{API}/me/enrollments/{enrollment_id}")).json()
+    assert in_progress["next_action"] == continue_final
+
+
 async def test_the_sweep_ingests_a_diagnostic_nobody_polled(
     client_for: ClientFactory, engine: AsyncEngine, path: PublishedPath, ai: FakeAiService
 ) -> None:
