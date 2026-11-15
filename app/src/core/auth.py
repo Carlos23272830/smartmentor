@@ -13,6 +13,8 @@
   pedir contraseña ni OTP. Cuando la sesión SSO vence, Keycloak muestra su login. Para no entrar en
   un ciclo de redirecciones, solo se renueva si el token vencido se emitió hace más de
   `RENEW_MIN_AGE_SECONDS` (`should_renew_silently`); si no, la app muestra A7 «Tu sesión expiró».
+  Al volver de Keycloak, Streamlit abre una sesión nueva en la raíz: `core/renewal.py` aparca
+  antes la página y la sesión de la app para regresar a ellas (B-030).
 - `st.logout()` no cierra la sesión de Keycloak: `end_session_url` arma la redirección al
   `end_session_endpoint` del realm.
 
@@ -24,7 +26,7 @@ login) queda pendiente de la Fase 8, que entrega el cliente `smartmentor-ui`.
 import base64
 import json
 import logging
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlencode
@@ -132,15 +134,33 @@ def access_token() -> str:
     return token
 
 
-def renew_silently_if_possible() -> None:
+def user_key() -> str | None:
+    """Identidad estable de la persona (`sub` del token de identidad) para aparcar su sesión."""
+    if not is_logged_in():
+        return None
+    try:
+        value = st.user.get("sub") or st.user.get("email")
+    except (AttributeError, KeyError):
+        return None
+    return str(value) if value else None
+
+
+def renew_silently_if_possible(before_redirect: Callable[[], None] | None = None) -> bool:
     """Si el token venció pero la sesión de Keycloak puede seguir viva, repite el login.
 
-    `st.login` redirige el navegador y no regresa; si no aplica, la función no hace nada y la
-    página sigue con A7.
+    `st.login` solo encola la redirección del navegador: el guion sigue hasta el final. Devuelve
+    True si se pidió la renovación, para que quien llama se detenga (`st.stop`) sin dibujar A7.
+    `before_redirect` corre justo antes, para aparcar la página y la sesión (B-030): al volver,
+    Streamlit abre una sesión nueva en la raíz. Si no aplica, devuelve False y la página sigue
+    con A7.
     """
-    if should_renew_silently(_exposed_token("access")):
-        logger.info("Access token vencido: se renueva con la sesión SSO de Keycloak")
-        st.login(PROVIDER)
+    if not should_renew_silently(_exposed_token("access")):
+        return False
+    logger.info("Access token vencido: se renueva con la sesión SSO de Keycloak")
+    if before_redirect is not None:
+        before_redirect()
+    st.login(PROVIDER)
+    return True
 
 
 def login() -> None:

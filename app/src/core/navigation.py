@@ -155,6 +155,14 @@ def is_registered(path: str) -> bool:
     return any(spec.path == path for spec in registered_pages())
 
 
+def page_for_url_path(url_path: str) -> str | None:
+    """Archivo de la página registrada con ese `url_path` (el último tramo de su URL), o None."""
+    for spec in registered_pages():
+        if spec.url_path == url_path:
+            return spec.path
+    return None
+
+
 def home_for(role: Role) -> str:
     """Archivo de la página de inicio del rol, o «Próximamente» si todavía no se construye."""
     for path in HOME_CANDIDATES[role]:
