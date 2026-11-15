@@ -7,13 +7,15 @@ biblioteca estándar, con pruebas contra valores a mano en `ai/tests/unit/test_m
 ejecuta de arriba abajo en `notebooks/metrics_cohort1.ipynb`.
 
 Los nombres de tabla y columna son los del esquema `v2.0.0` y las consultas de
-`notebooks/metrics_data.py` se probaron contra ese esquema (PostgreSQL desechable con datos mínimos). Dos
-columnas son `jsonb` libre cuya forma fija la API, no el esquema: `diagnostics.level_by_topic` (objeto con el
-id del tema como clave y `test_score` de 0 a 1 por tema) y `survey_responses.likert` (objeto con
-`satisfaction`, `usefulness` y `self_efficacy`, de 1 a 5). Están marcadas `SUPUESTO` y el cuaderno falla con un
-mensaje claro (`UnexpectedShapeError`) si la forma real es otra. El primer intento de un tema sale de
-`assessment_attempts` (`assessment_type = 'topic'`, `attempt_number = 1`, `passed`), porque `path_steps` no
-guarda ese dato; el estado aprobado de un paso es `passed`.
+`notebooks/metrics_data.py` se probaron contra la base real el 2026-11-15
+([resultados](results/metrics-cohort1-2026-11-15.md)). Dos columnas son `jsonb` libre cuya forma fija la API,
+no el esquema, y se confirmaron con datos reales: `diagnostics.level_by_topic` es un objeto con la lista
+`level_by_topic` (cada elemento trae `topic_id` y `test_score` de 0 a 100, o nulo) y `survey_responses.likert`
+trae las claves `q1`, `q2` y `q3`, de 1 a 5. El cuaderno falla con un mensaje claro (`UnexpectedShapeError`)
+si la forma cambia. El primer intento de un tema sale de `assessment_attempts` (`assessment_type = 'topic'`,
+`attempt_number = 1`, `passed`), porque `path_steps` no guarda ese dato; el estado aprobado de un paso es
+`passed`. El JSON inválido se cuenta como la API de observabilidad: `json_valid` falso o
+`status = invalid_output`; un `json_valid` nulo no cuenta como inválido.
 
 ## Cómo se ejecuta
 
@@ -24,9 +26,10 @@ guarda ese dato; el estado aprobado de un paso es `passed`.
 
 Instrucciones y comandos: `notebooks/README.md`.
 
-El changeset `v2.0.0-049` todavía no da `SELECT` sobre `interaction_events` al rol de métricas. Hasta que
-se agregue, el cuaderno lee esa tabla aparte (`OPTIONAL_QUERIES`): si falta el permiso, avisa y deja el
-tiempo en tarea sin calcular en lugar de fallar.
+El changeset `v2.0.1-004` (aplicado en Neon el 2026-11-15) da `SELECT` sobre `interaction_events` al rol de
+métricas. El cuaderno lee esa tabla aparte (`OPTIONAL_QUERIES`): si falta el permiso, avisa y deja el tiempo
+en tarea sin calcular en lugar de fallar. El rol no tiene `SELECT` sobre `assessment_items`, así que la
+equivalencia de ítems entre el diagnóstico y la final no se puede verificar desde el cuaderno.
 
 ## Métricas del sistema
 

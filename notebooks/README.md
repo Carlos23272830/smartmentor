@@ -29,7 +29,7 @@ Dos ejecuciones seguidas producen salidas idénticas (semilla fija).
 ## Cohorte real
 
 1. Use el usuario **de solo lectura** `smartmentor_metrics` (ADR 0019; lo crea el bootstrap con
-   `METRICS_DATABASE_USER` y `METRICS_DATABASE_PASSWORD`, y su `SELECT` lo da el changeset `v2.0.0-049`).
+   `METRICS_DATABASE_USER` y `METRICS_DATABASE_PASSWORD`, y su `SELECT` lo dan los changesets `v2.0.0-049` y `v2.0.1-004`, este último para `interaction_events`).
 2. Exporte la URL en el entorno de su terminal, nunca en el cuaderno ni en un archivo versionado:
    `export METRICS_DATABASE_URL='postgresql+psycopg://<usuario>:<clave>@<host>:<puerto>/<base>'`.
 3. Ejecute el cuaderno como arriba, pasando `-e METRICS_DATABASE_URL` al contenedor (o
