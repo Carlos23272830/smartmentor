@@ -121,6 +121,14 @@ class InMemoryUsers(InMemoryRepository[User]):
             None,
         )
 
+    async def get_with_roles_by_identity(
+        self, provider: str, subject: str
+    ) -> tuple[User, frozenset[str]] | None:
+        user = await self.get_by_identity(provider, subject)
+        if user is None:
+            return None
+        return user, await self.get_role_codes(require_id(user))
+
     async def get_by_email(self, email: str) -> User | None:
         return next((u for u in self.items.values() if u.email.lower() == email.lower()), None)
 
@@ -194,6 +202,10 @@ class InMemoryConsents:
     async def latest(self, user_id: int, consent_type: str) -> Consent | None:
         found = [c for c in self.items if c.user_id == user_id and c.consent_type == consent_type]
         return found[-1] if found else None
+
+    async def latest_by_type(self, user_id: int, consent_types: list[str]) -> dict[str, Consent]:
+        found = {t: await self.latest(user_id, t) for t in consent_types}
+        return {t: c for t, c in found.items() if c is not None}
 
     async def revoke(self, consent_id: int) -> Consent | None:
         for index, consent in enumerate(self.items):

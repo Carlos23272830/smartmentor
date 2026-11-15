@@ -26,6 +26,15 @@ class UserRepository(CrudRepository[User], Protocol):
         """Usuario enlazado a una identidad del proveedor (p. ej. el sub de Keycloak)."""
         ...
 
+    async def get_with_roles_by_identity(
+        self, provider: str, subject: str
+    ) -> tuple[User, frozenset[str]] | None:
+        """Usuario enlazado a la identidad y los códigos de sus roles activos, en una lectura.
+
+        Es lo que hace cada petición autenticada: leer ambos de una vez ahorra un viaje (R-008).
+        """
+        ...
+
     async def get_by_email(self, email: str) -> User | None:
         """Usuario con ese correo, sin distinguir mayúsculas."""
         ...
@@ -85,6 +94,10 @@ class ConsentRepository(Protocol):
 
     async def latest(self, user_id: int, consent_type: str) -> Consent | None:
         """La autorización más reciente de ese tipo (vigente o revocada)."""
+        ...
+
+    async def latest_by_type(self, user_id: int, consent_types: list[str]) -> dict[str, Consent]:
+        """La más reciente de cada tipo pedido, en una lectura (los tipos sin ninguna no vienen)."""
         ...
 
     async def revoke(self, consent_id: int) -> Consent | None: ...

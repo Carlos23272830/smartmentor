@@ -304,7 +304,8 @@ class ConsentService:
 
     async def status(self, user_id: int) -> dict[str, Consent | None]:
         """La autorización más reciente de cada tipo (`None` si nunca se dio)."""
-        return {t.value: await self._consents.latest(user_id, t.value) for t in ConsentType}
+        latest = await self._consents.latest_by_type(user_id, [t.value for t in ConsentType])
+        return {t.value: latest.get(t.value) for t in ConsentType}
 
     async def has_data_processing(self, user_id: int) -> bool:
         latest = await self._consents.latest(user_id, ConsentType.DATA_PROCESSING)

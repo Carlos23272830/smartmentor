@@ -63,7 +63,7 @@ from app.domains.assessments.repository import (
     ItemRepository,
     SurveyLookup,
 )
-from app.domains.courses.entities import Course
+from app.domains.courses.entities import Course, Topic
 from app.domains.identity.authentication import CurrentUser
 from app.domains.identity.entities import UserProfile
 from app.domains.learning_paths import exceptions as path_errors
@@ -267,16 +267,24 @@ class _Base:
         )
 
     async def topic_names(self, enrollment_id: int) -> dict[int, str]:
-        """Nombre de cada tema de la ruta de la inscripción (para mostrar «Tema · …»)."""
-        enrollment = await self._r.enrollments.get(enrollment_id)
-        if enrollment is None:
-            return {}
-        path = await self._path(enrollment)
-        return {n.id: n.name for n in await self._r.reader.topic_nodes(path.course_id)}
+        """Nombre de cada tema de la ruta de la inscripción (para mostrar «Tema · …»).
 
-    async def _final_counters(self, enrollment: Enrollment, path: LearningPath) -> tuple[int, int]:
-        """(intentos de la final usados, máximo con los extra)."""
-        attempts = await self._r.attempts.list_for_enrollment(require_id(enrollment))
+        Una sola lectura (antes eran cuatro: inscripción, ruta, temas y prerrequisitos; R-008).
+        """
+        return await self._r.reader.topic_names_for_enrollment(enrollment_id)
+
+    async def _final_counters(
+        self,
+        enrollment: Enrollment,
+        path: LearningPath,
+        attempts: list[AssessmentAttempt] | None = None,
+    ) -> tuple[int, int]:
+        """(intentos de la final usados, máximo con los extra).
+
+        `attempts` son los intentos de la inscripción si quien llama ya los leyó en esta petición.
+        """
+        if attempts is None:
+            attempts = await self._r.attempts.list_for_enrollment(require_id(enrollment))
         used = sum(
             1 for a in attempts if a.assessment_type == "final" and a.status not in OPEN_ATTEMPTS
         )
@@ -288,8 +296,11 @@ class _Base:
 
 
 class LearnerProgress(_Base):
-    async def facts(self, enrollment: Enrollment, steps: list[PathStep]) -> ProgressFacts:
-        path = await self._path(enrollment)
+    async def facts(
+        self, enrollment: Enrollment, steps: list[PathStep], path: LearningPath | None = None
+    ) -> ProgressFacts:
+        if path is None or path.id != enrollment.learning_path_id:
+            path = await self._path(enrollment)
         diagnostic = await self._r.diagnostics.by_enrollment(require_id(enrollment))
         diagnostic_job: str | None = None
         if diagnostic is not None and diagnostic.status == "scoring":
@@ -302,7 +313,7 @@ class LearnerProgress(_Base):
         finals = [a for a in attempts if a.assessment_type == "final"]
         graded_finals = [a for a in finals if a.status == AttemptStatus.GRADED]
         last_final = graded_finals[-1] if graded_finals else None
-        used, maximum = await self._final_counters(enrollment, path)
+        used, maximum = await self._final_counters(enrollment, path, attempts)
         return ProgressFacts(
             status=enrollment.status,
             diagnostic_status=diagnostic.status if diagnostic is not None else None,
@@ -800,7 +811,7 @@ class AttemptResultView:
 @dataclass(frozen=True)
 class StepContentView:
     step: PathStep
-    topic: TopicNode
+    topic: Topic
     outcomes: list[dict[str, Any]]
     explanation: dict[str, Any] | None
     personal_example: dict[str, Any] | None
@@ -847,11 +858,12 @@ class AttemptService(_Base):
             raise path_errors.step_not_found(step_id)
         return enrollment, step
 
-    async def _topic(self, path: LearningPath, topic_id: int) -> TopicNode:
-        for node in await self._r.reader.topic_nodes(path.course_id):
-            if node.id == topic_id:
-                return node
-        raise NotFoundError("Topic", topic_id, code="TOPIC_NOT_FOUND")
+    async def _topic(self, path: LearningPath, topic_id: int) -> Topic:
+        """El tema activo del curso de la ruta (solo ese: no hace falta leer todo el grafo)."""
+        topic = await self._r.reader.topic(topic_id)
+        if topic is None or not topic.active or topic.course_id != path.course_id:
+            raise NotFoundError("Topic", topic_id, code="TOPIC_NOT_FOUND")
+        return topic
 
     async def step_content(
         self, user: CurrentUser, enrollment_id: int, step_id: int
@@ -1407,9 +1419,14 @@ class AttemptService(_Base):
             )
         return entries
 
-    async def final_counters(self, user: CurrentUser, enrollment_id: int) -> tuple[int, int]:
-        enrollment = await self._own_enrollment(user, enrollment_id)
-        return await self._final_counters(enrollment, await self._path(enrollment))
+    async def final_counters_of(
+        self, enrollment: Enrollment, path: LearningPath
+    ) -> tuple[int, int]:
+        """(intentos de la final usados, máximo) de una inscripción cuya propiedad ya se verificó.
+
+        Recibe la inscripción y su ruta ya leídas para no volver a pedirlas (E5, R-008).
+        """
+        return await self._final_counters(enrollment, path)
 
     # --- ingesta de `grading.short_answer` --------------------------------------------------
 

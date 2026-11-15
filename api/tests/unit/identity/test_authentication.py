@@ -33,6 +33,26 @@ def make_service(
     )
 
 
+async def test_before_write_runs_only_when_the_user_must_be_linked_or_created() -> None:
+    """R-008: el caso común (usuario ya enlazado) no paga el viaje que fija la auditoría."""
+    calls: list[str] = []
+
+    async def before_write() -> None:
+        calls.append("write")
+
+    _, repo, assignments, uow = make_service([])
+    roles = InMemoryRoles([Role(id=3, code="learner", name="L")])
+    service = AuthenticationService(
+        repo, roles, assignments, uow, provider="keycloak", before_write=before_write
+    )
+    first = await service.resolve(identity())
+    assert first.is_new_user is True
+    assert calls == ["write"]
+    second = await service.resolve(identity())
+    assert second.roles == frozenset({"learner"})
+    assert calls == ["write"]  # ya enlazado: solo lectura
+
+
 def identity(
     sub: str = "sub-1", email: str | None = "ana@example.com", verified: bool = True
 ) -> ExternalIdentity:

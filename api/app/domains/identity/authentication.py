@@ -14,6 +14,7 @@ Reglas (docs/contracts/api-v2.md, sección 2.1):
 El rol que cuenta para autorizar es el de `user_roles`, no el que traiga el token.
 """
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from app.common.constants import ROLE_PRIVILEGE_ORDER, RoleCode
@@ -77,19 +78,29 @@ class AuthenticationService:
         uow: UnitOfWork,
         *,
         provider: str,
+        before_write: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
         self._users = users
         self._roles = roles
         self._user_roles = user_roles
         self._uow = uow
         self._provider = provider
+        # Se llama una vez antes de enlazar o crear al usuario (p. ej. para fijar la auditoría).
+        self._before_write = before_write
 
     async def resolve(self, identity: ExternalIdentity) -> CurrentUser:
-        user, is_new = await self._find_or_provision(identity)
+        # Caso común (usuario ya enlazado): usuario y roles en una sola lectura (R-008).
+        linked = await self._users.get_with_roles_by_identity(self._provider, identity.subject)
+        roles: frozenset[str] | None = None
+        if linked is not None:
+            (user, roles), is_new = linked, False
+        else:
+            user, is_new = await self._provision(identity)
         if not user.active:
             raise ForbiddenError("The account is deactivated.", code="ACCOUNT_DEACTIVATED")
         user_id = require_id(user)
-        roles = await self._users.get_role_codes(user_id)
+        if roles is None:
+            roles = await self._users.get_role_codes(user_id)
         return CurrentUser(
             id=user_id,
             full_name=user.full_name,
@@ -101,16 +112,15 @@ class AuthenticationService:
             second_factor=identity.second_factor,
         )
 
-    async def _find_or_provision(self, identity: ExternalIdentity) -> tuple[User, bool]:
-        linked = await self._users.get_by_identity(self._provider, identity.subject)
-        if linked is not None:
-            return linked, False
-
+    async def _provision(self, identity: ExternalIdentity) -> tuple[User, bool]:
+        """Enlaza o crea al usuario de una identidad que aún no está enlazada (reglas 2 a 4)."""
         if not identity.email or not identity.email_verified:
             raise ForbiddenError(
                 "The identity provider has not verified the email of this account.",
                 code="EMAIL_NOT_VERIFIED",
             )
+        if self._before_write is not None:
+            await self._before_write()
 
         # Enlazar a un usuario existente (p. ej. el administrador sembrado o uno creado a mano).
         by_email = await self._users.link_identity_by_email(

@@ -383,8 +383,8 @@ async def get_path(
     attempts: AttemptServiceDep,
 ) -> PathResponse:
     """Pasos con estado y motivo, ahorro por temas omitidos y estado de la final (E5, E5b)."""
-    used, maximum = await attempts.final_counters(user, enrollment_id)
-    view = await service.path_view(user, enrollment_id, used, maximum)
+    view = await service.path_view(user, enrollment_id)
+    used, maximum = await attempts.final_counters_of(view.enrollment, view.path)
     skipped, minutes = view.savings
     return PathResponse(
         enrollment_id=enrollment_id,
@@ -413,7 +413,7 @@ async def step_content(
         step_id=require_id(step),
         status=step.status,
         topic=StepTopic(
-            id=view.topic.id,
+            id=require_id(view.topic),
             name=view.topic.name,
             learning_outcomes=[LearningOutcomeBrief(**o) for o in view.outcomes],
         ),

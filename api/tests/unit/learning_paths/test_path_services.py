@@ -130,12 +130,17 @@ class Reader:
     async def pilot_arm_for_new_enrollment(self, learning_path_id: int) -> str | None:
         return self.arm
 
+    async def topic_names_for_enrollment(self, enrollment_id: int) -> dict[int, str]:
+        return {n.id: n.name for n in self.nodes}
+
     async def first_admin_id(self) -> int | None:
         return 1
 
 
 class Progress:
-    async def facts(self, enrollment: Enrollment, steps: list[PathStep]) -> ProgressFacts:
+    async def facts(
+        self, enrollment: Enrollment, steps: list[PathStep], path: LearningPath | None = None
+    ) -> ProgressFacts:
         return ProgressFacts(status=enrollment.status)
 
     async def history(self, enrollment_id: int) -> LearnerHistory:
