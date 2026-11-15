@@ -141,11 +141,12 @@ render_page_header(
         f"{threshold}. Repasa los temas débiles y vuelve a intentar con preguntas nuevas."
     ),
 )
-st.subheader("Temas a repasar", anchor=False)
-for topic in plan.weak_topics:
-    with st.container(border=True, key=f"panel-weak-{topic.topic_id}"):
+# Una sola tarjeta con una fila por tema, como en Figma (V-088 a V-096).
+with st.container(key="card-weak-topics"):
+    st.subheader("Temas a repasar", anchor=False)
+    for topic in plan.weak_topics:
         name_col, score_col, action_col = st.columns([5, 1, 2], vertical_alignment="center")
-        name_col.markdown(f"**{topic.name}**")
+        name_col.markdown(topic.name)
         score_col.markdown(f":orange[**{percent_points(topic.score)}**]", text_alignment="right")
         if action_col.button("Repasar tema", key=f"review-topic-{topic.topic_id}"):
             _review(topic.topic_id)
