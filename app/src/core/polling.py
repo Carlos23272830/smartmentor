@@ -8,11 +8,51 @@ una ejecución completa de la aplicación, que sí pasa por `main.py` y dibuja l
 from collections.abc import Callable
 
 import streamlit as st
+from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 from clients.base import ApiError
 from clients.models import Job
+from components import loading
 from core.errors import is_global
+from core.session import get_session
 from core.staff_errors import show_staff_error
+
+# --- Modo espera (T-054) -------------------------------------------------------------------------
+# Mientras una pantalla U1x espera un trabajo de IA, las lecturas que siguen (releer la inscripción
+# o el diagnóstico al terminar) no dibujan «Cargando…» sobre la tarjeta de carga. El indicador es la
+# clave de sesión `WAIT_MODE_KEY`, que guarda la página y el trabajo que se espera. Solo cuenta en
+# esa página y mientras la sesión siga esperando ese trabajo (la página lo olvida al consumirlo),
+# así un sondeo abandonado no calla los spinners del resto de la app.
+
+WAIT_MODE_KEY = "wait_mode"
+
+
+def _current_page() -> str:
+    ctx = get_script_run_ctx(suppress_warning=True)
+    return ctx.page_script_hash if ctx is not None else ""
+
+
+def enter_wait_mode(job_id: str) -> None:
+    """Marca que la página actual espera el trabajo `job_id`: no se dibuja el spinner."""
+    st.session_state[WAIT_MODE_KEY] = (_current_page(), job_id)
+
+
+def leave_wait_mode() -> None:
+    """Termina el modo espera (al navegar, reintentar o fallar el trabajo)."""
+    st.session_state.pop(WAIT_MODE_KEY, None)
+
+
+def in_wait_mode() -> bool:
+    """Si la página actual está esperando un trabajo (hay un sondeo activo en la sesión)."""
+    marked = st.session_state.get(WAIT_MODE_KEY)
+    if marked is None:
+        return False
+    page, job_id = marked
+    learner = get_session().learner
+    return page == _current_page() and job_id in (learner.diagnostic_job_id, learner.quiz_job_id)
+
+
+loading.set_quiet_probe(in_wait_mode)
 
 
 def poll_job_or_rerun(fetch: Callable[[], Job]) -> Job | None:

@@ -17,6 +17,7 @@ from clients.models import Enrollment, Job, NextAction, NextActionType
 from components.loading_steps import LoadingStep, StepState, render_loading_steps
 from core.errors import is_global, show_action_error
 from core.navigation import CATALOG, page_for_next_action
+from core.polling import enter_wait_mode, leave_wait_mode
 from core.session import get_session
 
 POLL_SECONDS = 2
@@ -77,6 +78,7 @@ def go_to_action(action: NextAction) -> None:
     if target is None:
         st.info("La pantalla que sigue todavía no está disponible.")
         st.stop()
+    leave_wait_mode()
     st.switch_page(target)
 
 
@@ -89,6 +91,7 @@ def redirect_unless(
         target = page_for_next_action(action)
         if target is not None and target != current_page:
             remember(action)
+            leave_wait_mode()
             st.switch_page(target)
     return action
 
@@ -142,12 +145,18 @@ def wait_for_job(
     """
     state = get_session().learner
     if state.job_error is not None:
+        leave_wait_mode()
         error, state.job_error = state.job_error, None
         raise error
     finished = state.finished_jobs.get(job_id)
+    if finished is None or finished.status != "failed":
+        # Modo espera: la tarjeta de carga ya está en pantalla y las lecturas que siguen al
+        # terminar el trabajo no dibujan «Cargando…» encima (T-054).
+        enter_wait_mode(job_id)
     if finished is not None and finished.status != "failed":
         return finished
     if finished is not None:
+        leave_wait_mode()  # con el error en pantalla, reintentar o volver sí muestran el spinner
         choice = render_loading_steps(
             screen.title,
             [

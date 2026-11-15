@@ -1,5 +1,7 @@
 """E3, U1a, E4, E4b, E5 y E5b: diagnóstico, resultado, objetivo y ruta."""
 
+from typing import Any
+
 from apptest import button, page_texts, session_of
 from learner_support import (
     DIAGNOSTIC,
@@ -140,6 +142,28 @@ def test_u1a_follows_figma_and_finishes_on_the_second_poll() -> None:
     at.run()  # segunda consulta: el trabajo terminó
     no_exception(at)
     assert "Tu punto de partida" in page_texts(at)
+
+
+def test_u1a_reads_after_the_job_finishes_do_not_draw_the_spinner_t054() -> None:
+    """Al terminar el trabajo, releer la inscripción corre en modo espera (sin «Cargando…»)."""
+    from core import polling
+
+    at = learner_app("learner_calculating", DIAGNOSTIC)
+    client = client_of(at)
+    seen: list[bool] = []
+    for name in ("get_enrollment", "list_enrollments"):
+        original = getattr(client, name)
+
+        def spy(*args: object, _original: Any = original, **kwargs: object) -> Any:
+            seen.append(polling.in_wait_mode())
+            return _original(*args, **kwargs)
+
+        setattr(client, name, spy)
+    at.run()  # segunda consulta: el trabajo terminó
+    no_exception(at)
+    assert seen
+    assert seen[0]  # la lectura del arranque ya ocurre con el sondeo activo
+    assert polling.WAIT_MODE_KEY not in at.session_state  # al navegar a otra pantalla se apaga
 
 
 def test_u1a_error_keeps_the_progress_and_offers_retry() -> None:
