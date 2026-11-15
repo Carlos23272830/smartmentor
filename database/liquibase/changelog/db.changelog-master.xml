@@ -44,4 +44,7 @@
     <!-- v2.0.1-007: el dueño del curso también es evaluador (B-036): sin trigger y con backfill. -->
     <include file="v2.0.1/007-course-owner-evaluator.xml" relativeToChangelogFile="true"/>
 
+    <!-- v2.0.1-008: apuntes y lecturas del curso como fuentes del RAG (R-004), con sus permisos. -->
+    <include file="v2.0.1/008-create-table-course_materials.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

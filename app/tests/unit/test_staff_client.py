@@ -11,6 +11,7 @@ from support import FIXTURES_DIR
 
 from clients.api import ApiClient
 from clients.base import ApiError
+from clients.evaluation_adapter import grading_result_from_api
 from clients.fixtures import FixturesClient
 from clients.models import Job, JobAccepted, Page
 from clients.models_staff import (
@@ -21,11 +22,11 @@ from clients.models_staff import (
     Course,
     CourseCreate,
     CourseEvaluator,
+    CourseMaterial,
     CourseTopics,
     Dashboard,
     ExtractionMetrics,
     GradingQueue,
-    HumanGradingResult,
     LearnerDetail,
     LlmCallLog,
     LlmSummary,
@@ -46,6 +47,7 @@ MODELS: dict[str, Any] = {
     "course": Course,
     "course_new": Course,
     "job_accepted": JobAccepted,
+    "material": CourseMaterial,
     "job_running": Job,
     "job_succeeded": Job,
     "job_failed": Job,
@@ -59,7 +61,6 @@ MODELS: dict[str, Any] = {
     "video_quality": VideoQuality,
     "annotation_queue": AnnotationQueue,
     "grading_queue": GradingQueue,
-    "human_grading_result": HumanGradingResult,
     "items": Page[ReviewItem],
     "users": Page[AdminUser],
     "user_new": AdminUser,
@@ -95,6 +96,11 @@ def test_every_staff_fixture_validates_against_the_models(path: Any) -> None:
         for item in data:
             _strict(list_models[name]).model_validate(item)
         return
+    if name == "human_grading_result":
+        # Tiene la forma de la API (`HumanGradingResponse`); la prueba del adaptador la valida
+        # contra el OpenAPI y aquí solo se comprueba que el adaptador la entiende.
+        assert grading_result_from_api(data)["llm_criteria_total"] == 3
+        return
     model = MODELS[name]
     strict = _strict(model)
     result = strict.model_validate(data)
@@ -126,6 +132,37 @@ def test_no_text_scenario_raises_the_contract_error() -> None:
     with pytest.raises(ApiError) as error:
         client.upload_syllabus(1, text=None, file=("a.pdf", b"x"), idempotency_key="k")
     assert error.value.code == "SYLLABUS_NO_TEXT"
+
+
+def test_fixtures_echo_the_uploaded_materials_of_each_course() -> None:
+    client = FixturesClient("instructor")
+    first = client.upload_material(7, file=("u1.pdf", b"%PDF-1"), origin="own_notes")
+    client.upload_material(8, file=("otro.md", b"# x"), origin="permitted")
+    assert first.file_name == "u1.pdf"
+    assert first.source_type == "pdf"
+    assert [m.file_name for m in client.list_materials(7)] == ["u1.pdf"]
+    assert client.list_materials(8)[0].source_type == "text"
+
+
+@respx.mock
+def test_api_client_uploads_a_material_with_its_origin_and_no_idempotency_key() -> None:
+    base = "http://api.test"
+    client = ApiClient(base, lambda: "test-only-not-a-secret", http=httpx.Client(base_url=base))
+    material = json.loads((STAFF_DIR / "material.json").read_text("utf-8"))
+    route = respx.post(f"{base}/api/v1/courses/7/materials").mock(
+        return_value=httpx.Response(201, json=material)
+    )
+    result = client.upload_material(7, file=("apuntes.md", b"# Tema"), origin="open_license")
+    request = route.calls.last.request
+    assert result.origin == "own_notes"  # lo que responde la API
+    assert "Idempotency-Key" not in request.headers
+    assert b'name="origin"' in request.content
+    assert b"open_license" in request.content
+    assert b"text/markdown" in request.content
+    respx.get(f"{base}/api/v1/courses/7/materials").mock(
+        return_value=httpx.Response(200, json=[material])
+    )
+    assert [m.id for m in client.list_materials(7)] == [1]
 
 
 def test_poll_job_runs_then_succeeds() -> None:
