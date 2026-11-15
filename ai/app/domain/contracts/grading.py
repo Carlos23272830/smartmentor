@@ -20,7 +20,15 @@ class CriterionResultLLM(LlmModel):
     criterion: str = Field(description="Same text as the rubric criterion")
     met: bool
     points_awarded: float = Field(description="Between 0 and the criterion points")
-    evidence: str = Field(description="Part of the answer that justifies the decision")
+    reason: str = Field(
+        description=(
+            "One sentence in Spanish for the learner: why the criterion is met or not, "
+            "without revealing the expected answer"
+        )
+    )
+    evidence: str = Field(
+        description="Short literal quote of the answer that supports the decision; empty if none"
+    )
 
 
 class ShortAnswerGradingLLM(LlmModel):
@@ -36,6 +44,10 @@ class CriterionResult(ContractModel):
     met: bool
     points: float = Field(gt=0, le=1, description="Points of the criterion in the rubric")
     points_awarded: float = Field(ge=0, le=1)
+    reason: str = Field(
+        default="",
+        description="Why the criterion is met or not (short_answer_grading v2); empty before v2",
+    )
     evidence: str
 
     @model_validator(mode="after")
@@ -106,6 +118,7 @@ def grading_from_llm(
             met=c.met,
             points=points[c.criterion],
             points_awarded=c.points_awarded,
+            reason=c.reason,
             evidence=c.evidence,
         )
         for c in llm.criteria

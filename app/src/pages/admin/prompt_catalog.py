@@ -24,7 +24,8 @@ rows = [
         key=prompt.prompt_id,
         cells=[
             f"**{prompt.prompt_id} v{prompt.version}**",
-            prompt.description or prompt.name,
+            # El nombre en español de Figma va junto a la descripción; el id sigue en inglés.
+            f"**{prompt.name}** · {prompt.description}" if prompt.description else prompt.name,
             prompt.screens or "—",
             ("En repositorio", "green"),
         ],

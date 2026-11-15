@@ -90,10 +90,11 @@ PROMPTS: tuple[PromptEntry, ...] = (
     ),
     PromptEntry(
         "short_answer_grading",
-        1,
+        2,
         "Calificación de respuesta corta",
         "E7, U1c, U1d, D5c",
-        "Califica la respuesta corta con la rúbrica y da retroalimentación breve",
+        "Califica la respuesta corta con la rúbrica, explica cada criterio y da retroalimentación "
+        "breve",
     ),
     PromptEntry(
         "final_assessment",

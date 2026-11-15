@@ -28,6 +28,16 @@ from core.staff_state import (
 client = get_client()
 state = get_staff_state()
 
+
+def _open_new_course() -> None:
+    """Lleva a D1b con el formulario vacío."""
+    state.course_id = None
+    state.job_id = None
+    st.session_state.pop("nc-view", None)
+    st.session_state.pop("nc-draft", None)
+    st.switch_page(NEW_COURSE)
+
+
 render_notice(
     "Tu rol: Instructor · Solo ves los cursos que tú creaste. Los de otros instructores no "
     "aparecen."
@@ -37,16 +47,19 @@ if flash := pop_flash():
 # V-007: Figma pone el nombre del instructor bajo el título.
 with render_page_header_with_actions("Mis cursos", caption=current_me().full_name or None):
     if st.button("Nuevo curso", type="primary", key="new-course"):
-        state.course_id = None
-        state.job_id = None
-        st.session_state.pop("nc-view", None)
-        st.session_state.pop("nc-draft", None)
-        st.switch_page(NEW_COURSE)
+        _open_new_course()
 
 try:
     courses = client.list_courses(mine=True)
 except ApiError as error:
     show_staff_error(error)
+    st.stop()
+
+if not courses.items:
+    # F-003: sin cursos no hay tabla vacía; se invita a crear el primero (como E1 sin rutas).
+    st.info("Todavía no tienes cursos.")
+    if st.button("Crear curso", type="primary", key="create-first-course"):
+        _open_new_course()
     st.stop()
 
 ARCHIVABLE = ("draft", "published")
@@ -106,7 +119,7 @@ clicked = render_table(
     empty_text=(
         "Todos tus cursos están archivados. Para verlos, activa «Ver cursos archivados»."
         if archived_count
-        else "Todavía no tienes cursos. Crea el primero con «Nuevo curso»."
+        else "Todavía no tienes cursos."
     ),
 )
 

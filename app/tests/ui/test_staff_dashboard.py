@@ -62,26 +62,24 @@ def test_d3_forbidden_and_error() -> None:
 def test_d3b_configure_saves_thresholds() -> None:
     at = staff_app(page=DASHBOARD)
     at = click(at, "Configurar ruta")
-    texts = page_texts(at)
-    assert "Configurar la ruta" in texts and "UMBRALES" in texts
+    # La ventana modal (G-001) no sale en `page_texts`: se leen sus widgets.
     assert "Aprobar un tema" in [n.label for n in at.number_input]
-    assert not any("Durante el piloto" in t for t in texts)
+    assert not any("Durante el piloto" in w.value for w in at.warning)
     at.number_input(key="pd-topic").set_value(75).run()
     at = click(at, "Guardar")
     assert_no_exception(at)
-    assert "Configurar la ruta" not in page_texts(at)
+    assert not any(n.key == "pd-topic" for n in at.number_input)  # la ventana se cerró
 
 
 def test_d3b_pilot_running_asks_for_confirmation() -> None:
     at = staff_app(scenario="pilot_running", page=DASHBOARD)
     at = click(at, "Configurar ruta")
-    texts = page_texts(at)
-    assert any("Durante el piloto, cambiar los umbrales" in t for t in texts)
+    assert any("Durante el piloto, cambiar los umbrales" in w.value for w in at.warning)
     assert next(b for b in at.button if b.label == "Guardar").disabled
     at.checkbox(key="pd-ok").check().run()
     at = click(at, "Guardar")
     assert_no_exception(at)
-    assert "Configurar la ruta" not in page_texts(at)
+    assert not any(n.key == "pd-topic" for n in at.number_input)
 
 
 def test_d3_clicking_a_learner_opens_the_detail() -> None:
@@ -110,9 +108,8 @@ def test_d4b_exhausted_attempts_matches_figma() -> None:
 def test_d4c_grant_attempts() -> None:
     at = _detail(204)
     at = click(at, "Habilitar nuevos intentos")
-    texts = page_texts(at)
     assert "Intentos que se habilitan" in [s.label for s in at.selectbox]
-    assert any("Cada intento trae preguntas nuevas" in t for t in texts)
+    assert any("Cada intento trae preguntas nuevas" in i.value for i in at.info)
     at = click(at, "Habilitar intentos")
     assert_no_exception(at)
     assert not any(s.label == "Intentos que se habilitan" for s in at.selectbox)

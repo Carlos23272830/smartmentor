@@ -26,6 +26,15 @@ def test_d1_empty_state() -> None:
     at = staff_app(scenario="empty", page=COURSES)
     assert_no_exception(at)
     assert any("Todavía no tienes cursos" in t for t in page_texts(at))
+    assert at.button(key="create-first-course").label == "Crear curso"
+    assert "courses-1-syllabus" not in _keys(at)
+
+
+def test_d1_empty_state_create_course_opens_new_course() -> None:
+    at = staff_app(scenario="empty", page=COURSES)
+    at.button(key="create-first-course").click().run()
+    assert_no_exception(at)
+    assert any("Nuevo curso" in t for t in page_texts(at))
 
 
 def test_d1_forbidden_shows_403() -> None:

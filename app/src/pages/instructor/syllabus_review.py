@@ -2,7 +2,7 @@
 
 El instructor revisa los temas que extrajo la IA, los corrige, valida el grafo y publica. Las
 correcciones, los ciclos y el estado del curso los valida la API; la página solo muestra su
-respuesta. Las ventanas de Figma (D2b, D2c) se dibujan como paneles bajo la tabla.
+respuesta. Las ventanas de Figma (D2b, D2c) son ventanas modales (`st.dialog`).
 """
 
 from typing import Any
@@ -129,66 +129,64 @@ def _edit_panel(topic: CourseTopic | None) -> None:
             for o in (topic.learning_outcomes if topic else [])
         ] or [_outcome(None, "", "apply")]
     outcomes: list[dict[str, Any]] = st.session_state[outcomes_key]
-    with st.container(border=True, key=f"panel-edit-topic-{tid}"):
-        st.subheader("Editar tema" if topic else "Agregar tema", anchor=False)
-        name = st.text_input("Nombre", value=topic.name if topic else "", key=f"sr-name-{tid}")
-        subtopics = st.text_area(
-            "Subtemas",
-            value="\n".join(topic.subtopics) if topic else "",
-            help="Uno por línea.",
-            key=f"sr-sub-{tid}",
-        )
-        st.markdown("**Resultados de aprendizaje**")
-        for index, outcome in enumerate(outcomes):
-            # Clave propia de cada resultado, no su posición: al quitar uno, el que ocupa su lugar
-            # heredaba el estado del campo y Streamlit ignoraba su `value=`.
-            uid = outcome["key"]
-            bloom_col, text_col, remove_col = st.columns([2, 6, 1], vertical_alignment="bottom")
-            labels = list(BLOOM_LABEL.values())
-            chosen = bloom_col.selectbox(
-                "Verbo de Bloom",
-                labels,
-                index=labels.index(BLOOM_LABEL[outcome["bloom"]]),
-                key=f"sr-ob-{tid}-{uid}",
-            )
-            outcome["bloom"] = BLOOM_BY_LABEL[chosen]
-            outcome["statement"] = text_col.text_input(
-                "Resultado",
-                value=outcome["statement"],
-                key=f"sr-os-{tid}-{uid}",
-                label_visibility="collapsed",
-            )
-            if remove_col.button("Quitar", key=f"sr-orm-{tid}-{uid}") and len(outcomes) > 1:
-                outcomes.pop(index)
-                st.rerun()
-        if st.button("+ Agregar resultado de aprendizaje", key=f"sr-oadd-{tid}", type="tertiary"):
-            outcomes.append(_outcome(None, "", "apply"))
-            st.rerun()
+    name = st.text_input("Nombre", value=topic.name if topic else "", key=f"sr-name-{tid}")
+    subtopics = st.text_area(
+        "Subtemas",
+        value="\n".join(topic.subtopics) if topic else "",
+        help="Uno por línea.",
+        key=f"sr-sub-{tid}",
+    )
+    st.markdown("**Resultados de aprendizaje**")
+    for index, outcome in enumerate(outcomes):
+        # Clave propia de cada resultado, no su posición: al quitar uno, el que ocupa su lugar
+        # heredaba el estado del campo y Streamlit ignoraba su `value=`.
+        uid = outcome["key"]
+        bloom_col, text_col, remove_col = st.columns([2, 6, 1], vertical_alignment="bottom")
         labels = list(BLOOM_LABEL.values())
-        bloom = st.selectbox(
-            "Nivel de Bloom",
+        chosen = bloom_col.selectbox(
+            "Verbo de Bloom",
             labels,
-            index=labels.index(BLOOM_LABEL[topic.bloom_level]) if topic else 2,
-            key=f"sr-bloom-{tid}",
+            index=labels.index(BLOOM_LABEL[outcome["bloom"]]),
+            key=f"sr-ob-{tid}-{uid}",
         )
-        options = [t.id for t in topics if t.id != tid]
-        prereqs = st.multiselect(
-            "Prerrequisitos",
-            options,
-            default=[i for i in (topic.prerequisite_topic_ids if topic else []) if i in options],
-            format_func=lambda i: names[i],
-            key=f"sr-pre-{tid}",
+        outcome["bloom"] = BLOOM_BY_LABEL[chosen]
+        outcome["statement"] = text_col.text_input(
+            "Resultado",
+            value=outcome["statement"],
+            key=f"sr-os-{tid}-{uid}",
+            label_visibility="collapsed",
         )
-        st.caption("Si un prerrequisito forma un ciclo, no podrás guardar.")
-        with st.container(horizontal=True):
-            delete = bool(topic) and st.button("Eliminar tema", key=f"sr-del-{tid}")
-            cancel = st.button("Cancelar", key=f"sr-cancel-{tid}")
-            save = st.button(
-                "Guardar cambios",
-                type="primary",
-                key=f"sr-save-{tid}",
-                disabled=not name.strip(),
-            )
+        if remove_col.button("Quitar", key=f"sr-orm-{tid}-{uid}") and len(outcomes) > 1:
+            outcomes.pop(index)
+            st.rerun()
+    if st.button("+ Agregar resultado de aprendizaje", key=f"sr-oadd-{tid}", type="tertiary"):
+        outcomes.append(_outcome(None, "", "apply"))
+        st.rerun()
+    labels = list(BLOOM_LABEL.values())
+    bloom = st.selectbox(
+        "Nivel de Bloom",
+        labels,
+        index=labels.index(BLOOM_LABEL[topic.bloom_level]) if topic else 2,
+        key=f"sr-bloom-{tid}",
+    )
+    options = [t.id for t in topics if t.id != tid]
+    prereqs = st.multiselect(
+        "Prerrequisitos",
+        options,
+        default=[i for i in (topic.prerequisite_topic_ids if topic else []) if i in options],
+        format_func=lambda i: names[i],
+        key=f"sr-pre-{tid}",
+    )
+    st.caption("Si un prerrequisito forma un ciclo, no podrás guardar.")
+    with st.container(horizontal=True):
+        delete = bool(topic) and st.button("Eliminar tema", key=f"sr-del-{tid}")
+        cancel = st.button("Cancelar", key=f"sr-cancel-{tid}")
+        save = st.button(
+            "Guardar cambios",
+            type="primary",
+            key=f"sr-save-{tid}",
+            disabled=not name.strip(),
+        )
     if cancel:
         st.session_state.pop("sr-edit", None)
         st.session_state.pop(outcomes_key, None)
@@ -233,18 +231,27 @@ def _edit_panel(topic: CourseTopic | None) -> None:
 
 def _reextract_panel() -> None:
     """D2c · Confirmar volver a extraer."""
-    with st.container(border=True, key="panel-reextract"):
-        st.subheader("¿Volver a extraer los temas?", anchor=False)
-        st.markdown(
-            "La IA procesará de nuevo el syllabus y se perderán tus correcciones: "
-            f"{review_summary(counts).replace(' · ', ', ')}. El registro de revisión vuelve a cero."
-        )
-        with st.container(horizontal=True):
-            if st.button("Cancelar", key="sr-reextract-cancel"):
-                st.session_state["sr-reextract"] = False
-                st.rerun()
-            if st.button("Sí, volver a extraer", type="primary", key="sr-reextract-ok"):
-                _go_extract()
+    st.markdown(
+        "La IA procesará de nuevo el syllabus y se perderán tus correcciones: "
+        f"{review_summary(counts).replace(' · ', ', ')}. El registro de revisión vuelve a cero."
+    )
+    with st.container(horizontal=True):
+        if st.button("Cancelar", key="sr-reextract-cancel"):
+            st.session_state["sr-reextract"] = False
+            st.rerun()
+        if st.button("Sí, volver a extraer", type="primary", key="sr-reextract-ok"):
+            _go_extract()
+
+
+def _close_edit() -> None:
+    """Cierra la ventana D2b (también con la «x» o Esc) y olvida sus resultados en edición."""
+    edit = st.session_state.pop("sr-edit", None)
+    st.session_state.pop(f"sr-outcomes-{NEW if edit is None else edit}", None)
+
+
+def _close_reextract() -> None:
+    """Cierra la ventana D2c (también con la «x» o Esc)."""
+    st.session_state["sr-reextract"] = False
 
 
 def _table_view() -> None:
@@ -330,9 +337,14 @@ def _table_view() -> None:
         st.rerun()
     edit = st.session_state.get("sr-edit")
     if edit is not None and can_review:
-        _edit_panel(next((t for t in topics if t.id == edit), None))
+        target = next((t for t in topics if t.id == edit), None)
+        st.dialog(
+            "Editar tema" if target else "Agregar tema", width="large", on_dismiss=_close_edit
+        )(_edit_panel)(target)
     if st.session_state.get("sr-reextract"):
-        _reextract_panel()
+        st.dialog("¿Volver a extraer los temas?", width="medium", on_dismiss=_close_reextract)(
+            _reextract_panel
+        )()
 
 
 def _graph_view() -> None:

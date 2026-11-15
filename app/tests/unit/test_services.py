@@ -171,13 +171,15 @@ def test_rubric_view_derives_the_minimum_from_the_ratio() -> None:
         "criteria_met": 2,
         "criteria_total": 3,
         "rubric_detail": [
-            {"criterion": "A", "met": True, "evidence": "ok"},
+            {"criterion": "A", "met": True, "evidence": "ok", "reason": "Se cumple."},
             {"criterion": "B", "met": True, "evidence": ""},
-            {"criterion": "C", "met": False, "evidence": "falta"},
+            {"criterion": "C", "met": False, "evidence": "falta", "reason": None},
         ],
     }
     view = rubric_view(grading)
     assert view is not None
+    assert [c.reason for c in view.criteria] == ["Se cumple.", "", ""]
+    assert [c.evidence for c in view.criteria] == ["ok", "", "falta"]
     assert (view.criteria_met, view.criteria_total, view.min_met) == (2, 3, 2)
     assert view.graded_by == "IA"
     assert [c.met for c in view.criteria] == [True, True, False]

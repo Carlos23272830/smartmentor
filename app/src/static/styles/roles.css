@@ -34,3 +34,16 @@
 [class*="st-key-role-"] [data-testid="stBaseButton-primary"]:hover {
   filter: brightness(0.92);
 }
+
+/*
+ * Las ventanas modales (st.dialog) se montan fuera del contenedor del rol, así que su botón
+ * principal no hereda --accent. Las del instructor (D2b, D2c, D3b, D4c) se pintan por `key`.
+ */
+[class*="st-key-sr-save-"] [data-testid="stBaseButton-primary"],
+.st-key-sr-reextract-ok [data-testid="stBaseButton-primary"],
+.st-key-pd-save [data-testid="stBaseButton-primary"],
+.st-key-ld-grant-ok [data-testid="stBaseButton-primary"] {
+  background-color: var(--instructor-accent);
+  border-color: var(--instructor-accent);
+  color: var(--text-on-accent);
+}

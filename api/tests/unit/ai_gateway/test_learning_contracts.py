@@ -187,6 +187,24 @@ def test_the_fake_grading_applies_two_of_three_criteria() -> None:
     assert graded["score"] == 70.0
 
 
+def test_the_fake_grading_explains_each_criterion_without_repeating_the_answer() -> None:
+    detail = {d["criterion"]: d for d in fake_grade_short_answer(GRADING_INPUT)["rubric_detail"]}
+    assert all(d["reason"] for d in detail.values())
+    assert all(d["reason"] != GRADING_INPUT["answer_text"] for d in detail.values())
+    assert detail["concepto clave"]["evidence"] == "el concepto y un ejemplo"
+    assert detail["conclusión clara"]["met"] is False
+    assert detail["conclusión clara"]["evidence"] == ""
+
+
+def test_the_api_accepts_a_grading_without_reason() -> None:
+    """Calificaciones anteriores al prompt v2: `reason` es opcional y queda vacío."""
+    graded = fake_grade_short_answer(GRADING_INPUT)
+    for criterion in graded["rubric_detail"]:
+        del criterion["reason"]
+    parsed = GradingV1.model_validate(graded)
+    assert [c.reason for c in parsed.rubric_detail] == ["", "", ""]
+
+
 async def test_every_learning_job_and_task_of_the_fake_is_contract_valid() -> None:
     ai = FakeAiService()
     jobs = {

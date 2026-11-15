@@ -14,6 +14,7 @@
       "met": true,
       "points": 0.4,
       "points_awarded": 0.4,
+      "reason": "Se cumple porque propones mover el umbral en la dirección que marca más casos como positivos.",
       "evidence": "Bajaría el umbral para que el modelo marque más pedidos como tardíos."
     },
     {
@@ -21,6 +22,7 @@
       "met": true,
       "points": 0.4,
       "points_awarded": 0.4,
+      "reason": "Se cumple porque describes el efecto del cambio sobre los dos tipos de error.",
       "evidence": "Así se escapan menos pedidos tarde, aunque habrá más alarmas falsas."
     },
     {
@@ -28,13 +30,14 @@
       "met": false,
       "points": 0.2,
       "points_awarded": 0.0,
-      "evidence": "No menciona que el falso negativo cuesta más."
+      "reason": "No se cumple porque tu respuesta no explica por qué un error pesa más que el otro en este caso.",
+      "evidence": ""
     }
   ],
   "feedback": "Bien identificado el efecto del umbral sobre los dos errores. Te falta conectar la decisión con la diferencia de costos del caso: ¿por qué conviene aceptar más falsas alarmas aquí?",
   "meta": {
     "prompt_id": "short_answer_grading",
-    "prompt_version": "v1",
+    "prompt_version": "v2",
     "model": "example-llm-model",
     "generated_at": "2026-11-07T15:00:00Z",
     "input_sha256": "7968245e83f15317ab8c04a5d3226b2fa08ad29a4aa4d9104317b940f6788fcb",

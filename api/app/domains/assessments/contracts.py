@@ -80,6 +80,9 @@ class CriterionResult(_Strict):
     met: bool
     points: Annotated[float, Field(gt=0, le=1)]
     points_awarded: Annotated[float, Field(ge=0, le=1)]
+    # Por qué se cumple o no (prompt `short_answer_grading` v2, B-038); vacío en calificaciones
+    # anteriores. Se acepta antes de que `ai/` lo envíe porque el contrato rechaza campos extra.
+    reason: str = ""
     evidence: str
 
 
