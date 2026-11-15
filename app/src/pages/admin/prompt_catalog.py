@@ -24,7 +24,7 @@ rows = [
         key=prompt.prompt_id,
         cells=[
             f"**{prompt.prompt_id} v{prompt.version}**",
-            prompt.name,
+            prompt.description or prompt.name,
             prompt.screens or "—",
             ("En repositorio", "green"),
         ],

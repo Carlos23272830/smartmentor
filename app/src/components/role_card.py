@@ -21,5 +21,7 @@ def render_role_card(
         st.badge(badge_label, color=ROLE_COLOR[role])
         st.markdown(f"#### {title}")
         st.caption(description)
-        st.caption(permissions)
-        return st.button(cta_label, type="primary", key=f"enter-{key}")
+        # «Puede» y «No puede» van en líneas separadas (V-059): salto de línea de Markdown.
+        st.markdown(permissions.replace("\n", "  \n"))
+        # Botón secundario: su color (el del rol) lo da role_card.css por la `key` de la tarjeta.
+        return st.button(cta_label, key=f"enter-{key}")

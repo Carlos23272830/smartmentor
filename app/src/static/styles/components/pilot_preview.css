@@ -1,0 +1,15 @@
+/* AD4b: lista de temas de la ruta fija en tarjeta gris, con separadores (V-085). */
+.st-key-preview-list {
+  background: var(--bg-page);
+  border-radius: var(--radius-card);
+  padding: var(--space-8) var(--space-16);
+}
+
+[class*="st-key-preview-step-"] {
+  padding: var(--space-6) 0;
+}
+
+/* Separador entre temas (no tras el último). */
+[class*="st-key-preview-step-"]:not(.st-key-preview-step-1) {
+  border-top: 1px solid var(--border-default);
+}
