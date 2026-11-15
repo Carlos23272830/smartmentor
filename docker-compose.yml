@@ -127,6 +127,9 @@ services:
       # Usuarios de desarrollo (instructor y aprendiz); vacíos = no se siembran. En producción, vacíos.
       SEED_INSTRUCTOR_EMAIL: ${SEED_INSTRUCTOR_EMAIL:-}
       SEED_LEARNER_EMAIL: ${SEED_LEARNER_EMAIL:-}
+      # Usuarios «vacío» (aprendiz sin inscripciones e instructor sin cursos); vacíos = no se siembran.
+      SEED_EMPTY_LEARNER_EMAIL: ${SEED_EMPTY_LEARNER_EMAIL:-}
+      SEED_EMPTY_INSTRUCTOR_EMAIL: ${SEED_EMPTY_INSTRUCTOR_EMAIL:-}
       LIQUIBASE_COMMAND_CHANGELOG_FILE: db.changelog-master.xml
       LIQUIBASE_LOG_LEVEL: info
     volumes:
