@@ -6,9 +6,12 @@ intento, el trabajo de IA) y lo que aún no se ha guardado.
 """
 
 from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
 
 from clients.base import ApiError
 from clients.models import Job, LearnerAnswer
+from clients.models_learner import InteractionEvent
 
 
 @dataclass
@@ -29,6 +32,35 @@ class AnswerSheet:
 
 
 @dataclass
+class OpenView:
+    """Una visita en curso a una pantalla medida (tema, ruta, quiz, final): cuándo empezó y qué
+    evento la cierra con sus `seconds`."""
+
+    page: str
+    close_type: str
+    enrollment_id: int
+    topic_id: int | None
+    payload: dict[str, Any]
+    started_at: datetime
+
+
+@dataclass
+class UsageLog:
+    """Eventos de uso de la sesión (m27): visitas abiertas, marcas de lo ya enviado y lo pendiente.
+
+    - `current_page`: la página que se está dibujando (la pone `main.py` en cada ejecución).
+    - `open_views`: visitas en curso, por pantalla y entidad (`topic:7:813`).
+    - `sent`: marcas de los eventos que van una sola vez (`quiz.start:9002`).
+    - `pending`: lote que no llegó porque la API no respondía; sale con el próximo envío.
+    """
+
+    current_page: str | None = None
+    open_views: dict[str, OpenView] = field(default_factory=dict)
+    sent: set[str] = field(default_factory=set)
+    pending: list[InteractionEvent] = field(default_factory=list)
+
+
+@dataclass
 class LearnerState:
     step_id: int | None = None
     attempt_id: int | None = None
@@ -46,6 +78,7 @@ class LearnerState:
     survey_likert: dict[str, int] = field(default_factory=dict)
     survey_sus: dict[int, int] = field(default_factory=dict)
     manage_consents: bool = False
+    usage: UsageLog = field(default_factory=UsageLog)
 
     def forget_position(self) -> None:
         """Olvida el tema, los intentos y los trabajos de la ruta anterior (B-027).

@@ -5,10 +5,13 @@ El video y la explicación se ven antes del quiz y no durante él. «Empezar qui
 nuevas, con un trabajo de IA (U1b). Los intentos restantes salen de la API.
 """
 
+from datetime import datetime
+
 import streamlit as st
 
 from clients.base import ApiError
 from clients.models import Attempt, PathDetail, StepContent
+from clients.models_learner import InteractionEvent
 from components.layout import eyebrow, render_page_header
 from components.video_feedback import render_video_feedback
 from components.video_player import render_explanation, render_video
@@ -16,6 +19,7 @@ from core.container import get_client
 from core.errors import show_action_error
 from core.learner_flow import current_enrollment, go_to_action, idempotency_key
 from core.session import get_session
+from core.usage_events import build_event, open_view
 from services.content import (
     explanation_text,
     source_note,
@@ -69,6 +73,58 @@ except ApiError as error:
     st.stop()
 
 render_page_header(content.topic.name, breadcrumb=breadcrumb)
+
+
+def _resources_shown(at: datetime) -> list[InteractionEvent]:
+    """`resource.view` del texto y del video que muestra esta visita (una vez por visita)."""
+    events: list[InteractionEvent] = []
+    common = {"screen": "E6", "step_id": content.step_id}
+    if content.explanation is not None:
+        payload = {
+            **common,
+            "resource": "explanation",
+            "resource_id": content.explanation.resource_id,
+        }
+        events.append(
+            build_event(
+                enrollment.id,
+                "resource.view",
+                topic_id=content.topic.id,
+                payload=payload,
+                occurred_at=at,
+            )
+        )
+    if content.video is not None:
+        payload = {
+            **common,
+            "resource": "video",
+            "video_candidate_id": content.video.video_candidate_id,
+            "duration_seconds": content.video.duration_seconds,
+        }
+        events.append(
+            build_event(
+                enrollment.id,
+                "resource.view",
+                topic_id=content.topic.id,
+                payload=payload,
+                occurred_at=at,
+            )
+        )
+    return events
+
+
+# Tiempo en tarea (m27): `topic.open` y lo que se ve, una vez por visita; `topic.close` con los
+# segundos al salir del tema (al empezar el quiz o al ir a otra página).
+open_view(
+    client,
+    f"topic:{enrollment.id}:{content.step_id}",
+    enrollment_id=enrollment.id,
+    event_type="topic.open",
+    close_type="topic.close",
+    topic_id=content.topic.id,
+    payload={"screen": "E6", "step_id": content.step_id, "step_status": content.status},
+    extra=_resources_shown,
+)
 
 if content.video is not None:
     render_video(

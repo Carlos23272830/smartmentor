@@ -21,6 +21,7 @@ from core.learner_flow import (
 )
 from core.question_flow import render_question_sheet
 from core.session import get_session
+from core.usage_events import build_event, close_view, open_view, record_once
 from services.learning import bloom_label
 
 PAGE = "pages/learner/quiz.py"
@@ -188,6 +189,31 @@ if attempt.status not in OPEN_STATUSES:
 state.sheet.load(f"attempt-{attempt.id}", attempt.answers, len(attempt.items))
 number = min(state.sheet.index, max(len(attempt.items) - 1, 0)) + 1
 
+# Tiempo en tarea (m27): `quiz.start` una vez por intento; cada visita a las preguntas es un tramo
+# que se cierra con `quiz.submit` al entregar o con `quiz.pause` si sale sin entregar.
+quiz_view = f"quiz:{attempt.id}"
+quiz_payload = {
+    "screen": "E6b",
+    "attempt_id": attempt.id,
+    "step_id": step_id,
+    "attempt_number": attempt.attempt_number or attempt_number,
+}
+record_once(
+    client,
+    f"quiz.start:{attempt.id}",
+    lambda: [
+        build_event(enrollment.id, "quiz.start", topic_id=content.topic.id, payload=quiz_payload)
+    ],
+)
+open_view(
+    client,
+    quiz_view,
+    enrollment_id=enrollment.id,
+    close_type="quiz.pause",
+    topic_id=content.topic.id,
+    payload=quiz_payload,
+)
+
 st.caption(
     f"Quiz del tema · Sin ayuda de IA ni apuntes. Apruebas con "
     f"{round(content.quiz_rules.pass_threshold)} %. Intento {attempt_number} de {total_attempts}."
@@ -216,6 +242,13 @@ def _save(answers: list[LearnerAnswer]) -> None:
 def _submit(_answers: list[LearnerAnswer]) -> None:
     sent = client.submit_attempt(
         attempt.id, idempotency_key=idempotency_key(f"submit-{attempt.id}")
+    )
+    graded = isinstance(sent, AttemptResult)
+    close_view(
+        client,
+        quiz_view,
+        event_type="quiz.submit",
+        payload={"items": len(attempt.items), "grading": "done" if graded else "job"},
     )
     if isinstance(sent, AttemptResult):
         st.switch_page(RESULT_PAGE)
