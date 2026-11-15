@@ -118,4 +118,4 @@ def test_c4_what_it_does_describes_every_prompt() -> None:
     assert_no_exception(at)
     texts = page_texts(at)
     for prompt in PROMPTS:
-        assert prompt.description in texts
+        assert f"{prompt.name} · {prompt.description}" in texts
