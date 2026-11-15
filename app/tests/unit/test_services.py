@@ -7,7 +7,7 @@ from support import FIXTURES_DIR
 
 from clients.base import ApiError
 from clients.fixtures import FixturesClient
-from clients.models import CourseSummary, LearningPathCard, Page
+from clients.models import CourseSummary, Enrollment, LearningPathCard, Page
 from components.formatting import approx_duration, duration, initials, percent, percent_points
 from services.assessment import rubric_view
 from services.catalog import card_view, load_catalog, open_path
@@ -94,6 +94,19 @@ def test_catalog_from_the_real_api_goes_in_paths() -> None:
 def test_open_path_returns_the_existing_enrollment_on_conflict() -> None:
     client = FixturesClient("learner_in_path")
     assert open_path(client, 1).id == 7
+
+
+def test_open_path_skips_the_post_when_the_catalog_says_it_is_enrolled() -> None:
+    client = FixturesClient("learner_in_path")
+    posted: list[int] = []
+
+    def fail_create(path_id: int, *_: object, **__: object) -> Enrollment:
+        posted.append(path_id)
+        raise AssertionError("no debe inscribir de nuevo")
+
+    client.create_enrollment = fail_create  # type: ignore[method-assign]
+    assert open_path(client, 1, enrolled=True).id == 7
+    assert posted == []
 
 
 def test_open_path_propagates_other_errors() -> None:
