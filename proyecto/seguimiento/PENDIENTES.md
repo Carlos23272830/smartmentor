@@ -129,7 +129,7 @@ Recorrer las 96 pantallas de Figma v3 (incluidas las variantes por curso) y comp
 
 | Estado | Responsable | Depende de | Peso |
 | --- | --- | --- | --- |
-| ◐ Validadas por agente al 100 %: 84 de 96 (2026-11-15, con los PR 15 a 39 en `dev`; 8 N/A). Quedan D2b (V-071, V-072), D2c (V-074) y AD2 (V-017), de severidad baja. Falta la revalidación del equipo | — (revalidación del equipo) | — | Medio: la demo y E9 |
+| ◐ Validadas por agente al 100 %: 85 de 96 (2026-11-15, con los PR 15 a 39 en `dev`; 8 N/A). Quedan D2b (V-071, V-072), D2c (V-074) y AD2 (V-017), de severidad baja. Falta la revalidación del equipo | — (revalidación del equipo) | — | Medio: la demo y E9 |
 
 #### Acceso y comunes (A)
 
@@ -183,7 +183,7 @@ Recorrer las 96 pantallas de Figma v3 (incluidas las variantes por curso) y comp
 | 32 | E5f | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1403) (`140:1403`) | Ruta · Claude Marketing | ✔ | 100 % · Variante de E5 con otro curso (misma página) |  |
 | 33 | E5g | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1485) (`140:1485`) | Ruta · Google IA Estudio | ✔ | 100 % · Variante de E5 con otro curso (misma página) |  |
 | 34 | E6 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-209) (`5:209`) | Tema (video + texto + quiz) | ✔ | 100 % · V-011 a V-013 corregidas (PR 21); modo repaso (PR 36) y video según el nivel de inglés (PR 37) |  |
-| 35 | E6b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=81-419) (`81:419`) | Quiz del tema | — | 90 % · V-037 abierta (botones a la derecha) · V-033, V-034, V-035 y V-044 corregidas (PR 15, 25 y 26) |  |
+| 35 | E6b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=81-419) (`81:419`) | Quiz del tema | ✔ | 100 % · V-033, V-034, V-035 y V-044 corregidas (PR 15, 25 y 26); V-037 ya cumplía (botones a la derecha dentro de la tarjeta) |  |
 | 36 | E6c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-489) (`94:489`) | Quiz · Respuesta corta (5 de 5) | ✔ | 100 % · V-037 no aplica: Figma también alinea a la izquierda (verificado 2026-11-15) · V-034 a V-036 corregidas (PR 26) |  |
 | 37 | E7 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-245) (`5:245`) | Resultado del quiz | ✔ | 100 % · V-037 no aplica: Figma también alinea a la izquierda (verificado 2026-11-15) · V-045 corregida (PR 24) |  |
 | 38 | E7b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=69-373) (`69:373`) | Quiz no aprobado (refuerzo) | ✔ | 100 % · V-037 no aplica: Figma también alinea a la izquierda (verificado 2026-11-15) · V-046 corregida (PR 24) |  |
@@ -218,8 +218,8 @@ Recorrer las 96 pantallas de Figma v3 (incluidas las variantes por curso) y comp
 | 3 | D1c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-592) (`95:592`) | Carga · Extrayendo temas | ✔ | 100 % · V-064 a V-066 corregidas (PR 25 y 28) |  |
 | 4 | D1d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-618) (`95:618`) | Error al leer el syllabus | ✔ | 100 % · V-067 a V-069 corregidas (PR 28) |  |
 | 5 | D2 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=6-2) (`6:2`) | Curso y syllabus | ✔ | 100 % · V-020 corregida; V-025 aceptada |  |
-| 6 | D2b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-644) (`95:644`) | Editar tema (modal) | — | 90 % · V-070 ventana (PR 34); quedan bV-071 y bV-072 |  |
-| 7 | D2c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-776) (`95:776`) | Confirmar volver a extraer | — | 95 % · V-073 ventana (PR 34); queda bV-074 |  |
+| 6 | D2b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-644) (`95:644`) | Editar tema (modal) | — | 90 % · V-070 ventana (PR 34); quedan V-071 y V-072 (severidad baja) |  |
+| 7 | D2c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-776) (`95:776`) | Confirmar volver a extraer | — | 95 % · V-073 ventana (PR 34); queda V-074 (severidad baja) |  |
 | 8 | D2d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=104-1102) (`104:1102`) | Temas en vista de grafo | ✔ | 100 % · V-020 corregida |  |
 | 9 | D3 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=6-107) (`6:107`) | Ruta y avance | ✔ | 100 % · V-015 corregida; V-016 aceptada |  |
 | 10 | D3b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-883) (`95:883`) | Configurar la ruta (panel) | ✔ | 100 % · V-075 y V-077 corregidas (PR 30); V-076 ventana (PR 34) |  |
