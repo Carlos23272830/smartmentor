@@ -31,3 +31,18 @@
   background: var(--learner-soft);
   border-color: var(--learner-accent);
 }
+
+/* Barra de progreso de la hoja (V-034): azul del Aprendiz sobre pista neutra. */
+[class*="st-key-card-quiz-"] [data-testid="stProgress"],
+[data-testid="stProgress"] {
+  margin-bottom: var(--space-4);
+}
+
+/* «Cómo se califica» (E6c): caja azul suave sin borde (V-036). */
+[class*="st-key-card-rubric-"] {
+  background: var(--learner-soft);
+  border-color: transparent;
+}
+[class*="st-key-card-rubric-"] p {
+  color: var(--text-primary);
+}

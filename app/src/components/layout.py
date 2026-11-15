@@ -110,9 +110,13 @@ def render_page_header_with_actions(
     return right.container(horizontal=True, horizontal_alignment="right", key=key)
 
 
-def render_notice(text: str) -> None:
-    """Aviso ámbar de permisos o reglas («Tu rol: Instructor · Solo corriges tus cursos»)."""
-    st.warning(text)
+def render_notice(text: str, *, tone: Literal["warning", "info"] = "warning") -> None:
+    """Aviso de permisos o reglas: ámbar («Tu rol: Instructor · Solo corriges tus cursos») o, con
+    `tone="info"`, caja azul suave (nota de la prueba de retención)."""
+    if tone == "info":
+        st.info(text)
+    else:
+        st.warning(text)
 
 
 def render_status_screen(

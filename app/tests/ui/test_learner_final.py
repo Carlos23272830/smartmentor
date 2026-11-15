@@ -23,6 +23,7 @@ def test_e8_follows_figma() -> None:
         at,
         "E8",
         accepted=("(Demo del prototipo) Ver resultado menor a 80 %",),
+        alerts=True,
     )
 
 

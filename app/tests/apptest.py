@@ -88,8 +88,10 @@ class _Label:
         self.value = text
 
 
-def _element_texts(element: Any) -> list[str]:
+def _element_texts(element: Any, *, alerts: bool = False) -> list[str]:
     kind = element.type
+    if alerts and kind in {"warning", "info"}:
+        return [element.value]
     if kind == "label":
         return [element.value]
     if kind in {"markdown", "caption", "title", "header", "subheader", "text"}:
@@ -137,8 +139,9 @@ def _role_container(at: AppTest) -> Block | None:
     return None
 
 
-def page_texts(at: AppTest, *, skip_header: bool = True) -> list[str]:
-    """Textos de la página en orden. Con `skip_header` se omite la barra superior."""
+def page_texts(at: AppTest, *, skip_header: bool = True, alerts: bool = False) -> list[str]:
+    """Textos de la página en orden. Con `skip_header` se omite la barra superior; con `alerts`
+    se incluyen los avisos (`st.warning` y `st.info`)."""
     container = _role_container(at)
     elements: list[Any] = []
     if container is None:
@@ -151,7 +154,8 @@ def page_texts(at: AppTest, *, skip_header: bool = True) -> list[str]:
             elements.extend(_walk(child) if isinstance(child, Block) else [child])
     texts: list[str] = []
     for element in elements:
-        texts.extend(plain(text) for text in _element_texts(element) if text)
+        found = _element_texts(element, alerts=True) if alerts else _element_texts(element)
+        texts.extend(plain(text) for text in found if text)
     return [text for text in texts if text]
 
 
