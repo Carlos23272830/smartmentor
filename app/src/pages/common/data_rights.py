@@ -52,7 +52,8 @@ with left:
     with st.container(key="card-rights-not"):
         st.markdown("**Lo que no pedimos**")
         st.markdown("Datos sensibles, fecha de nacimiento, dirección ni foto.")
-with right:
+with right, st.container(key="card-rights-who-sees"):
+    # El título va dentro de la tarjeta, junto con la tabla, como en Figma (V-088 a V-096).
     st.markdown("**Quién ve cada dato**")
     _ROWS = (
         ("Nombre y correo", "Sí", "Sí", "Sí"),
