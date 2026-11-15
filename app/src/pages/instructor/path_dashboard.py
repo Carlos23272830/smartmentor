@@ -20,7 +20,7 @@ from clients.models_staff import (
 )
 from components.formatting import percent, percent_points
 from components.kpi_cards import Kpi, render_kpis
-from components.layout import render_notice, render_page_header_with_actions
+from components.layout import eyebrow, render_notice, render_page_header_with_actions
 from components.staff_theme import ADMIN_ENROLLMENT_BADGE, MASTERY_BADGE
 from components.table import Actions, Row, render_table
 from components.theme import BLOOM_VERBS
@@ -55,12 +55,29 @@ current_path: int = path_id
 settings = dashboard.settings
 
 
+def _threshold_field(
+    label: str, description: str, key: str, value: int, low: int, high: int, *, unit: str
+) -> int:
+    """Fila de umbral como en Figma (V-075): etiqueta y descripción a la izquierda y campo corto."""
+    text_col, field_col = st.columns([4, 1], vertical_alignment="center")
+    with text_col.container(gap="xxsmall"):
+        st.markdown(f"**{label}**")
+        st.caption(description)
+    # Streamlit no admite texto en `format` («%d %%» falla): el «%» va en una columna aparte.
+    number_col, unit_col = field_col.columns([3, 1], vertical_alignment="center", gap="xsmall")
+    value_out = number_col.number_input(
+        label, low, high, value, format="%d", label_visibility="collapsed", key=key
+    )
+    unit_col.caption(unit)
+    return int(value_out)
+
+
 def _config_panel() -> None:
     """D3b · Configurar la ruta."""
     default = settings.default_objective or DefaultObjective()
     with st.container(border=True, key="panel-path-settings"):
         st.subheader("Configurar la ruta", anchor=False)
-        st.caption("**OBJETIVO POR DEFECTO · OPCIONAL**")
+        eyebrow("OBJETIVO POR DEFECTO · OPCIONAL")
         verbs = list(BLOOM_VERBS)
         verb = st.selectbox(
             "Verbo de Bloom",
@@ -85,38 +102,42 @@ def _config_panel() -> None:
             "Si lo dejas vacío, la IA propone un objetivo para cada aprendiz a partir de su perfil "
             "y su diagnóstico."
         )
-        st.caption("**UMBRALES**")
-        topic_pass = st.number_input(
+        eyebrow("UMBRALES")
+        topic_pass = _threshold_field(
             "Aprobar un tema",
-            0,
-            100,
+            "Puntaje mínimo en el quiz del tema.",
+            "pd-topic",
             settings.topic_pass_threshold,
-            help="Puntaje mínimo en el quiz del tema.",
-            key="pd-topic",
-        )
-        final_pass = st.number_input(
-            "Obtener el badge",
             0,
             100,
-            settings.final_pass_threshold,
-            help="Puntaje mínimo en la evaluación final.",
-            key="pd-final",
+            unit="%",
         )
-        attempts = st.number_input(
+        final_pass = _threshold_field(
+            "Obtener el badge",
+            "Puntaje mínimo en la evaluación final.",
+            "pd-final",
+            settings.final_pass_threshold,
+            0,
+            100,
+            unit="%",
+        )
+        attempts = _threshold_field(
             "Intentos por evaluación",
+            "Cada intento trae preguntas nuevas.",
+            "pd-attempts",
+            settings.max_attempts,
             1,
             10,
-            settings.max_attempts,
-            help="Cada intento trae preguntas nuevas.",
-            key="pd-attempts",
+            unit="",
         )
-        skip = st.number_input(
+        skip = _threshold_field(
             "Omitir un tema",
+            "Dominio en el diagnóstico desde el cual el tema se omite.",
+            "pd-skip",
+            settings.mastery_skip_threshold,
             0,
             100,
-            settings.mastery_skip_threshold,
-            help="Dominio en el diagnóstico desde el cual el tema se omite.",
-            key="pd-skip",
+            unit="%",
         )
         needs_confirm = dashboard.pilot_running or st.session_state.get("pd-confirm-needed")
         confirmed = True
