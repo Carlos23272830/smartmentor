@@ -655,7 +655,6 @@ def test_u1c_without_the_criteria_count_has_no_number_b052() -> None:
 
 def test_grading_screen_reads_the_attempt_once_per_attempt_b052() -> None:
     """La pantalla de espera se repite cada 2 s: la rúbrica no suma una consulta por sondeo."""
-    calls: list[int] = []
 
     def app() -> None:
         import streamlit as st
