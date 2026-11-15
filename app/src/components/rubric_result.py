@@ -41,11 +41,8 @@ def render_rubric_result(view: RubricView, *, key: str) -> None:
                 f"(mínimo {view.min_met})."
             )
         for criterion in view.criteria:
-            icon = (
-                ":green[:material/check:] **Cumple**"
-                if criterion.met
-                else (":orange[:material/close:] **No cumple**")
-            )
-            st.markdown(f"{icon} · {criterion.name}")
+            # Verde y rojo como en Figma; el resultado va escrito además del color.
+            word, color = ("Cumple", "green") if criterion.met else ("No cumple", "red")
+            st.markdown(f":{color}[{word} · {criterion.name}]")
             if criterion.evidence:
                 st.caption(criterion.evidence)

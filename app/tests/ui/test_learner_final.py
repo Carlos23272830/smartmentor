@@ -141,6 +141,12 @@ def test_e9_follows_figma() -> None:
     )
 
 
+def test_e9_survey_button_is_primary_and_scores_are_amber() -> None:
+    at = learner_app("learner_final_failed", FINAL_RESULT)
+    assert at.button(key="final-survey").proto.type == "primary"
+    assert ":orange[**55 %**]" in [e.value for e in at.markdown]
+
+
 def test_e9_review_topic_opens_the_topic() -> None:
     at = learner_app("learner_final_failed", FINAL_RESULT)
     at.button(key="review-topic-12").click().run()

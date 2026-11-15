@@ -1,5 +1,7 @@
 """E6, E6b, E6c, U1b, U1c, E7, E7b y E7c: tema, quiz y resultado."""
 
+import re
+
 from apptest import button, page_texts, session_of
 from learner_support import (
     QUIZ,
@@ -383,6 +385,14 @@ def test_e7b_follows_figma() -> None:
     )
 
 
+def test_e7b_next_attempt_badge_and_review_link() -> None:
+    at = _result("learner_quiz_failed")
+    assert "Intento 2 de 3" in {
+        m.group(1) for e in at.markdown if (m := re.fullmatch(r":blue-badge\[(.*)\]", e.value))
+    }
+    assert at.button(key="request-review-1005").proto.type == "tertiary"
+
+
 def test_e7b_retry_with_new_questions_opens_the_quiz() -> None:
     at = _result("learner_quiz_failed")
     button(at, "Reintentar con preguntas nuevas").click().run()
@@ -411,6 +421,16 @@ def test_e7c_exhausted_attempts_from_next_action() -> None:
     assert "40 % · 2 de 5" in texts
     assert "Necesitas 70 % para aprobar." in texts
     assert "Recursos de repaso" in texts
+
+
+def test_e7c_route_rows_have_one_badge_each() -> None:
+    at = _result("learner_exhausted")
+    found = [
+        m.group(1) for e in at.markdown if (m := re.fullmatch(r":[a-z]+-badge\[(.*)\]", e.value))
+    ]
+    assert found.count("En espera") >= 1
+    assert "Puedes seguir" in found
+    assert ":red[40 % · 2 de 5]" in [e.value for e in at.markdown]
 
 
 def test_e7c_exhausted_from_the_result() -> None:

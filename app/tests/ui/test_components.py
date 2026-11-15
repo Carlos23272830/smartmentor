@@ -149,6 +149,12 @@ def test_rubric_result_states_each_criterion_in_words() -> None:
     assert "No cumple · Justifica con datos del caso" in shown
 
 
+def test_rubric_result_colors_met_green_and_unmet_red() -> None:
+    raw = [e.value for e in run(_rubric).markdown]
+    assert ":green[Cumple · Relaciona el umbral con el costo]" in raw
+    assert ":red[No cumple · Justifica con datos del caso]" in raw
+
+
 # --- attempt_history -----------------------------------------------------------------------------
 
 
@@ -176,6 +182,12 @@ def test_attempt_history_lists_attempts_and_flags_exhausted() -> None:
     assert "Intento 3 · intento extra" in shown
     assert "Necesitas 70 % para aprobar." in shown
     assert "Intentos agotados" in badges(at)
+
+
+def test_attempt_history_scores_are_red() -> None:
+    raw = [e.value for e in run(_history).markdown]
+    assert ":red[60 % · 3 de 5]" in raw
+    assert ":red[40 % · 2 de 5]" in raw
 
 
 # --- topic_graph ---------------------------------------------------------------------------------
