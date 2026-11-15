@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 import streamlit as st
 
-from components.layout import render_notice
+from components.layout import render_action_row, render_notice
 from components.theme import BLOOM_ACTION_VERBS
 
 VERB_PLACEHOLDER = "Elige un verbo"
@@ -84,12 +84,15 @@ def render_objective_editor(
                 "cambia con tu objetivo."
             )
         render_notice("\n\n".join(lines), tone="success")
-    reset = (
-        st.button("Volver a la propuesta de la IA", type="tertiary", key=f"{key}-reset")
-        if can_reset
-        else False
-    )
-    with st.container(horizontal=True):
+    # «Volver a la propuesta» a la izquierda; «Cancelar» y «Guardar» a la derecha, como en Figma.
+    link, actions = render_action_row(f"{key}-editor")
+    with link:
+        reset = (
+            st.button("Volver a la propuesta de la IA", type="tertiary", key=f"{key}-reset")
+            if can_reset
+            else False
+        )
+    with actions:
         cancel = st.button("Cancelar", key=f"{key}-cancel")
         save = st.button(
             "Guardar objetivo",
