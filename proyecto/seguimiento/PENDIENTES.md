@@ -129,17 +129,17 @@ Recorrer las 96 pantallas de Figma v3 (incluidas las variantes por curso) y comp
 
 | Estado | Responsable | Depende de | Peso |
 | --- | --- | --- | --- |
-| ◐ Validadas por agente al 100 %: 18 de 96 (2026-11-15). Las 11 «s/m» ya se midieron (75 a 90 %, V-058 a V-087). Falta la revalidación del equipo | — (revalidación del equipo) | — | Medio: la demo y E9 |
+| ◐ Validadas por agente al 100 %: 49 de 96 (2026-11-15, tras los PR 15 a 30; 8 N/A). Quedan V-037 en 14 pantallas, las ventanas de D2b, D2c, D3b y D4c (en curso), V-071, V-072, V-074 y V-017. Falta la revalidación del equipo | — (revalidación del equipo) | — | Medio: la demo y E9 |
 
 #### Acceso y comunes (A)
 
 | N.º | Código | Link | Nombre o descripción | Validado agente | % migración | Revalidado (equipo) |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 1 | A1 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=2-169) (`2:169`) | Selector de rol | — | 75 % · V-058 (m), V-059 (m), V-060 (b) · solo en modo de datos de ejemplo |  |
+| 1 | A1 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=2-169) (`2:169`) | Selector de rol | ✔ | 100 % · V-058 a V-060 corregidas (PR 30) · solo en modo de datos de ejemplo | |
 | 2 | A2 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=2-201) (`2:201`) | Login aprendiz | N/A | N/A · La dibuja Keycloak (`st.login`) | |
 | 3 | A3 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=2-225) (`2:225`) | Registro aprendiz | N/A | N/A · La dibuja Keycloak; las casillas, en `consent.py` | |
-| 4 | A3b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=103-725) (`103:725`) | Consentimiento informado | — | 95 % · V-056 (decisión del dueño) | |
-| 5 | A3c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=121-903) (`121:903`) | Tus datos y tus derechos | — | 95 % · V-057 (decisión del dueño) | |
+| 4 | A3b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=103-725) (`103:725`) | Consentimiento informado | ✔ | 100 % · V-056 aceptada por el dueño | |
+| 5 | A3c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=121-903) (`121:903`) | Tus datos y tus derechos | ✔ | 100 % · V-057 aceptada por el dueño | |
 | 6 | A4 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=2-251) (`2:251`) | Login instructor | N/A | N/A · La dibuja Keycloak | |
 | 7 | A5 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=2-275) (`2:275`) | Recuperar contraseña | N/A | N/A · La dibuja Keycloak | |
 | 8 | A6 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=2-290) (`2:290`) | 403 Sin permiso | ✔ | 100 % | |
@@ -150,82 +150,82 @@ Recorrer las 96 pantallas de Figma v3 (incluidas las variantes por curso) y comp
 | N.º | Código | Link | Nombre o descripción | Validado agente | % migración | Revalidado (equipo) |
 | ---: | --- | --- | --- | --- | --- | --- |
 | 1 | E1 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-2) (`5:2`) | Catálogo de rutas | ✔ | 100 % · V-005 corregida; V-010 aceptada | |
-| 2 | E2 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-37) (`5:37`) | Perfil | — | 85 % · V-037 · V-039 | |
-| 3 | E2b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=123-935) (`123:935`) | Hoja de vida | — | 80 % · V-037 · V-038 | |
-| 4 | E2bc | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1367) (`149:1367`) | Hoja de vida · Estadística para ciencia de datos | — | 80 % · Variante de E2b con otro curso (misma página) | |
-| 5 | E2bd | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1513) (`149:1513`) | Hoja de vida · Python para análisis de datos | — | 80 % · Variante de E2b con otro curso (misma página) | |
-| 6 | E2be | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1658) (`149:1658`) | Hoja de vida · Claude Ventas | — | 80 % · Variante de E2b con otro curso (misma página) | |
-| 7 | E2bf | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1805) (`149:1805`) | Hoja de vida · Claude Marketing | — | 80 % · Variante de E2b con otro curso (misma página) | |
-| 8 | E2bg | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1954) (`149:1954`) | Hoja de vida · Google IA Estudio | — | 80 % · Variante de E2b con otro curso (misma página) | |
-| 9 | E2c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1343) (`149:1343`) | Perfil · Estadística para ciencia de datos | — | 85 % · Variante de E2 con otro curso (misma página) | |
-| 10 | E2d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1489) (`149:1489`) | Perfil · Python para análisis de datos | — | 85 % · Variante de E2 con otro curso (misma página) | |
-| 11 | E2e | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1634) (`149:1634`) | Perfil · Claude Ventas | — | 85 % · Variante de E2 con otro curso (misma página) | |
-| 12 | E2f | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1781) (`149:1781`) | Perfil · Claude Marketing | — | 85 % · Variante de E2 con otro curso (misma página) | |
-| 13 | E2g | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1930) (`149:1930`) | Perfil · Google IA Estudio | — | 85 % · Variante de E2 con otro curso (misma página) | |
-| 14 | E3 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-61) (`5:61`) | Diagnóstico | — | 80 % · V-034 · V-037 | |
-| 15 | E3c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=136-1131) (`136:1131`) | Diagnóstico · Estadística para ciencia de datos | — | 80 % · Variante de E3 con otro curso (misma página) | |
-| 16 | E3d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=136-1172) (`136:1172`) | Diagnóstico · Python para análisis de datos | — | 80 % · Variante de E3 con otro curso (misma página) | |
-| 17 | E3e | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=136-1213) (`136:1213`) | Diagnóstico · Claude Ventas | — | 80 % · Variante de E3 con otro curso (misma página) | |
-| 18 | E3f | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=136-1254) (`136:1254`) | Diagnóstico · Claude Marketing | — | 80 % · Variante de E3 con otro curso (misma página) | |
-| 19 | E3g | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=136-1295) (`136:1295`) | Diagnóstico · Google IA Estudio | — | 80 % · Variante de E3 con otro curso (misma página) | |
-| 20 | E4 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-97) (`5:97`) | Resultado del diagnóstico | — | 85 % · V-037 · V-040 | |
-| 21 | E4b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-536) (`94:536`) | Editar el objetivo (modal) | — | 90 % · V-041 | |
-| 22 | E4c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1434) (`149:1434`) | Resultado del diagnóstico · Estadística para ciencia de datos | — | 85 % · Variante de E4 con otro curso (misma página) | |
-| 23 | E4d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1580) (`149:1580`) | Resultado del diagnóstico · Python para análisis de datos | — | 85 % · Variante de E4 con otro curso (misma página) | |
-| 24 | E4e | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1725) (`149:1725`) | Resultado del diagnóstico · Claude Ventas | — | 85 % · Variante de E4 con otro curso (misma página) | |
-| 25 | E4f | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1872) (`149:1872`) | Resultado del diagnóstico · Claude Marketing | — | 85 % · Variante de E4 con otro curso (misma página) | |
-| 26 | E4g | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-2021) (`149:2021`) | Resultado del diagnóstico · Google IA Estudio | — | 85 % · Variante de E4 con otro curso (misma página) | |
-| 27 | E5 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-148) (`5:148`) | Vista de ruta | — | 90 % · V-042 | |
-| 28 | E5b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=96-657) (`96:657`) | Vista de ruta · Ruta fija (grupo de comparación) | — | 85 % · V-042 · V-043 | |
-| 29 | E5c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1160) (`140:1160`) | Ruta · Estadística para ciencia de datos | — | 90 % · Variante de E5 con otro curso (misma página) | |
-| 30 | E5d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1241) (`140:1241`) | Ruta · Python para análisis de datos | — | 90 % · Variante de E5 con otro curso (misma página) | |
-| 31 | E5e | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1321) (`140:1321`) | Ruta · Claude Ventas | — | 90 % · Variante de E5 con otro curso (misma página) | |
-| 32 | E5f | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1403) (`140:1403`) | Ruta · Claude Marketing | — | 90 % · Variante de E5 con otro curso (misma página) | |
-| 33 | E5g | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1485) (`140:1485`) | Ruta · Google IA Estudio | — | 90 % · Variante de E5 con otro curso (misma página) | |
-| 34 | E6 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-209) (`5:209`) | Tema (video + texto + quiz) | — | 75 % · V-011 · V-012 · V-013 | |
-| 35 | E6b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=81-419) (`81:419`) | Quiz del tema | — | 65 % · V-034 · V-035 · V-037 · V-044 | |
-| 36 | E6c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-489) (`94:489`) | Quiz · Respuesta corta (5 de 5) | — | 60 % · V-034 · V-035 · V-036 · V-037 | |
-| 37 | E7 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-245) (`5:245`) | Resultado del quiz | — | 80 % · V-037 · V-045 | |
-| 38 | E7b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=69-373) (`69:373`) | Quiz no aprobado (refuerzo) | — | 80 % · V-037 · V-046 | |
-| 39 | E7c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-607) (`94:607`) | Intentos agotados | — | 80 % · V-037 · V-047 | |
-| 40 | E8 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=3-348) (`3:348`) | Evaluación final | — | 75 % · V-034 · V-035 · V-044 | |
-| 41 | E9 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-280) (`5:280`) | Repaso dirigido | — | 95 % · V-048 | |
-| 42 | E9c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=103-769) (`103:769`) | Evaluación final · Intentos agotados | — | 80 % · V-037 · V-047 | |
-| 43 | E10 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-311) (`5:311`) | Badge | — | 95 % · V-049 (decisión del dueño) | |
-| 44 | E11 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-348) (`5:348`) | Mi progreso | — | 95 % · V-044 | |
-| 45 | E11b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=122-962) (`122:962`) | Gestionar autorizaciones (modal) | — | 90 % · V-051 | |
-| 46 | E12 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-382) (`5:382`) | Logros | — | 85 % · V-044 · V-052 | |
-| 47 | E13a | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-674) (`94:674`) | Encuesta final (1 de 2) | — | 70 % · V-034 · V-037 · V-053 | |
-| 48 | E13b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-812) (`94:812`) | Encuesta final (2 de 2) | — | 70 % · V-034 · V-037 · V-053 (decisión del dueño: botón verde) | |
-| 49 | E14 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=104-935) (`104:935`) | Prueba de retención (post-test diferido) | — | 80 % · V-037 · V-054 | |
-| 50 | E15 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=123-1031) (`123:1031`) | Mi perfil | — | 75 % · V-037 · V-038 · V-044 | |
-| 51 | U1a | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-417) (`94:417`) | Carga · Calculando tu nivel | — | 95 % · V-055 | |
-| 52 | U1ac | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1234) (`140:1234`) | Carga · Calculando tu nivel · Estadística para ciencia de datos | — | 95 % · Variante de U1a con otro curso (misma página) | |
-| 53 | U1ad | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1314) (`140:1314`) | Carga · Calculando tu nivel · Python para análisis de datos | — | 95 % · Variante de U1a con otro curso (misma página) | |
-| 54 | U1ae | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1396) (`140:1396`) | Carga · Calculando tu nivel · Claude Ventas | — | 95 % · Variante de U1a con otro curso (misma página) | |
-| 55 | U1af | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1478) (`140:1478`) | Carga · Calculando tu nivel · Claude Marketing | — | 95 % · Variante de U1a con otro curso (misma página) | |
-| 56 | U1ag | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1558) (`140:1558`) | Carga · Calculando tu nivel · Google IA Estudio | — | 95 % · Variante de U1a con otro curso (misma página) | |
-| 57 | U1b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-441) (`94:441`) | Carga · Preparando reintento | — | 95 % · V-055 (mismo componente que U1a) | |
-| 58 | U1c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-465) (`94:465`) | Carga · Calificando | — | 95 % · V-055 (mismo componente que U1a) | |
-| 59 | U1d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=124-1271) (`124:1271`) | Carga · Calificando la evaluación final | — | 95 % · V-055 (mismo componente que U1a) | |
+| 2 | E2 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-37) (`5:37`) | Perfil | — | 90 % · V-037 abierta (botones a la derecha) · V-039 corregida (PR 25) | |
+| 3 | E2b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=123-935) (`123:935`) | Hoja de vida | — | 90 % · V-037 abierta (botones a la derecha) · V-038 corregida (PR 25) | |
+| 4 | E2bc | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1367) (`149:1367`) | Hoja de vida · Estadística para ciencia de datos | — | 90 % · Variante de E2b con otro curso (misma página) | |
+| 5 | E2bd | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1513) (`149:1513`) | Hoja de vida · Python para análisis de datos | — | 90 % · Variante de E2b con otro curso (misma página) | |
+| 6 | E2be | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1658) (`149:1658`) | Hoja de vida · Claude Ventas | — | 90 % · Variante de E2b con otro curso (misma página) | |
+| 7 | E2bf | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1805) (`149:1805`) | Hoja de vida · Claude Marketing | — | 90 % · Variante de E2b con otro curso (misma página) | |
+| 8 | E2bg | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1954) (`149:1954`) | Hoja de vida · Google IA Estudio | — | 90 % · Variante de E2b con otro curso (misma página) | |
+| 9 | E2c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1343) (`149:1343`) | Perfil · Estadística para ciencia de datos | — | 90 % · Variante de E2 con otro curso (misma página) | |
+| 10 | E2d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1489) (`149:1489`) | Perfil · Python para análisis de datos | — | 90 % · Variante de E2 con otro curso (misma página) | |
+| 11 | E2e | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1634) (`149:1634`) | Perfil · Claude Ventas | — | 90 % · Variante de E2 con otro curso (misma página) | |
+| 12 | E2f | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1781) (`149:1781`) | Perfil · Claude Marketing | — | 90 % · Variante de E2 con otro curso (misma página) | |
+| 13 | E2g | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1930) (`149:1930`) | Perfil · Google IA Estudio | — | 90 % · Variante de E2 con otro curso (misma página) | |
+| 14 | E3 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-61) (`5:61`) | Diagnóstico | — | 90 % · V-037 abierta (botones a la derecha) · V-033 y V-034 corregidas (PR 15 y 26) | |
+| 15 | E3c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=136-1131) (`136:1131`) | Diagnóstico · Estadística para ciencia de datos | — | 90 % · Variante de E3 con otro curso (misma página) | |
+| 16 | E3d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=136-1172) (`136:1172`) | Diagnóstico · Python para análisis de datos | — | 90 % · Variante de E3 con otro curso (misma página) | |
+| 17 | E3e | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=136-1213) (`136:1213`) | Diagnóstico · Claude Ventas | — | 90 % · Variante de E3 con otro curso (misma página) | |
+| 18 | E3f | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=136-1254) (`136:1254`) | Diagnóstico · Claude Marketing | — | 90 % · Variante de E3 con otro curso (misma página) | |
+| 19 | E3g | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=136-1295) (`136:1295`) | Diagnóstico · Google IA Estudio | — | 90 % · Variante de E3 con otro curso (misma página) | |
+| 20 | E4 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-97) (`5:97`) | Resultado del diagnóstico | — | 90 % · V-037 abierta (botones a la derecha) · V-040 corregida (PR 21) | |
+| 21 | E4b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-536) (`94:536`) | Editar el objetivo (modal) | ✔ | 100 % · V-041 corregida (PR 25) | |
+| 22 | E4c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1434) (`149:1434`) | Resultado del diagnóstico · Estadística para ciencia de datos | — | 90 % · Variante de E4 con otro curso (misma página) | |
+| 23 | E4d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1580) (`149:1580`) | Resultado del diagnóstico · Python para análisis de datos | — | 90 % · Variante de E4 con otro curso (misma página) | |
+| 24 | E4e | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1725) (`149:1725`) | Resultado del diagnóstico · Claude Ventas | — | 90 % · Variante de E4 con otro curso (misma página) | |
+| 25 | E4f | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-1872) (`149:1872`) | Resultado del diagnóstico · Claude Marketing | — | 90 % · Variante de E4 con otro curso (misma página) | |
+| 26 | E4g | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=149-2021) (`149:2021`) | Resultado del diagnóstico · Google IA Estudio | — | 90 % · Variante de E4 con otro curso (misma página) | |
+| 27 | E5 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-148) (`5:148`) | Vista de ruta | ✔ | 100 % · V-042 corregida (PR 21) | |
+| 28 | E5b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=96-657) (`96:657`) | Vista de ruta · Ruta fija (grupo de comparación) | ✔ | 100 % · V-042 y V-043 corregidas (PR 21) | |
+| 29 | E5c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1160) (`140:1160`) | Ruta · Estadística para ciencia de datos | ✔ | 100 % · Variante de E5 con otro curso (misma página) | |
+| 30 | E5d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1241) (`140:1241`) | Ruta · Python para análisis de datos | ✔ | 100 % · Variante de E5 con otro curso (misma página) | |
+| 31 | E5e | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1321) (`140:1321`) | Ruta · Claude Ventas | ✔ | 100 % · Variante de E5 con otro curso (misma página) | |
+| 32 | E5f | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1403) (`140:1403`) | Ruta · Claude Marketing | ✔ | 100 % · Variante de E5 con otro curso (misma página) | |
+| 33 | E5g | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1485) (`140:1485`) | Ruta · Google IA Estudio | ✔ | 100 % · Variante de E5 con otro curso (misma página) | |
+| 34 | E6 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-209) (`5:209`) | Tema (video + texto + quiz) | ✔ | 100 % · V-011 a V-013 corregidas (PR 21) | |
+| 35 | E6b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=81-419) (`81:419`) | Quiz del tema | — | 90 % · V-037 abierta (botones a la derecha) · V-033, V-034, V-035 y V-044 corregidas (PR 15, 25 y 26) | |
+| 36 | E6c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-489) (`94:489`) | Quiz · Respuesta corta (5 de 5) | — | 90 % · V-037 abierta (botones a la derecha) · V-034 a V-036 corregidas (PR 26) | |
+| 37 | E7 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-245) (`5:245`) | Resultado del quiz | — | 90 % · V-037 abierta (botones a la derecha) · V-045 corregida (PR 24) | |
+| 38 | E7b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=69-373) (`69:373`) | Quiz no aprobado (refuerzo) | — | 90 % · V-037 abierta (botones a la derecha) · V-046 corregida (PR 24) | |
+| 39 | E7c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-607) (`94:607`) | Intentos agotados | — | 90 % · V-037 abierta (botones a la derecha) · V-047 corregida (PR 24) | |
+| 40 | E8 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=3-348) (`3:348`) | Evaluación final | ✔ | 100 % · V-033 a V-035 y V-044 corregidas (PR 15, 25 y 26) | |
+| 41 | E9 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-280) (`5:280`) | Repaso dirigido | ✔ | 100 % · V-048 corregida (PR 24) | |
+| 42 | E9c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=103-769) (`103:769`) | Evaluación final · Intentos agotados | — | 90 % · V-037 abierta (botones a la derecha) · V-047 corregida (PR 24) | |
+| 43 | E10 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-311) (`5:311`) | Badge | ✔ | 100 % · V-049 aceptada por el dueño | |
+| 44 | E11 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-348) (`5:348`) | Mi progreso | ✔ | 100 % · V-044 y V-050 corregidas (PR 15 y 25) | |
+| 45 | E11b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=122-962) (`122:962`) | Gestionar autorizaciones (modal) | ✔ | 100 % · V-051 corregida (PR 25) | |
+| 46 | E12 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=5-382) (`5:382`) | Logros | ✔ | 100 % · V-044 y V-052 corregidas (PR 25) | |
+| 47 | E13a | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-674) (`94:674`) | Encuesta final (1 de 2) | — | 90 % · V-037 abierta (botones a la derecha) · V-034 corregida (PR 26); V-053 aceptada | |
+| 48 | E13b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-812) (`94:812`) | Encuesta final (2 de 2) | — | 90 % · V-037 abierta (botones a la derecha) · V-034 corregida (PR 26); V-053 aceptada | |
+| 49 | E14 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=104-935) (`104:935`) | Prueba de retención (post-test diferido) | — | 90 % · V-037 abierta (botones a la derecha) · V-033 y V-054 corregidas (PR 15 y 26) | |
+| 50 | E15 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=123-1031) (`123:1031`) | Mi perfil | — | 90 % · V-037 abierta (botones a la derecha) · V-038 y V-044 corregidas (PR 25) | |
+| 51 | U1a | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-417) (`94:417`) | Carga · Calculando tu nivel | ✔ | 100 % · V-055 corregida (PR 25) | |
+| 52 | U1ac | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1234) (`140:1234`) | Carga · Calculando tu nivel · Estadística para ciencia de datos | ✔ | 100 % · Variante de U1a con otro curso (misma página) | |
+| 53 | U1ad | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1314) (`140:1314`) | Carga · Calculando tu nivel · Python para análisis de datos | ✔ | 100 % · Variante de U1a con otro curso (misma página) | |
+| 54 | U1ae | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1396) (`140:1396`) | Carga · Calculando tu nivel · Claude Ventas | ✔ | 100 % · Variante de U1a con otro curso (misma página) | |
+| 55 | U1af | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1478) (`140:1478`) | Carga · Calculando tu nivel · Claude Marketing | ✔ | 100 % · Variante de U1a con otro curso (misma página) | |
+| 56 | U1ag | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=140-1558) (`140:1558`) | Carga · Calculando tu nivel · Google IA Estudio | ✔ | 100 % · Variante de U1a con otro curso (misma página) | |
+| 57 | U1b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-441) (`94:441`) | Carga · Preparando reintento | ✔ | 100 % · V-055 corregida (PR 25), mismo componente que U1a | |
+| 58 | U1c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=94-465) (`94:465`) | Carga · Calificando | ✔ | 100 % · V-055 corregida (PR 25), mismo componente que U1a | |
+| 59 | U1d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=124-1271) (`124:1271`) | Carga · Calificando la evaluación final | ✔ | 100 % · V-055 corregida (PR 25), mismo componente que U1a | |
 
 #### Instructor (D)
 
 | N.º | Código | Link | Nombre o descripción | Validado agente | % migración | Revalidado (equipo) |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 1 | D1 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=3-2) (`3:2`) | Instructor · Mis cursos | ✔ | 100 % | |
-| 2 | D1b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-538) (`95:538`) | Nuevo curso | — | 80 % · V-061 (m), V-062 (b), V-063 (b) |  |
-| 3 | D1c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-592) (`95:592`) | Carga · Extrayendo temas | — | 80 % · V-064 (m), V-065 (b), V-066 (b) |  |
-| 4 | D1d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-618) (`95:618`) | Error al leer el syllabus | — | 80 % · V-067 (m), V-068 (b), V-069 (b) |  |
+| 1 | D1 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=3-2) (`3:2`) | Instructor · Mis cursos | ✔ | 100 % · V-002, V-003, V-006 y V-007 corregidas · F-003 (estado vacío) en curso | |
+| 2 | D1b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-538) (`95:538`) | Nuevo curso | ✔ | 100 % · V-061 a V-063 corregidas (PR 28) | |
+| 3 | D1c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-592) (`95:592`) | Carga · Extrayendo temas | ✔ | 100 % · V-064 a V-066 corregidas (PR 25 y 28) | |
+| 4 | D1d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-618) (`95:618`) | Error al leer el syllabus | ✔ | 100 % · V-067 a V-069 corregidas (PR 28) | |
 | 5 | D2 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=6-2) (`6:2`) | Curso y syllabus | ✔ | 100 % · V-020 corregida; V-025 aceptada | |
-| 6 | D2b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-644) (`95:644`) | Editar tema (modal) | — | 80 % · V-070 (m), V-071 (b), V-072 (b) |  |
-| 7 | D2c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-776) (`95:776`) | Confirmar volver a extraer | — | 85 % · V-073 (m), V-074 (b) |  |
+| 6 | D2b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-644) (`95:644`) | Editar tema (modal) | — | 80 % · V-070 ventana modal, en curso · V-071 · V-072 | |
+| 7 | D2c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-776) (`95:776`) | Confirmar volver a extraer | — | 85 % · V-073 ventana modal, en curso · V-074 | |
 | 8 | D2d | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=104-1102) (`104:1102`) | Temas en vista de grafo | ✔ | 100 % · V-020 corregida | |
 | 9 | D3 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=6-107) (`6:107`) | Ruta y avance | ✔ | 100 % · V-015 corregida; V-016 aceptada | |
-| 10 | D3b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-883) (`95:883`) | Configurar la ruta (panel) | — | 80 % · V-075 (m), V-076 (b), V-077 (b) |  |
+| 10 | D3b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=95-883) (`95:883`) | Configurar la ruta (panel) | — | 95 % · V-076 ventana, en curso · V-075 y V-077 corregidas (PR 30) | |
 | 11 | D4 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=3-71) (`3:71`) | Detalle de aprendiz | ✔ | 100 % · V-021 corregida | |
-| 12 | D4b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=103-825) (`103:825`) | Detalle de aprendiz · Intentos agotados | — | 80 % · V-078 (m), V-079 (b), V-080 (b) |  |
-| 13 | D4c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=103-940) (`103:940`) | Habilitar nuevos intentos (modal) | — | 80 % · V-081 (m), V-082 (b), V-083 (b) |  |
+| 12 | D4b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=103-825) (`103:825`) | Detalle de aprendiz · Intentos agotados | ✔ | 100 % · V-078 a V-080 corregidas (PR 30) | |
+| 13 | D4c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=103-940) (`103:940`) | Habilitar nuevos intentos (modal) | — | 90 % · V-081 ventana modal, en curso · V-082 y V-083 corregidas (PR 30) | |
 | 14 | D5 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=8-13) (`8:13`) | Revisión de recursos y preguntas | ✔ | 100 % · V-022 corregida | |
 | 15 | D5b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=96-850) (`96:850`) | Anotación de preguntas (panel) | ✔ | 100 % · V-026 corregida; V-032 aceptada | |
 | 16 | D5c | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=96-1013) (`96:1013`) | Calificación humana de respuestas cortas | ✔ | 100 % · V-027 corregida | |
@@ -240,10 +240,10 @@ Recorrer las 96 pantallas de Figma v3 (incluidas las variantes por curso) y comp
 | 1 | AD1 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=3-174) (`3:174`) | Admin · Usuarios y roles | ✔ | 100 % · V-008 y V-009 corregidas | |
 | 2 | AD2 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=3-262) (`3:262`) | Admin · Log LLM y costos | — | 95 % · V-017 (falta el enlace) | |
 | 3 | AD3 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=8-133) (`8:133`) | Métricas globales | ✔ | 100 % · V-018 corregida; V-019 aceptada | |
-| 4 | AD4 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=96-1083) (`96:1083`) | Admin · Piloto | ✔ | 100 % · V-024 corregida; el estado «sin piloto» es F-013 | |
-| 5 | AD4b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=110-885) (`110:885`) | Vista previa de la ruta fija (solo lectura) | — | 75 % · V-084 (m), V-085 (m), V-086 (b) |  |
+| 4 | AD4 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=96-1083) (`96:1083`) | Admin · Piloto | N/A | N/A · Se retira de la app por decisión del dueño (F-013, en curso) | |
+| 5 | AD4b | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=110-885) (`110:885`) | Vista previa de la ruta fija (solo lectura) | N/A | N/A · Se retira de la app por decisión del dueño (F-013, en curso) | |
 | 6 | AD5 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=103-1279) (`103:1279`) | Admin · Cursos, rutas e inscripciones | ✔ | 100 % · V-023 corregida | |
-| 7 | C4 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=104-985) (`104:985`) | Catálogo de prompts | — | 90 % · V-087 (m) |  |
+| 7 | C4 | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=104-985) (`104:985`) | Catálogo de prompts | ✔ | 100 % · V-087 corregida (PR 30) · nombres en español en curso | |
 
 #### Referencia
 
