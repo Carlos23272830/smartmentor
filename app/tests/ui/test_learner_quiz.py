@@ -202,6 +202,7 @@ def test_e6b_first_question_follows_figma() -> None:
             "Fundamentos de ML › Tema 3 de 5 · Pregunta 1 de 5",
             "(Demo del prototipo) Ver resultado menor a 70 %",
         ),
+        alerts=True,
     )
 
 
@@ -210,8 +211,9 @@ def test_e6c_short_answer_shows_the_rubric_and_limit() -> None:
     _answer_all(at, 4)
     no_exception(at)
     texts = page_texts(at)
-    assert "Respuesta corta" in texts
-    assert "0 / 500 caracteres" in texts
+    assert "Pregunta 5 de 5 · Respuesta corta" in texts
+    assert "0 / 500 caracteres" not in texts  # un solo contador: el del cuadro (V-036)
+    assert "Quiz del tema" in texts
     assert "CÓMO SE CALIFICA" in texts
     assert "Responde sin ayuda de IA." in texts
     assert button(at, "Enviar quiz").disabled
@@ -438,3 +440,25 @@ def test_e6b_submitted_attempt_is_not_answered_again_b026() -> None:
     texts = page_texts(at)
     assert "Enviar quiz" not in texts
     assert "Siguiente" not in texts
+
+
+# --- V-034 a V-036 · barra de progreso, aviso, tarjeta y chips -----------------------------------
+
+
+def test_quiz_shows_the_progress_bar_notice_and_card() -> None:
+    at = _open_quiz()
+    assert [p.value for p in at.progress] == [20]  # pregunta 1 de 5
+    assert any("Quiz del tema · Sin ayuda de IA" in w.value for w in at.warning)
+    assert at.get_by_key("card-quiz-quiz")
+    assert "Tutor IA desactivado durante el quiz" in page_texts(at)
+    _answer_all(at, 1)
+    assert [p.value for p in at.progress] == [40]
+
+
+def test_quiz_short_answer_has_one_counter_and_a_rubric_box() -> None:
+    at = _open_quiz()
+    _answer_all(at, 4)
+    assert [p.value for p in at.progress] == [100]
+    assert at.get_by_key("card-rubric-quiz")
+    assert not any("caracteres" in c.value for c in at.caption)
+    assert not any(t.startswith("Quiz: ") for t in page_texts(at))
