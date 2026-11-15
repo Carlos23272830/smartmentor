@@ -2,6 +2,9 @@
 
 Recibe una vista ya armada (`RubricView`); quien la arma es `services/assessment.py`, a partir del
 `grading.v1` que devuelve la API. El resultado de cada criterio va escrito («Cumple», «No cumple»).
+Debajo de cada criterio va la razón de la IA y, si hay, la cita de la respuesta del aprendiz
+(«En tu respuesta: «…»»). Las calificaciones anteriores al prompt v2 no traen razón (B-038): en
+ellas `evidence` se muestra tal cual, como antes.
 """
 
 from dataclasses import dataclass
@@ -14,6 +17,9 @@ class CriterionView:
     name: str
     met: bool
     evidence: str
+    """Cita literal de la respuesta del aprendiz; vacía si no hay nada que citar."""
+    reason: str = ""
+    """Por qué se cumple o no el criterio; vacía en calificaciones anteriores al prompt v2."""
 
 
 @dataclass(frozen=True)
@@ -44,5 +50,9 @@ def render_rubric_result(view: RubricView, *, key: str) -> None:
             # Verde y rojo como en Figma; el resultado va escrito además del color.
             word, color = ("Cumple", "green") if criterion.met else ("No cumple", "red")
             st.markdown(f":{color}[{word} · {criterion.name}]")
-            if criterion.evidence:
+            if criterion.reason:
+                st.caption(criterion.reason)
+                if criterion.evidence:
+                    st.caption(f"En tu respuesta: «{criterion.evidence}»")
+            elif criterion.evidence:
                 st.caption(criterion.evidence)
