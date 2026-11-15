@@ -48,11 +48,15 @@ def render_header(
     other_roles: Sequence[tuple[Role, str]] = (),
     logout_label: str = "Cerrar sesión",
     switch_label: str = "Cambiar de perfil",
+    active_label: str = "Rol activo",
+    active_role_label: str | None = None,
 ) -> HeaderAction | None:
     """Barra superior: marca, rol, enlaces del rol y menú de la cuenta (CU-35).
 
-    `other_roles` son los demás roles del usuario con su etiqueta; si hay alguno, el menú ofrece
-    cambiar de perfil. Devuelve la acción elegida (cambiar de rol o cerrar sesión), o None.
+    El menú muestra el nombre, el correo y el rol activo (`active_role_label`, con su etiqueta
+    larga; si no llega, la corta). `other_roles` son los demás roles del usuario con su etiqueta;
+    si hay alguno, el menú ofrece cambiar de perfil (F-004). Devuelve la acción elegida (cambiar
+    de rol o cerrar sesión), o None.
     """
     action: HeaderAction | None = None
     with st.container(key="app-header", horizontal=True, vertical_alignment="center", gap="medium"):
@@ -64,6 +68,8 @@ def render_header(
         with st.popover(initials(full_name), type="tertiary"):
             st.markdown(f"**{full_name}**")
             st.caption(email)
+            st.caption(f"**{active_label.upper()}**")
+            st.markdown(f":material/check: {active_role_label or role_label}")
             if other_roles:
                 st.caption(f"**{switch_label.upper()}**")
                 for other, label in other_roles:
