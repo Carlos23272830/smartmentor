@@ -63,6 +63,14 @@ Implementación: dos subflujos condicionales, uno con *Condition - user role* `i
 
 Comprobado con un Keycloak desechable (`check-realm-import.sh --functional`): el aprendiz recibe el código de autorización sin OTP, y el instructor, el administrador y quien tiene ambos son enviados a configurar el OTP.
 
+> **Nota de seguridad (B-035).** `--import-realm` solo importa el realm si todavía no existe. Un Keycloak cuya base se creó antes del 2026-11-07 conserva un realm sin `browser-role-otp` y deja entrar al instructor y al administrador sin OTP. En el ambiente **local** se acepta así (decisión del dueño, 2026-11-15). En **QA y producción** el OTP es obligatorio:
+>
+> - Crear el Keycloak con una base nueva, para que importe el realm versionado.
+> - Comprobar que el realm vivo tiene `browserFlow` en `browser-role-otp` (consola: *Authentication → Flows*, o `GET /admin/realms/smartmentor`).
+> - Activar `REQUIRE_SECOND_FACTOR=true` en la API solo después de verificar que el token del instructor trae `amr` con OTP; si no, la API rechaza a todo el personal.
+>
+> Tarea de seguimiento: T-050 en [`PENDIENTES.md`](../proyecto/seguimiento/PENDIENTES.md).
+
 ### Clientes
 
 | Cliente | Tipo | Para qué |
