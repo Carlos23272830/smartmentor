@@ -61,6 +61,11 @@ class Enrollment(BaseEntity):
     objective_content: str | None = None
     objective_criterion: str | None = None
     objective_origin: str | None = None
+    # Propuesta de la IA (o el objetivo por defecto de la ruta): no cambia al confirmar (B-033).
+    objective_proposal_bloom_verb: str | None = None
+    objective_proposal_content: str | None = None
+    objective_proposal_criterion: str | None = None
+    objective_proposal_origin: str | None = None
     pilot_arm: str | None = None
     analysis_included: bool = False
     completed_at: datetime | None = None

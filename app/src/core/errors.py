@@ -24,6 +24,7 @@ MESSAGES: dict[str, str] = {
     "DIAGNOSTIC_ALREADY_SUBMITTED": "Ya entregaste el diagnóstico.",
     "DIAGNOSTIC_NOT_READY": "Todavía estamos calculando tu nivel.",
     "OBJECTIVE_NOT_MEASURABLE": "Agrega cómo sabrás que lo lograste.",
+    "INVALID_BLOOM_VERB": "Elige el verbo de la lista de verbos de Bloom (por ejemplo, Aplicar).",
     "STEP_NOT_AVAILABLE": "Este tema todavía no está disponible.",
     "MAX_ATTEMPTS_EXCEEDED": "Ya usaste todos los intentos de este tema.",
     "ATTEMPT_ALREADY_SUBMITTED": "Ya entregaste esta prueba.",

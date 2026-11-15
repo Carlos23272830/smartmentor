@@ -329,32 +329,25 @@ class SqlAlchemyContentReader:
         )
         return None if found is None else int(found["resource_id"])
 
-    async def video(self, topic_id: int) -> dict[str, Any] | None:
-        row = (
+    async def videos(self, topic_id: int) -> list[dict[str, Any]]:
+        rows = (
             (
                 await self._session.execute(
                     text(
-                        "SELECT id, youtube_video_id, title, duration_seconds, status "
+                        "SELECT id, youtube_video_id, title, channel, duration_seconds, language, "
+                        "has_captions, characterization, characterization_source, similarity, "
+                        "origin, status "
                         "FROM video_candidates WHERE active AND topic_id = :topic_id "
                         "AND status IN ('in_use', 'backup') "
-                        "ORDER BY CASE status WHEN 'in_use' THEN 0 ELSE 1 END, rank NULLS LAST, id "
-                        "LIMIT 1"
+                        "ORDER BY CASE status WHEN 'in_use' THEN 0 ELSE 1 END, rank NULLS LAST, id"
                     ),
                     {"topic_id": topic_id},
                 )
             )
             .mappings()
-            .first()
+            .all()
         )
-        if row is None:
-            return None
-        return {
-            "video_candidate_id": int(row["id"]),
-            "youtube_video_id": row["youtube_video_id"],
-            "title": row["title"],
-            "duration_seconds": row["duration_seconds"],
-            "is_backup": row["status"] == "backup",
-        }
+        return [{"video_candidate_id": int(row["id"]), **dict(row)} for row in rows]
 
     async def outcomes(self, topic_id: int) -> list[dict[str, Any]]:
         rows = (

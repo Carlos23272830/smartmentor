@@ -101,8 +101,11 @@ class ContentReader(Protocol):
 
     async def remedial_resource_id(self, topic_id: int, enrollment_id: int) -> int | None: ...
 
-    async def video(self, topic_id: int) -> dict[str, Any] | None:
-        """El video `in_use` del tema o, si no hay, el primer respaldo."""
+    async def videos(self, topic_id: int) -> list[dict[str, Any]]:
+        """Los videos `in_use` y de respaldo del tema, en ese orden (luego por `rank`).
+
+        Cada uno trae los datos de `video_candidates` que pide `video.rank` y su `status`.
+        """
         ...
 
     async def outcomes(self, topic_id: int) -> list[dict[str, Any]]: ...

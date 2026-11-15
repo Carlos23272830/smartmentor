@@ -145,14 +145,27 @@ async def test_the_whole_learner_flow_from_enrollment_to_badge(
     assert incomplete.status_code == 422
     assert incomplete.json()["code"] == "OBJECTIVE_NOT_MEASURABLE"
     assert incomplete.json()["missing"] == ["criterion"]
+    bad_verb = await learner.put(
+        f"{API}/me/enrollments/{enrollment_id}/objective",
+        json={"bloom_verb": "Hackear", "content": "un modelo", "criterion": "con 80 %"},
+    )
+    assert bad_verb.status_code == 422
+    assert bad_verb.json()["code"] == "INVALID_BLOOM_VERB"
+    assert "Construir" in bad_verb.json()["allowed"]
     confirmed = await learner.put(
         f"{API}/me/enrollments/{enrollment_id}/objective",
-        json={"bloom_verb": "Construir", "content": "un modelo", "criterion": "con 80 %"},
+        json={"bloom_verb": "construir", "content": "un modelo", "criterion": "con 80 %"},
     )
     assert confirmed.status_code == 200, confirmed.text
     body = confirmed.json()
     assert body["status"] == "in_path"
     assert body["objective"]["origin"] == "learner_edited"
+    assert body["objective"]["bloom_verb"] == "Construir"
+    # La propuesta de la IA sigue intacta para «Volver a la propuesta» (B-033)
+    after = (await learner.get(f"{API}/me/enrollments/{enrollment_id}/diagnostic/result")).json()
+    assert after["proposed_objective"]["origin"] == "llm_proposed"
+    assert after["proposed_objective"]["bloom_verb"] == "Aplicar"
+    assert after["proposed_objective"]["content"] == result["proposed_objective"]["content"]
 
     # Ruta: fundamentos es obligatorio (no se omite), lineal se omite, logística espera
     route = (await learner.get(f"{API}/me/enrollments/{enrollment_id}/path")).json()

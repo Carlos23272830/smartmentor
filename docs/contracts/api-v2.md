@@ -176,7 +176,7 @@ Campos sin valor van en `null`. `screen` es una ayuda para la app (código de Fi
 | `PUT /me/enrollments/{id}/diagnostic/answers` | learner | `{"answers": [LearnerAnswer]}` | `200 {saved: n}` (guardado parcial, reemplaza por `item_id`) | `409 DIAGNOSTIC_ALREADY_SUBMITTED` | E3 |
 | `POST /me/enrollments/{id}/diagnostic/submit` | learner | — (`Idempotency-Key`) | `202 JobAccepted` (`diagnostic.finalize`) | `409 DIAGNOSTIC_ALREADY_SUBMITTED` | U1a |
 | `GET /me/enrollments/{id}/diagnostic/result` | learner | — | `200 DiagnosticResult` | `409 DIAGNOSTIC_NOT_READY` | E4 |
-| `PUT /me/enrollments/{id}/objective` | learner | `Objective` (tres partes) | `200 Enrollment` con `path`; llama a `path.sequence` y crea los pasos | `422 OBJECTIVE_NOT_MEASURABLE`, `409 INVALID_STATE_TRANSITION` | E4, E4b |
+| `PUT /me/enrollments/{id}/objective` | learner | `Objective` (tres partes) | `200 Enrollment` con `path`; llama a `path.sequence` y crea los pasos | `422 OBJECTIVE_NOT_MEASURABLE`, `422 INVALID_BLOOM_VERB`, `409 INVALID_STATE_TRANSITION` | E4, E4b |
 | `GET /me/enrollments/{id}/path` | learner | — | `200 Path` | `404` | E5, E5b |
 | `GET /me/enrollments/{id}/steps/{step_id}/content` | learner | — | `200 StepContent`; un tema aprobado u omitido llega con `mode: "review"` (repaso) | `404 STEP_NOT_FOUND`, `409 STEP_NOT_AVAILABLE` (paso bloqueado o en espera) | E6, E9 |
 | `POST /me/enrollments/{id}/steps/{step_id}/attempts` | learner | `{"assessment_type": "topic"}` o `"retention"` | `201 Attempt` con ítems no vistos; `202 JobAccepted` si hay que generar más (`items.generate_quiz_bank`) | `422 MAX_ATTEMPTS_EXCEEDED`, `409 STEP_NOT_AVAILABLE`, `ATTEMPT_IN_PROGRESS` | E6, U1b, E14 |
@@ -210,7 +210,7 @@ Campos sin valor van en `null`. `screen` es una ayuda para la app (código de Fi
   "id": 7,
   "learning_path": {"id": 1, "name": "Fundamentos de Machine Learning", "group_label": "Piloto 2026-2"},
   "status": "in_path",
-  "objective": {"statement": "Construir y evaluar un modelo de regresión logística…", "bloom_verb": "Construir y evaluar", "content": "un modelo de regresión logística…", "criterion": "con al menos 80 % en la evaluación final", "origin": "llm_proposed"},
+  "objective": {"statement": "Construir y evaluar un modelo de regresión logística…", "bloom_verb": "Construir", "content": "y evaluar un modelo de regresión logística…", "criterion": "con al menos 80 % en la evaluación final", "origin": "llm_proposed"},
   "progress": {"steps_total": 3, "steps_done": 1, "percent": 33},
   "pilot_arm": "personalized",
   "next_action": {"type": "study_topic", "step_id": 812, "attempt_id": null, "job_id": null, "screen": "E6"},
@@ -234,6 +234,19 @@ Campos sin valor van en `null`. `screen` es una ayuda para la app (código de Fi
 `LearnerAnswer` es la forma de `prompts/schemas/simulated_answers.v1.json` (`item_id`, `selected_option`, `dont_know`, `text_answer`), con `item_id` entero.
 
 `DiagnosticResult`: `{"status": "scored", "level_by_topic": [...], "overall_score": 55.6, "proposed_objective": Objective}`. `level_by_topic` tiene la forma de `diagnostic_result.v1` más `name` de cada tema; la clasificación es `mastered` (≥ umbral de omisión), `to_reinforce` (≥ 50) o `to_learn`.
+
+`proposed_objective` es la **propuesta original** (de la IA, `origin: "llm_proposed"`, o el objetivo por defecto de la ruta, `"path_default"`), guardada aparte del objetivo confirmado (columnas `enrollments.objective_proposal_*`, B-033): no cambia cuando el aprendiz edita o confirma, y es lo que trae «Volver a la propuesta de la IA» en E4b. El objetivo vigente está en `Enrollment.objective`. En inscripciones anteriores a esa columna cuyo objetivo ya fue editado, la propuesta se perdió y llega `null`.
+
+**Verbo de Bloom del objetivo (B-033).** `PUT …/objective` acepta un verbo de esta lista (sin distinguir mayúsculas ni tildes; se guarda la forma de la lista) y responde `422 INVALID_BLOOM_VERB` con `allowed` si no está. La única excepción es el verbo de la propuesta guardada, para que confirmar la propuesta sin cambios nunca falle. Al ingerir `diagnostic.finalize`, un verbo compuesto de la IA («Construir y evaluar») conserva el primero si está en la lista y el resto pasa al inicio del contenido («y evaluar un modelo…»), así el enunciado no cambia. La app ofrece la misma lista (`BLOOM_ACTION_VERBS`).
+
+| Nivel | Verbos |
+| --- | --- |
+| Recordar | Recordar, Identificar, Reconocer, Definir, Enumerar, Listar, Nombrar |
+| Comprender | Comprender, Explicar, Describir, Interpretar, Resumir, Clasificar, Ejemplificar |
+| Aplicar | Aplicar, Implementar, Ejecutar, Usar, Utilizar, Resolver, Calcular, Demostrar |
+| Analizar | Analizar, Comparar, Contrastar, Diferenciar, Distinguir, Examinar, Organizar |
+| Evaluar | Evaluar, Justificar, Valorar, Juzgar, Criticar, Argumentar, Verificar |
+| Crear | Crear, Diseñar, Construir, Desarrollar, Formular, Planificar, Proponer, Producir, Generar |
 
 `Path`:
 
@@ -264,6 +277,8 @@ Campos sin valor van en `null`. `screen` es una ayuda para la app (código de Fi
   "attempts": {"used": 0, "max": 3, "extra_granted": 0, "remaining": 3}
 }
 ```
+
+`video` es el video `in_use` del tema (o, si no hay, el primer respaldo), salvo que esté en inglés y el aprendiz no declare inglés B1 o superior en la hoja de vida: entonces la API pide a `ai/` el mejor en español con `video.rank` (`english_allowed: false`; ver `ai-service-v1.md`, sección 4.3) y puede llegar un respaldo (`is_backup: true`). Si no hay alternativa o `ai/` no responde, se mantiene el del tema (R-001).
 
 `mode` dice cómo se abre el tema (B-025):
 

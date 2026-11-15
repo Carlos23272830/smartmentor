@@ -21,6 +21,7 @@ from app.domains.assessments.dependencies import (
     DiagnosticServiceDep,
 )
 from app.domains.assessments.entities import AssessmentItem, AttemptAnswer
+from app.domains.assessments.objective import objective_proposal
 from app.domains.assessments.service import (
     AttemptHistoryEntry,
     AttemptOutcome,
@@ -67,7 +68,7 @@ from app.domains.learner.schemas import (
     TopicLevelResponse,
     WeakTopicResponse,
 )
-from app.domains.learning_paths.controller import enrollment_response, objective_of, step_response
+from app.domains.learning_paths.controller import enrollment_response, step_response
 from app.domains.learning_paths.dependencies import EnrollmentServiceDep
 from app.domains.learning_paths.schemas import (
     EnrollmentCreate,
@@ -335,7 +336,8 @@ async def diagnostic_result(
     """Niveles por tema, clasificación y objetivo propuesto (E4)."""
     view = await service.result(user, enrollment_id)
     data = view.diagnostic.level_by_topic or {}
-    objective = objective_of(view.enrollment)
+    # La propuesta guardada, no el objetivo confirmado: «Volver a la propuesta» la usa (B-033).
+    proposal = objective_proposal(view.enrollment)
     return DiagnosticResultResponse(
         status=view.diagnostic.status,
         level_by_topic=[
@@ -354,7 +356,12 @@ async def diagnostic_result(
         ],
         overall_score=float(data.get("overall_score", 0)),
         proposed_objective=(
-            ProposedObjective(**objective.model_dump()) if objective is not None else None
+            ProposedObjective(
+                statement=f"{proposal['bloom_verb']} {proposal['content']} {proposal['criterion']}",
+                **proposal,
+            )
+            if proposal is not None
+            else None
         ),
     )
 
