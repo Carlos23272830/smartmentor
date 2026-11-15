@@ -164,3 +164,12 @@ def test_d2d_cycle_blocks_publishing() -> None:
 def test_d2_forbidden_shows_403() -> None:
     at = staff_app(scenario="forbidden", page=SYLLABUS)
     assert "403" in page_texts(at, skip_header=False)
+
+
+def test_d1c_back_to_courses_discards_the_draft() -> None:
+    at = _fill_paste_form("failed")
+    at = click(at, "Extraer temas con IA")
+    assert "nc-draft" in at.session_state
+    at = click(at, "Volver a mis cursos")
+    assert_no_exception(at)
+    assert "nc-draft" not in at.session_state
