@@ -7,7 +7,7 @@ import httpx
 import pytest
 import respx
 from jsonschema import Draft202012Validator
-from support import REPO_ROOT
+from support import FIXTURES_DIR, REPO_ROOT
 
 from clients.api import ApiClient
 from clients.evaluation_adapter import (
@@ -72,6 +72,36 @@ QUEUE: dict[str, Any] = {
     "offset": 0,
     "graded": 2,
 }
+GRADING_V1: dict[str, Any] = {
+    "item_id": "q5",
+    "item_type": "short_answer",
+    "grader": "llm_judge",
+    "approval_rule": "min_criteria_ratio",
+    "min_criteria_ratio": 0.6667,
+    "score": 50.0,
+    "is_correct": False,
+    "criteria_met": 1,
+    "criteria_total": 2,
+    "rubric_detail": [
+        {
+            "criterion": "Define ETL",
+            "met": True,
+            "points": 0.5,
+            "points_awarded": 0.5,
+            "reason": "Se cumple: define ETL.",
+            "evidence": "ETL transforma primero",
+        },
+        {
+            "criterion": "Define ELT",
+            "met": False,
+            "points": 0.5,
+            "points_awarded": 0,
+            "reason": "No se cumple: no menciona ELT.",
+            "evidence": "",
+        },
+    ],
+    "feedback": "Falta definir ELT.",
+}
 RESULT: dict[str, Any] = {
     "id": 1,
     "attempt_answer_id": 77,
@@ -85,10 +115,8 @@ RESULT: dict[str, Any] = {
         "score": 50.0,
         "is_correct": False,
         "feedback": "Falta definir ELT.",
-        "rubric_detail": [
-            {"criterion": "Define ETL", "met": True, "points": 0.5, "points_awarded": 0.5},
-            {"criterion": "Define ELT", "met": False, "points": 0.5, "points_awarded": 0},
-        ],
+        # La API devuelve `grading.v1` sin `meta` como objeto, no como lista.
+        "rubric_detail": GRADING_V1,
     },
     "created_at": "2026-11-11T18:40:00Z",
 }
@@ -130,16 +158,75 @@ def test_grading_queue_counts_what_is_done_and_what_is_left() -> None:
     assert requests.learner_requests == 3
 
 
-def test_grading_result_compares_with_the_llm() -> None:
+def test_grading_result_reads_the_grading_v1_object() -> None:
     result = HumanGradingResult.model_validate(grading_result_from_api(RESULT))
     assert (result.llm_criteria_met, result.llm_criteria_total) == (1, 2)
     assert result.llm_rationale == "Falta definir ELT."
     assert result.agrees is True
-    differs = {
+    # La API no entrega la versión del prompt en este endpoint: se muestra «—», no vacío.
+    assert result.prompt_version == "—"
+
+
+def test_grading_result_counts_come_from_the_object_when_present() -> None:
+    llm = {**RESULT["llm_grading"], "rubric_detail": {**GRADING_V1, "criteria_met": 2}}
+    result = HumanGradingResult.model_validate(
+        grading_result_from_api({**RESULT, "llm_grading": llm})
+    )
+    assert (result.llm_criteria_met, result.llm_criteria_total) == (2, 2)
+
+
+def test_grading_result_takes_the_prompt_version_from_meta_when_the_api_sends_it() -> None:
+    meta = {"prompt_id": "short_answer_grading", "prompt_version": "v2"}
+    llm = {**RESULT["llm_grading"], "rubric_detail": {**GRADING_V1, "meta": meta}}
+    result = HumanGradingResult.model_validate(
+        grading_result_from_api({**RESULT, "llm_grading": llm})
+    )
+    assert result.prompt_version == "short_answer_grading v2"
+
+
+def test_grading_result_still_reads_the_old_list_shape() -> None:
+    llm = {**RESULT["llm_grading"], "rubric_detail": GRADING_V1["rubric_detail"]}
+    result = HumanGradingResult.model_validate(
+        grading_result_from_api({**RESULT, "llm_grading": llm})
+    )
+    assert (result.llm_criteria_met, result.llm_criteria_total, result.agrees) == (1, 2, True)
+
+
+def test_grading_result_differs_when_a_verdict_is_not_the_same() -> None:
+    # Mismo total de criterios cumplidos (1 y 1), pero en criterios distintos: no coincide.
+    swapped = {
+        **RESULT,
+        "criteria": [
+            {"criterion": "Define ETL", "met": False, "points_awarded": 0},
+            {"criterion": "Define ELT", "met": True, "points_awarded": 1},
+        ],
+    }
+    assert HumanGradingResult.model_validate(grading_result_from_api(swapped)).agrees is False
+    fewer = {
         **RESULT,
         "criteria": [{"criterion": "Define ETL", "met": False, "points_awarded": 0}],
     }
-    assert HumanGradingResult.model_validate(grading_result_from_api(differs)).agrees is False
+    assert HumanGradingResult.model_validate(grading_result_from_api(fewer)).agrees is False
+    all_met = {
+        **RESULT,
+        "criteria": [
+            {"criterion": "Define ETL", "met": True, "points_awarded": 1},
+            {"criterion": "Define ELT", "met": True, "points_awarded": 1},
+        ],
+    }
+    assert HumanGradingResult.model_validate(grading_result_from_api(all_met)).agrees is False
+
+
+def test_staff_fixture_has_the_shape_of_the_api() -> None:
+    sample = json.loads((FIXTURES_DIR / "staff" / "human_grading_result.json").read_text("utf-8"))
+    validator = Draft202012Validator(
+        {"$ref": "#/components/schemas/HumanGradingResponse", **OPENAPI}
+    )
+    assert not [e.message for e in validator.iter_errors(sample)]
+    assert isinstance(sample["llm_grading"]["rubric_detail"], dict)
+    result = HumanGradingResult.model_validate(grading_result_from_api(sample))
+    assert (result.llm_criteria_met, result.llm_criteria_total) == (2, 3)
+    assert result.agrees is True
 
 
 @respx.mock
