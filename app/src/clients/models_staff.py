@@ -2,12 +2,12 @@
 
 Siguen el mismo criterio que `models.py`: las respuestas reales se leen con `extra="ignore"` y las
 pruebas validan los fixtures con `extra="forbid"`. El contrato fija las rutas y algunos cuerpos
-(`TopicWrite`, `PathSettings`) pero deja sin detallar `Course`, `Dashboard`, `Pilot`, el log del
+(`TopicWrite`, `PathSettings`) pero deja sin detallar `Course`, `Dashboard`, el log del
 LLM y las métricas (sección 8 del contrato): esos modelos son **propuestas** y se anotan en la
 bitácora F07c para contrastarlas con el OpenAPI cuando exista.
 """
 
-from datetime import date, datetime
+from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -565,66 +565,6 @@ class MetricsEvaluation(ApiModel):
     cohort: str
     is_sample_data: bool = False
     groups: list[MetricGroup]
-
-
-PilotStatus = Literal["draft", "randomized", "running", "closed"]
-
-
-class PilotGroups(ApiModel):
-    personalized: int
-    fixed: int
-
-
-class PilotConsents(ApiModel):
-    accepted: int
-    total: int
-
-
-class Pilot(ApiModel):
-    id: int
-    learning_path: LearningPathRef
-    status: PilotStatus
-    starts_on: date | None = None
-    ends_on: date | None = None
-    delayed_posttest_on: date | None = None
-    random_seed: int | None = None
-    groups: PilotGroups | None = None
-    consents: PilotConsents
-    equivalent_items_topics: int = 0
-    topics_total: int = 0
-
-
-class PilotUpdate(ApiModel):
-    learning_path_id: int
-    starts_on: date | None = None
-    ends_on: date | None = None
-    delayed_posttest_on: date | None = None
-    random_seed: int | None = None
-
-
-class PilotReadiness(ApiModel):
-    ready: bool
-    missing: list[str] = Field(default_factory=list)
-
-
-class FixedPathStep(ApiModel):
-    step_order: int
-    topic_id: int
-    name: str
-
-
-class FixedPathPreview(ApiModel):
-    """`learning_path.v1` con `pilot_arm=fixed`, reducido a lo que muestra AD4b."""
-
-    pilot_arm: PilotArm
-    steps: list[FixedPathStep]
-    final_pass_threshold: int
-    mastery_skip_threshold: int
-
-
-class RandomizeResult(ApiModel):
-    personalized: int
-    fixed: int
 
 
 class AdminEnrollment(ApiModel):

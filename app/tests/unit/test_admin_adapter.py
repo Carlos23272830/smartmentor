@@ -10,21 +10,16 @@ from support import REPO_ROOT
 
 from clients.admin_adapter import (
     admin_enrollment_from_api,
-    fixed_path_preview_from_api,
     llm_log_from_api,
     llm_summary_from_api,
     metrics_from_api,
-    pilot_from_api,
-    pilot_to_show,
 )
 from clients.api import ApiClient
 from clients.models_staff import (
     AdminEnrollment,
-    FixedPathPreview,
     LlmCallLog,
     LlmSummary,
     MetricsEvaluation,
-    Pilot,
     UserCreate,
 )
 from services.staff_admin import metric_text
@@ -231,109 +226,6 @@ def test_the_http_client_reads_the_real_logs() -> None:
     logs = client.list_llm_logs()
     assert [log.id for log in logs.items] == [7]
     assert client.get_llm_summary().by_task[0].calls == 4
-
-
-# --- AD4 y AD4b · Piloto ---------------------------------------------------------------------
-
-API_PILOT: dict[str, Any] = {
-    "id": 4,
-    "learning_path_id": 7,
-    "starts_on": "2026-12-01",
-    "ends_on": "2026-12-20",
-    "delayed_posttest_on": None,
-    "random_seed": 2026,
-    "status": "randomized",
-    "arms": {"personalized": 12, "fixed": 11},
-    "created_at": CREATED,
-    "updated_at": None,
-    "learning_path": {"id": 7, "name": "Datos", "group_label": "Piloto"},
-}
-API_READINESS: dict[str, Any] = {
-    "ready": False,
-    "missing": ["item_bank"],
-    "consents_accepted": 23,
-    "consents_total": 25,
-    "topics_total": 5,
-    "topics_with_items": 4,
-    "topics_with_equivalent_items": 3,
-}
-API_PREVIEW: dict[str, Any] = {
-    "algorithm": "topological_threshold v1",
-    "mastery_skip_threshold": 80.0,
-    "pilot_arm": "fixed",
-    "final_pass_threshold": 80.0,
-    "steps": [
-        {"step_order": 1, "topic_id": "101", "name": "Bases", "status": "pending"},
-        {"step_order": 2, "topic_id": "102", "name": "ETL", "status": "blocked"},
-    ],
-}
-
-
-def test_the_pilot_samples_are_valid_api_responses() -> None:
-    assert _valid("PilotResponse", API_PILOT) == []
-    assert _valid("ReadinessResponse", API_READINESS) == []
-    assert _valid("Page_PilotResponse_", _page([API_PILOT])) == []
-
-
-def test_the_newest_open_pilot_is_shown() -> None:
-    closed = {**API_PILOT, "id": 9, "status": "closed"}
-    assert pilot_to_show([API_PILOT, closed, {**API_PILOT, "id": 2}]) == 4
-    assert pilot_to_show([closed]) == 9
-    assert pilot_to_show([]) is None
-
-
-def test_a_pilot_becomes_the_screen_model() -> None:
-    pilot = Pilot.model_validate(pilot_from_api(API_PILOT, API_READINESS))
-    assert (pilot.learning_path.name, pilot.learning_path.group_label) == ("Datos", "Piloto")
-    assert pilot.status == "randomized"
-    assert pilot.groups is not None and (pilot.groups.personalized, pilot.groups.fixed) == (12, 11)
-    assert (pilot.consents.accepted, pilot.consents.total) == (23, 25)
-    # Ítems equivalentes = versiones paralelas (`equivalence_group`), no temas con preguntas.
-    assert (pilot.equivalent_items_topics, pilot.topics_total) == (3, 5)
-
-
-def test_a_draft_pilot_has_no_groups_yet() -> None:
-    draft = {**API_PILOT, "status": "draft", "arms": {"personalized": 0, "fixed": 0}}
-    assert Pilot.model_validate(pilot_from_api(draft, API_READINESS)).groups is None
-
-
-def test_the_fixed_preview_becomes_the_screen_model() -> None:
-    preview = FixedPathPreview.model_validate(fixed_path_preview_from_api(API_PREVIEW))
-    assert [(s.step_order, s.topic_id, s.name) for s in preview.steps] == [
-        (1, 101, "Bases"),
-        (2, 102, "ETL"),
-    ]
-    assert (preview.final_pass_threshold, preview.mastery_skip_threshold) == (80, 80)
-
-
-def test_the_pilot_fixtures_pass_unchanged() -> None:
-    preview = json.loads(
-        (REPO_ROOT / "app" / "tests" / "fixtures" / "staff" / "fixed_path_preview.json").read_text(
-            "utf-8"
-        )
-    )
-    assert fixed_path_preview_from_api(preview) == preview
-
-
-@respx.mock
-def test_the_http_client_finds_and_reads_the_real_pilot() -> None:
-    respx.get(f"{BASE}/api/v1/pilots").mock(
-        return_value=httpx.Response(200, json=_page([API_PILOT]))
-    )
-    respx.get(f"{BASE}/api/v1/pilots/4").mock(return_value=httpx.Response(200, json=API_PILOT))
-    respx.get(f"{BASE}/api/v1/pilots/4/readiness").mock(
-        return_value=httpx.Response(200, json=API_READINESS)
-    )
-    respx.get(f"{BASE}/api/v1/pilots/4/fixed-path-preview").mock(
-        return_value=httpx.Response(200, json=API_PREVIEW)
-    )
-    client = _client()
-    pilot_id = client.find_pilot_id()
-    assert pilot_id == 4
-    pilot = client.get_pilot(4)
-    assert pilot.consents.accepted == 23
-    assert client.get_pilot_readiness(4).missing == ["item_bank"]
-    assert client.get_fixed_path_preview(4).steps[1].name == "ETL"
 
 
 # --- AD5 · Inscripciones -------------------------------------------------------------------

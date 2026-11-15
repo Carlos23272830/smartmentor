@@ -1,7 +1,7 @@
 """AD3 · Métricas globales de evaluación.
 
 Las calcula la API en SQL (`GET /metrics/evaluation`); la página solo las muestra con su meta, su
-prioridad y el tamaño de la muestra. Mientras no corra el piloto los valores son de ejemplo.
+prioridad y el tamaño de la muestra. Los fixtures marcan sus valores como de ejemplo.
 """
 
 import streamlit as st
@@ -12,7 +12,6 @@ from components.layout import render_notice, render_page_header
 from components.staff_theme import METRIC_BADGE, PRIORITY_COLOR
 from core.container import get_client
 from core.staff_errors import show_staff_error
-from core.staff_state import PILOT
 from services.staff_admin import metric_text
 
 COLUMNS = 3
@@ -33,15 +32,10 @@ render_page_header(
     "Métricas de evaluación",
     caption=f"{CAPTION} · {metrics.cohort}" if metrics.cohort else CAPTION,
 )
-# Figma AD3: en la fila de abajo, la insignia de datos de ejemplo a la izquierda y el botón a la
-# derecha.
-badge_col, action_col = st.columns([3, 2], vertical_alignment="center")
+# Figma AD3 trae aquí «Configurar piloto»; el piloto se define fuera de la app (F-013) y el
+# botón no se construye.
 if metrics.is_sample_data:
-    with badge_col:
-        st.badge("Valores de ejemplo hasta que corra el piloto", color="orange")
-with action_col.container(horizontal=True, horizontal_alignment="right"):
-    if st.button("Configurar piloto", key="m-pilot"):
-        st.switch_page(PILOT)
+    st.badge("Valores de ejemplo", color="orange")
 
 if not metrics.groups:
     st.info("Todavía no hay métricas para mostrar.")

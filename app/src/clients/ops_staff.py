@@ -19,17 +19,12 @@ import httpx
 from pydantic import BaseModel, ValidationError
 
 from clients.admin_adapter import (
-    DEFAULT_PILOT_ID,
     admin_enrollment_from_api,
     admin_enrollments_page_from_api,
     admin_user_from_api,
-    fixed_path_preview_from_api,
-    is_api_pilot,
     llm_logs_page_from_api,
     llm_summary_from_api,
     metrics_from_api,
-    pilot_from_api,
-    pilot_to_show,
 )
 from clients.base import ApiError
 from clients.content_adapter import item_from_api, item_patch_for_api, resource_from_api
@@ -56,7 +51,6 @@ from clients.models_staff import (
     CourseTopics,
     Dashboard,
     ExtractionMetrics,
-    FixedPathPreview,
     GradingQueue,
     HumanGradingBody,
     HumanGradingResult,
@@ -65,10 +59,6 @@ from clients.models_staff import (
     LlmCallLog,
     LlmSummary,
     MetricsEvaluation,
-    Pilot,
-    PilotReadiness,
-    PilotUpdate,
-    RandomizeResult,
     Resource,
     ReviewItem,
     SampleType,
@@ -431,39 +421,6 @@ class StaffApiOps:
         response = self._request("GET", "/metrics/evaluation", params=params)
         return _parse(MetricsEvaluation, metrics_from_api(_json(response)))
 
-    # AD4. El piloto de la API trae los brazos y la ruta; los consentimientos y los temas con
-    # ítems salen de `readiness`, que ya los calcula. Ver `admin_adapter.pilot_from_api`.
-
-    def find_pilot_id(self) -> int | None:
-        pilots = self._all_pages("/pilots")
-        return pilot_to_show(pilots)
-
-    def _pilot(self, data: Any) -> Pilot:
-        if not is_api_pilot(data):
-            return _parse(Pilot, data)
-        readiness = _json(self._request("GET", f"/pilots/{int(data['id'])}/readiness"))
-        return _parse(Pilot, pilot_from_api(data, readiness))
-
-    def get_pilot(self, pilot_id: int) -> Pilot:
-        return self._pilot(_json(self._request("GET", f"/pilots/{pilot_id}")))
-
-    def update_pilot(self, pilot_id: int, body: PilotUpdate) -> Pilot:
-        response = self._request("PUT", f"/pilots/{pilot_id}", json=body.model_dump(mode="json"))
-        return self._pilot(_json(response))
-
-    def randomize_pilot(self, pilot_id: int) -> RandomizeResult:
-        return self._send(RandomizeResult, "POST", f"/pilots/{pilot_id}/randomize")
-
-    def start_pilot(self, pilot_id: int) -> Pilot:
-        return self._pilot(_json(self._request("POST", f"/pilots/{pilot_id}/start")))
-
-    def get_pilot_readiness(self, pilot_id: int) -> PilotReadiness:
-        return self._get(PilotReadiness, f"/pilots/{pilot_id}/readiness")
-
-    def get_fixed_path_preview(self, pilot_id: int) -> FixedPathPreview:
-        response = self._request("GET", f"/pilots/{pilot_id}/fixed-path-preview")
-        return _parse(FixedPathPreview, fixed_path_preview_from_api(_json(response)))
-
     def list_admin_enrollments(self, *, limit: int = 100, offset: int = 0) -> Page[AdminEnrollment]:
         response = self._request("GET", "/enrollments", params={"limit": limit, "offset": offset})
         return _page(AdminEnrollment, admin_enrollments_page_from_api(_json(response)))
@@ -797,39 +754,6 @@ class StaffFixturesOps:
     def get_evaluation_metrics(self, learning_path_id: int | None = None) -> MetricsEvaluation:
         del learning_path_id
         return self._model(MetricsEvaluation, "metrics")
-
-    def find_pilot_id(self) -> int | None:
-        # Los fixtures tienen un solo piloto, el de la cohorte.
-        return DEFAULT_PILOT_ID
-
-    def get_pilot(self, pilot_id: int) -> Pilot:
-        del pilot_id
-        return self._model(Pilot, "pilot")
-
-    def update_pilot(self, pilot_id: int, body: PilotUpdate) -> Pilot:
-        pilot = self.get_pilot(pilot_id)
-        pilot.starts_on = body.starts_on
-        pilot.ends_on = body.ends_on
-        pilot.delayed_posttest_on = body.delayed_posttest_on
-        pilot.random_seed = body.random_seed
-        return pilot
-
-    def randomize_pilot(self, pilot_id: int) -> RandomizeResult:
-        del pilot_id
-        return self._model(RandomizeResult, "randomize_result")
-
-    def start_pilot(self, pilot_id: int) -> Pilot:
-        pilot = self.get_pilot(pilot_id)
-        pilot.status = "running"
-        return pilot
-
-    def get_pilot_readiness(self, pilot_id: int) -> PilotReadiness:
-        del pilot_id
-        return self._model(PilotReadiness, "pilot_readiness")
-
-    def get_fixed_path_preview(self, pilot_id: int) -> FixedPathPreview:
-        del pilot_id
-        return self._model(FixedPathPreview, "fixed_path_preview")
 
     def list_admin_enrollments(self, *, limit: int = 100, offset: int = 0) -> Page[AdminEnrollment]:
         page = self._model(Page[AdminEnrollment], "admin_enrollments")
