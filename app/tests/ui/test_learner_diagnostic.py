@@ -163,10 +163,10 @@ def test_e4b_edit_shows_the_three_part_editor() -> None:
     at = learner_app("learner_objective", DIAGNOSTIC_RESULT)
     button(at, "Editar el objetivo").click().run()
     no_exception(at)
-    texts = page_texts(at)
-    assert "Editar tu objetivo" in texts
-    assert "Guardar objetivo" in texts
-    assert "Confirmar y ver mi ruta" not in texts
+    # V-041: el editor es una ventana modal (`st.dialog`) sobre el resumen, que sigue debajo.
+    assert button(at, "Guardar objetivo")
+    assert "Confirmar y ver mi ruta" in page_texts(at)
+    assert any("El 80 % para obtener el badge" in s.value for s in at.success)
 
 
 def test_e4b_save_sends_the_edited_objective() -> None:
@@ -267,7 +267,7 @@ def test_e5_edit_objective_opens_the_editor() -> None:
     at = learner_app("learner_path", PATH)
     button(at, "Editar objetivo").click().run()
     no_exception(at)
-    assert "Editar tu objetivo" in page_texts(at)
+    assert button(at, "Guardar objetivo")
 
 
 def test_e5b_fixed_path_follows_figma() -> None:

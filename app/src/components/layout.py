@@ -110,9 +110,15 @@ def render_page_header_with_actions(
     return right.container(horizontal=True, horizontal_alignment="right", key=key)
 
 
-def render_notice(text: str) -> None:
-    """Aviso ámbar de permisos o reglas («Tu rol: Instructor · Solo corriges tus cursos»)."""
-    st.warning(text)
+def render_notice(text: str, *, tone: Literal["warning", "success"] = "warning") -> None:
+    """Aviso ámbar de permisos o reglas («Tu rol: Instructor · Solo corriges tus cursos»).
+
+    Con `tone="success"` es la nota verde informativa (E4b: «El 80 % para obtener el badge…»).
+    """
+    if tone == "success":
+        st.success(text)
+    else:
+        st.warning(text)
 
 
 def render_status_screen(
