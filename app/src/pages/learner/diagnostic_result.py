@@ -13,7 +13,7 @@ import streamlit as st
 
 from clients.base import ApiError
 from clients.models import DiagnosticResult, Objective
-from components.layout import eyebrow, render_page_header
+from components.layout import eyebrow, render_action_row, render_page_header
 from components.levels import LevelRow, render_levels
 from components.objective_editor import ObjectiveDraft, render_objective_editor
 from core.container import get_client
@@ -131,12 +131,15 @@ def _edit_dialog() -> None:
 
 
 if objective is not None:
-    edit_col, confirm_col = st.columns(2)
-    if edit_col.button("Editar el objetivo", key="objective-edit"):
+    _, actions = render_action_row("objective")
+    with actions:
+        edit = st.button("Editar el objetivo", key="objective-edit")
+        confirm = st.button("Confirmar y ver mi ruta", type="primary", key="objective-confirm")
+    if edit:
         state.edit_objective = True
         _forget_editor_fields()
         st.rerun()
-    if confirm_col.button("Confirmar y ver mi ruta", type="primary", key="objective-confirm"):
+    if confirm:
         _save(objective)
 
 if state.edit_objective:

@@ -115,6 +115,21 @@ def render_page_header_with_actions(
     return right.container(horizontal=True, horizontal_alignment="right", key=key)
 
 
+def render_action_row(key: str) -> tuple[DeltaGenerator, DeltaGenerator]:
+    """Fila de botones como en Figma (V-037): salidas a la izquierda y avance a la derecha.
+
+    Devuelve dos contenedores horizontales con un espacio flexible entre ambos. A la izquierda van
+    los secundarios de «salida» («No lo sé», «Ahora no», «Completar más tarde») y a la derecha
+    «Atrás/Anterior», los secundarios y el principal, juntos. La página pone sus botones dentro
+    (`with left: ...`, `with right: ...`) y conserva sus `key` y su lógica.
+    """
+    with st.container(key=f"action-row-{key}", horizontal=True, vertical_alignment="center"):
+        left = st.container(horizontal=True, width="content", key=f"action-row-{key}-left")
+        st.space("stretch")
+        right = st.container(horizontal=True, width="content", key=f"action-row-{key}-right")
+    return left, right
+
+
 def render_notice(text: str, *, tone: Literal["warning", "info", "success"] = "warning") -> None:
     """Aviso de permisos o reglas («Tu rol: Instructor · Solo corriges tus cursos»).
 
