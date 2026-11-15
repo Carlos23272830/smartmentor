@@ -2,7 +2,7 @@
 
 Lo que falta para llegar al hito del brief (el flujo corre de punta a punta con el LLM real) y al piloto. Arranca del estado de `dev` en `d8de841` (2026-11-12). Estados e IDs en el [README](README.md#estados). Las fases F0–F11 son las del [plan v3](../../PLAN_IMPLEMENTACION_V3.md#7-plan-fase-a-fase).
 
-**Última actualización:** 2026-11-12 15:31
+**Última actualización:** 2026-11-14
 
 ## Dónde estamos (2026-11-12)
 
