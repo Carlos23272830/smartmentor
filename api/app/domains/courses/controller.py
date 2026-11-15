@@ -4,12 +4,14 @@ import json
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from starlette.datastructures import UploadFile
 
 from app.auth.dependencies import require_roles
 from app.auth.policies import ADMIN, STAFF
+from app.common.constants import MaterialOrigin
 from app.common.entities import require_id
 from app.common.exceptions import (
     BusinessRuleError,
@@ -23,10 +25,14 @@ from app.domains.ai_gateway.entities import JobRef
 from app.domains.ai_gateway.schemas import JobAccepted
 from app.domains.courses.dependencies import (
     get_course_service,
+    get_material_service,
     get_publication_service,
     get_syllabus_service,
     get_topic_service,
 )
+from app.domains.courses.entities import CourseMaterial
+from app.domains.courses.materials_text import extract_material
+from app.domains.courses.materials_text import too_large as material_too_large
 from app.domains.courses.schemas import (
     CourseCreate,
     CourseOwnerUpdate,
@@ -37,6 +43,7 @@ from app.domains.courses.schemas import (
     GraphEdge,
     GraphNode,
     LearningPathSummary,
+    MaterialResponse,
     OutcomeResponse,
     ReviewCounts,
     ScoreResponse,
@@ -49,6 +56,7 @@ from app.domains.courses.schemas import (
 from app.domains.courses.service import (
     CourseService,
     CourseView,
+    MaterialService,
     OutcomeDraft,
     PublicationService,
     Score,
@@ -71,6 +79,7 @@ CourseServiceDep = Annotated[CourseService, Depends(get_course_service)]
 SyllabusServiceDep = Annotated[SyllabusService, Depends(get_syllabus_service)]
 TopicServiceDep = Annotated[TopicService, Depends(get_topic_service)]
 PublicationServiceDep = Annotated[PublicationService, Depends(get_publication_service)]
+MaterialServiceDep = Annotated[MaterialService, Depends(get_material_service)]
 
 # Margen sobre el límite del archivo para la cabecera multipart y el nombre del campo.
 _MULTIPART_OVERHEAD_BYTES = 64 * 1024
@@ -88,6 +97,33 @@ SYLLABUS_REQUEST_BODY = {
                 }
             },
             "application/json": {"schema": SyllabusTextBody.model_json_schema()},
+        },
+    }
+}
+
+
+MATERIAL_REQUEST_BODY = {
+    "requestBody": {
+        "required": True,
+        "content": {
+            "multipart/form-data": {
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "file": {
+                            "type": "string",
+                            "format": "binary",
+                            "description": "PDF, TXT o MD de hasta 10 MB",
+                        },
+                        "origin": {
+                            "type": "string",
+                            "enum": [o.value for o in MaterialOrigin],
+                            "description": "Origen del apunte; se registra como su licencia",
+                        },
+                    },
+                    "required": ["file", "origin"],
+                }
+            },
         },
     }
 }
@@ -312,6 +348,79 @@ async def upload_syllabus(
         action=action,
         location=_location,
     )
+
+
+def _material_response(material: CourseMaterial) -> MaterialResponse:
+    return MaterialResponse(
+        id=require_id(material),
+        course_id=material.course_id,
+        file_name=material.file_name,
+        source_type=material.source_type,
+        origin=MaterialOrigin(material.origin),
+        byte_size=material.byte_size,
+        page_count=material.page_count,
+        extracted_char_count=material.extracted_char_count,
+        created_at=material.created_at,
+    )
+
+
+async def _read_material(request: Request) -> tuple[ExtractedSyllabus, MaterialOrigin]:
+    """Lee el apunte: multipart con `file` (PDF, TXT o MD) y `origin`; extrae su texto."""
+    max_bytes = get_settings().syllabus_max_bytes
+    content_type = request.headers.get("content-type", "").split(";")[0].strip().lower()
+    if content_type != "multipart/form-data":
+        raise UnsupportedMediaTypeError(
+            "Send the material as multipart/form-data.", code="MATERIAL_UNSUPPORTED_TYPE"
+        )
+    declared = request.headers.get("content-length")
+    if declared and declared.isdigit() and int(declared) > max_bytes + _MULTIPART_OVERHEAD_BYTES:
+        raise material_too_large(max_bytes)
+    form = await request.form()
+    upload = form.get("file")
+    if not isinstance(upload, UploadFile) or not upload.filename:
+        raise BusinessRuleError("The form needs a `file` field.", code="VALIDATION_ERROR")
+    raw_origin = form.get("origin")
+    try:
+        origin = MaterialOrigin(raw_origin if isinstance(raw_origin, str) else "")
+    except ValueError as exc:
+        allowed = ", ".join(o.value for o in MaterialOrigin)
+        raise BusinessRuleError(
+            f"`origin` must be one of: {allowed}.", code="VALIDATION_ERROR"
+        ) from exc
+    data = await upload.read(max_bytes + 1)
+    if len(data) > max_bytes:
+        raise material_too_large(max_bytes)
+    return await extract_material(data, upload.filename), origin
+
+
+@router.post(
+    "/courses/{course_id}/materials",
+    response_model=MaterialResponse,
+    status_code=201,
+    openapi_extra=MATERIAL_REQUEST_BODY,
+    responses={200: {"model": MaterialResponse, "description": "El curso ya tenía ese archivo"}},
+)
+async def upload_material(
+    course_id: int, request: Request, user: StaffUser, service: MaterialServiceDep
+) -> JSONResponse:
+    """Sube un apunte o lectura del curso (PDF, TXT o MD ≤ 10 MB) como fuente del RAG (R-004).
+
+    Responde 201 con el apunte nuevo, o 200 con el que ya existía si el curso ya tenía ese mismo
+    archivo. Se usa al explicar los temas; no cambia la extracción del syllabus.
+    """
+    extracted, origin = await _read_material(request)
+    material, created = await service.upload(user, course_id, extracted, origin)
+    return JSONResponse(
+        jsonable_encoder(_material_response(material)), status_code=201 if created else 200
+    )
+
+
+@router.get("/courses/{course_id}/materials", response_model=list[MaterialResponse])
+async def list_materials(
+    course_id: int, user: StaffUser, service: MaterialServiceDep
+) -> list[MaterialResponse]:
+    """Apuntes activos del curso, del más antiguo al más nuevo (R-004)."""
+    return [_material_response(m) for m in await service.list_materials(user, course_id)]
 
 
 @router.post("/courses/{course_id}/extractions", response_model=JobAccepted, status_code=202)

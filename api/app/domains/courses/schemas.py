@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.common.constants import BloomLevel
+from app.common.constants import BloomLevel, MaterialOrigin
 from app.common.schemas import RequestSchema, UtcDatetime
 
 
@@ -50,6 +50,20 @@ class CourseResponse(BaseModel):
 
 class SyllabusTextBody(RequestSchema):
     text: str = Field(min_length=1)
+
+
+class MaterialResponse(BaseModel):
+    """Apunte o lectura del curso (R-004). El texto extraído no viaja: solo su tamaño."""
+
+    id: int
+    course_id: int
+    file_name: str | None
+    source_type: str = Field(description="pdf o text (los TXT y MD son texto)")
+    origin: MaterialOrigin
+    byte_size: int | None
+    page_count: int | None
+    extracted_char_count: int | None = Field(description="Caracteres de texto extraídos")
+    created_at: UtcDatetime | None
 
 
 class ExtractionRequest(RequestSchema):

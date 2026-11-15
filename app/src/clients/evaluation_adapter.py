@@ -8,8 +8,10 @@ Como `content_adapter` y `dashboard_adapter`, es el único punto que conoce las 
 * Cola de calificación: la API devuelve una página de respuestas (`GradingQueuePage`) con
   `graded`; la pantalla quiere el «X de Y» de la muestra y los criterios como textos. El código
   de la respuesta es su número interno: no identifica al aprendiz.
-* Resultado: la nota del LLM llega como `llm_grading` (puntaje y detalle por criterio); la
-  pantalla muestra «X de Y criterios» y si coincide con lo que marcó el evaluador.
+* Resultado: la nota del LLM llega como `llm_grading`, cuyo `rubric_detail` es el objeto
+  `grading.v1` sin `meta` (`criteria_met`, `criteria_total` y la lista `rubric_detail` por
+  criterio); la pantalla muestra «X de Y criterios» y si coincide con lo que marcó el evaluador.
+  La API no devuelve la versión del prompt en este endpoint: la pantalla muestra «—».
 * Calidad de los videos (D5f): la API mide etiquetas («útil», audio, desactualizado, muy largo),
   vistas completas y un índice bayesiano de 0 a 1, y decide el estado. No mide la calificación
   de 1 a 5, el efecto en el quiz ni agrupa comentarios (F-012): esos campos quedan vacíos. Los
@@ -165,18 +167,59 @@ def annotation_queue_from_api(data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# La API no guarda la versión del prompt con la calificación del LLM (`grading.v1` se persiste sin
+# `meta`), así que el endpoint no la devuelve: se muestra «—» en lugar de dejarla en blanco.
+NO_PROMPT_VERSION = "—"
+
+
+def _llm_detail(llm: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Criterios del LLM y el objeto `grading.v1` que los contiene.
+
+    La API guarda `rubric_detail` como el objeto `grading.v1` sin `meta` (con `criteria_met`,
+    `criteria_total` y la lista `rubric_detail` por criterio). Una forma anterior era la lista
+    suelta de criterios: se sigue leyendo.
+    """
+    raw = llm.get("rubric_detail")
+    grading: dict[str, Any] = raw if isinstance(raw, dict) else {}
+    criteria = grading.get("rubric_detail") if grading else raw
+    detail = (
+        [c for c in criteria or [] if isinstance(c, dict)] if isinstance(criteria, list) else []
+    )
+    return detail, grading
+
+
+def _prompt_version(grading: dict[str, Any]) -> str:
+    meta = grading.get("meta")
+    if isinstance(meta, dict) and meta.get("prompt_version"):
+        prompt_id = str(meta.get("prompt_id") or "").strip()
+        return f"{prompt_id} {meta['prompt_version']}".strip()
+    return NO_PROMPT_VERSION
+
+
+def _count(value: Any, fallback: int) -> int:
+    return value if isinstance(value, int) and not isinstance(value, bool) else fallback
+
+
 def grading_result_from_api(data: dict[str, Any]) -> dict[str, Any]:
     if "llm_criteria_met" in data:
         return data
     llm = data.get("llm_grading") or {}
-    detail = [d for d in llm.get("rubric_detail") or [] if isinstance(d, dict)]
-    llm_met = sum(1 for d in detail if d.get("met"))
-    human_met = sum(1 for c in data.get("criteria") or [] if isinstance(c, dict) and c.get("met"))
+    detail, grading = _llm_detail(llm)
+    llm_met = _count(grading.get("criteria_met"), sum(1 for d in detail if d.get("met")))
+    llm_total = _count(grading.get("criteria_total"), len(detail))
+    human = [c for c in data.get("criteria") or [] if isinstance(c, dict)]
+    llm_by_name = {str(d.get("criterion")): bool(d.get("met")) for d in detail}
+    human_by_name = {str(c.get("criterion")): bool(c.get("met")) for c in human}
+    if llm_by_name and set(llm_by_name) == set(human_by_name):
+        # Mismos criterios: coinciden si cada uno tiene el mismo veredicto.
+        agrees = llm_by_name == human_by_name
+    else:
+        agrees = bool(detail) and llm_met == sum(human_by_name.values())
     return {
         "id": data["id"],
         "llm_criteria_met": llm_met,
-        "llm_criteria_total": len(detail),
-        "llm_rationale": llm.get("feedback") or "",
-        "prompt_version": "",
-        "agrees": bool(detail) and llm_met == human_met,
+        "llm_criteria_total": llm_total,
+        "llm_rationale": llm.get("feedback") or grading.get("feedback") or "",
+        "prompt_version": _prompt_version(grading),
+        "agrees": agrees,
     }

@@ -38,6 +38,21 @@ class SyllabusDocument(BaseEntity):
 
 
 @dataclass(kw_only=True)
+class CourseMaterial(BaseEntity):
+    """Apunte o lectura del curso: fuente del RAG además del syllabus (R-004)."""
+
+    course_id: int
+    source_type: str
+    origin: str
+    file_name: str | None = None
+    file_sha256: str
+    byte_size: int
+    page_count: int | None = None
+    extracted_char_count: int
+    extracted_text: str
+
+
+@dataclass(kw_only=True)
 class SyllabusExtraction(BaseEntity):
     course_id: int
     syllabus_document_id: int

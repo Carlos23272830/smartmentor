@@ -3822,6 +3822,106 @@
         "title": "MasteryRow",
         "type": "object"
       },
+      "MaterialOrigin": {
+        "description": "Origen de un apunte del curso (R-004); hace de licencia de la fuente del RAG (DEF-08).",
+        "enum": [
+          "own_notes",
+          "open_license",
+          "permitted"
+        ],
+        "title": "MaterialOrigin",
+        "type": "string"
+      },
+      "MaterialResponse": {
+        "description": "Apunte o lectura del curso (R-004). El texto extraído no viaja: solo su tamaño.",
+        "properties": {
+          "byte_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Byte Size"
+          },
+          "course_id": {
+            "title": "Course Id",
+            "type": "integer"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "extracted_char_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Caracteres de texto extraídos",
+            "title": "Extracted Char Count"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/MaterialOrigin"
+          },
+          "page_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Count"
+          },
+          "source_type": {
+            "description": "pdf o text (los TXT y MD son texto)",
+            "title": "Source Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "course_id",
+          "file_name",
+          "source_type",
+          "origin",
+          "byte_size",
+          "page_count",
+          "extracted_char_count",
+          "created_at"
+        ],
+        "title": "MaterialResponse",
+        "type": "object"
+      },
       "MeResponse": {
         "description": "El usuario autenticado y sus roles (CU-34, CU-35).",
         "properties": {
@@ -8592,6 +8692,150 @@
           }
         ],
         "summary": "Re Extract",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/{course_id}/materials": {
+      "get": {
+        "description": "Apuntes activos del curso, del más antiguo al más nuevo (R-004).",
+        "operationId": "list_materials_api_v1_courses__course_id__materials_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "title": "Course Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MaterialResponse"
+                  },
+                  "title": "Response List Materials Api V1 Courses  Course Id  Materials Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "Token (pegar)": []
+          },
+          {
+            "Login (usuario y contraseña)": []
+          }
+        ],
+        "summary": "List Materials",
+        "tags": [
+          "courses"
+        ]
+      },
+      "post": {
+        "description": "Sube un apunte o lectura del curso (PDF, TXT o MD ≤ 10 MB) como fuente del RAG (R-004).\n\nResponde 201 con el apunte nuevo, o 200 con el que ya existía si el curso ya tenía ese mismo\narchivo. Se usa al explicar los temas; no cambia la extracción del syllabus.",
+        "operationId": "upload_material_api_v1_courses__course_id__materials_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "title": "Course Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "description": "PDF, TXT o MD de hasta 10 MB",
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "origin": {
+                    "description": "Origen del apunte; se registra como su licencia",
+                    "enum": [
+                      "own_notes",
+                      "open_license",
+                      "permitted"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file",
+                  "origin"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialResponse"
+                }
+              }
+            },
+            "description": "El curso ya tenía ese archivo"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "Token (pegar)": []
+          },
+          {
+            "Login (usuario y contraseña)": []
+          }
+        ],
+        "summary": "Upload Material",
         "tags": [
           "courses"
         ]
