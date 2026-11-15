@@ -53,6 +53,10 @@ def render_loading_steps(
     """Dibuja la carga y devuelve «retry» o «back» si hay error y se pulsó el botón."""
     result: Literal["retry", "back"] | None = None
     with st.container(key=f"loading-{key}"):
+        if not error_message:
+            # Anillo grande que gira, como el de Figma; el CSS lo anima (V-088 a V-096).
+            with st.container(key=f"spinner-{key}", horizontal_alignment="center"):
+                st.markdown(":material/progress_activity:", width="content")
         st.markdown(f"#### {title}", text_alignment="center")
         for step in steps:
             color = _STATE_COLOR[step.state]
