@@ -24,6 +24,10 @@ guarda ese dato; el estado aprobado de un paso es `passed`.
 
 Instrucciones y comandos: `notebooks/README.md`.
 
+El changeset `v2.0.0-049` todavía no da `SELECT` sobre `interaction_events` al rol de métricas. Hasta que
+se agregue, el cuaderno lee esa tabla aparte (`OPTIONAL_QUERIES`): si falta el permiso, avisa y deja el
+tiempo en tarea sin calcular en lugar de fallar.
+
 ## Métricas del sistema
 
 ### Estructuración del syllabus: F1 de temas y prerrequisitos
@@ -156,11 +160,34 @@ Instrucciones y comandos: `notebooks/README.md`.
 | Finalización y certificación | % de inscripciones con `status = 'completed'` y % con insignia | `enrollments`, `badges` | Finalización ≥ 60 % |
 | Abandono | Primer tema sin terminar (`pending`, `in_progress`, `blocked`, `on_hold`) de cada inscripción con `status = 'abandoned'` | `path_steps` | Identificar temas críticos |
 | Percepción | Media de cada escala Likert (1 a 5) | `survey_responses.likert` | Media ≥ 4 |
-| Tiempo en tarea | Minutos por tema y por ruta | `interaction_events` | Reportar. **Pendiente en el cuaderno**: depende del contrato de eventos de la interfaz |
+| Tiempo en tarea (m27) | Minutos por tema y por ruta ([regla](#tiempo-en-tarea-m27)) | `interaction_events` | Reportar |
 | Retención (opcional) | Nota del post-test diferido (2 a 4 semanas) | `assessment_attempts` (`retention`) | Reportar. Solo si hay segunda medición |
 
 Una aprobación al primer intento por encima de 85 % indica quizzes demasiado fáciles; por debajo de
 60 %, demasiado difíciles o un diagnóstico que ubica mal.
+
+### Tiempo en tarea (m27)
+
+| Campo | Detalle |
+| --- | --- |
+| Función | `time_on_task(events, cap_seconds=3600)` |
+| Tabla | `interaction_events` de inscripciones con `analysis_included` (`active`), solo los tipos de tramo. Tipos y campos: [contrato, 4.2](../contracts/api-v2.md#42-eventos-de-uso-post-meevents) |
+| Tramo cerrado | Cada cierre (`path.close`, `topic.close`, `quiz.pause`, `quiz.submit`, `final.pause`, `final.submit`) aporta `payload.seconds`. Un cierre repetido (misma inscripción, tipo de visita y `payload.started_at`) cuenta una vez: el endpoint no es idempotente |
+| Tramo abierto | Apertura sin cierre (pestaña cerrada): `path.view` o `topic.open` sin un cierre cuyo `started_at` sea su `occurred_at`; `quiz.start` o `final.start` sin ningún cierre de su `attempt_id`. Se imputa `min(mediana, hasta el siguiente evento, 3600 s)`: la mediana de los tramos cerrados y no recortados del mismo tipo de visita en la cohorte, sin pasar del siguiente evento de tramo de la misma inscripción (los tramos no se solapan). Sin tramos de referencia se imputa 0 |
+| Tramo `capped` | Cuenta 3600 s (cota inferior del tramo real) y queda fuera de la mediana de referencia |
+| Por tema | Suma de los tramos con `topic_id` (tema y quiz) por inscripción y tema; se reporta la mediana entre personas junto a `topics.estimated_minutes` |
+| Por ruta | Suma de todos los tramos de la inscripción (ruta, temas, quizzes y final); mediana por brazo |
+| Meta | Reportar, siempre con el % de minutos imputados y el % de tramos recortados |
+| Interpretación | Es tiempo con la pantalla abierta, no tiempo de estudio: no descuenta la inactividad y `resource.view` es «mostrado», no «reproducido». Si los imputados pasan del 10 % de los minutos o los recortados del 5 % de los tramos, el valor se reporta marcado como poco confiable |
+
+Ejemplo (una inscripción): `topic.close` de 720 s, `quiz.pause` de 300 s y `quiz.submit` de 600 s
+del tema 11 dan 1620 s = **27 min** en el tema; `path.close` de 90 s suma 1,5 min a la ruta. Un
+`topic.open` del tema 12 queda sin cierre y el siguiente evento de la inscripción llega 8 min después;
+con una mediana de 15 min para los tramos de tema, se imputan `min(15, 8, 60)` = **8 min** al tema 12.
+La ruta suma 27 + 1,5 + 8 = **36,5 min**, con 8 / 36,5 = 22 % imputado (por encima del 10 %).
+
+No se puede imputar la visita que se reabre después de un `quiz.pause` y nunca se cierra: no manda
+evento de apertura. Ese tiempo se pierde (sesgo hacia abajo).
 
 ### Equidad
 

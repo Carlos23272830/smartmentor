@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import math
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 
@@ -286,3 +288,150 @@ class TestLatency:
     def test_latency_empty(self) -> None:
         with pytest.raises(ValueError, match="valores"):
             m.latency_percentiles([])
+
+
+T0 = datetime(2026, 11, 9, 14, 0, tzinfo=UTC)
+
+
+def _at(minutes: float) -> datetime:
+    return T0 + timedelta(minutes=minutes)
+
+
+def _event(
+    event_type: str,
+    minute: float,
+    *,
+    enrollment_id: int = 7,
+    topic_id: int | None = None,
+    **payload: Any,
+) -> dict[str, Any]:
+    return {
+        "event_type": event_type,
+        "enrollment_id": enrollment_id,
+        "topic_id": topic_id,
+        "occurred_at": _at(minute),
+        "payload": payload or None,
+    }
+
+
+def _close(
+    event_type: str, start: float, seconds: int, *, topic_id: int | None = None, **extra: Any
+) -> dict[str, Any]:
+    """Cierre de un tramo que empezó en el minuto ``start`` y duró ``seconds``."""
+    return _event(
+        event_type,
+        start + seconds / 60,
+        topic_id=topic_id,
+        seconds=seconds,
+        started_at=_at(start).isoformat(),
+        **extra,
+    )
+
+
+class TestTimeOnTask:
+    def test_closed_segments_by_topic_and_enrollment(self) -> None:
+        events = [
+            _event("path.view", 0, screen="E5", steps_total=3),
+            _close("path.close", 0, 90),
+            _event("topic.open", 2, topic_id=11, screen="E6", step_id=812),
+            _event("resource.view", 2, topic_id=11, resource="explanation", resource_id=120),
+            _close("topic.close", 2, 720, topic_id=11),
+            _event("quiz.start", 14.1, topic_id=11, attempt_id=9001),
+            _close("quiz.pause", 14.2, 300, topic_id=11, attempt_id=9001),
+            _close("quiz.submit", 30, 600, topic_id=11, attempt_id=9001, items=5),
+        ]
+        result = m.time_on_task(events)
+        # Tema 11: 720 + 300 + 600 = 1620 s = 27 min; ruta: 27 + 1,5 = 28,5 min.
+        assert result.minutes_by_topic == {(7, 11): pytest.approx(27.0)}
+        assert result.minutes_by_enrollment == {7: pytest.approx(28.5)}
+        assert result.closed_segments == 4
+        assert result.imputed_segments == 0
+
+    def test_open_segment_imputed_with_median_and_next_event(self) -> None:
+        events = [
+            _event("topic.open", 0, topic_id=11),
+            _close("topic.close", 0, 600, topic_id=11),
+            _event("topic.open", 10, topic_id=12),
+            _close("topic.close", 10, 1200, topic_id=12),
+            # Tema 13 sin cierre; el siguiente evento de la inscripción llega 8 min después.
+            _event("topic.open", 40, topic_id=13),
+            _event("path.view", 48),
+            _close("path.close", 48, 60),
+        ]
+        result = m.time_on_task(events)
+        # Mediana de los temas cerrados: 900 s (15 min); el tope es el siguiente evento: 8 min.
+        assert result.reference_seconds["topic"] == pytest.approx(900.0)
+        assert result.minutes_by_topic[(7, 13)] == pytest.approx(8.0)
+        assert result.imputed_segments == 1
+        assert result.imputed_minutes == pytest.approx(8.0)
+        assert result.minutes_by_enrollment[7] == pytest.approx(10 + 20 + 8 + 1)
+
+    def test_open_segment_without_later_event_takes_the_median(self) -> None:
+        events = [
+            _event("topic.open", 0, topic_id=11),
+            _close("topic.close", 0, 600, topic_id=11),
+            _event("topic.open", 30, topic_id=12, enrollment_id=8),
+        ]
+        result = m.time_on_task(events)
+        # La mediana es de la cohorte: la inscripción 8 toma los 10 min de la 7.
+        assert result.minutes_by_topic[(8, 12)] == pytest.approx(10.0)
+
+    def test_open_segment_without_reference_is_zero(self) -> None:
+        result = m.time_on_task([_event("final.start", 0, attempt_id=5)])
+        assert result.imputed_segments == 1
+        assert result.minutes_by_enrollment == {7: 0.0}
+
+    def test_quiz_paired_by_attempt(self) -> None:
+        events = [
+            _event("quiz.start", 0, topic_id=11, attempt_id=1),
+            _close("quiz.pause", 0.01, 120, topic_id=11, attempt_id=1),
+            _event("quiz.start", 10, topic_id=11, attempt_id=2),
+        ]
+        result = m.time_on_task(events)
+        # El intento 1 cerró (no se imputa); el 2 queda abierto y toma la mediana: 2 min.
+        assert result.imputed_segments == 1
+        assert result.minutes_by_topic[(7, 11)] == pytest.approx(4.0)
+
+    def test_capped_counts_at_cap_and_is_left_out_of_reference(self) -> None:
+        events = [
+            _close("topic.close", 0, 3600, topic_id=11, capped=True),
+            _close("topic.close", 70, 300, topic_id=12),
+            _close("topic.close", 80, 5000, topic_id=13),
+        ]
+        result = m.time_on_task(events)
+        assert result.capped_segments == 2
+        assert result.minutes_by_topic[(7, 11)] == pytest.approx(60.0)
+        assert result.minutes_by_topic[(7, 13)] == pytest.approx(60.0)
+        assert result.reference_seconds == {"topic": pytest.approx(300.0)}
+
+    def test_duplicate_closes_count_once(self) -> None:
+        close = _close("topic.close", 0, 600, topic_id=11)
+        result = m.time_on_task([_event("topic.open", 0, topic_id=11), close, dict(close)])
+        assert result.duplicate_closes == 1
+        assert result.imputed_segments == 0
+        assert result.minutes_by_topic[(7, 11)] == pytest.approx(10.0)
+
+    def test_accepts_json_text_and_iso_dates(self) -> None:
+        row = {
+            "event_type": "path.close",
+            "enrollment_id": 3,
+            "topic_id": float("nan"),
+            "occurred_at": "2026-11-09T14:05:00+00:00",
+            "payload": '{"seconds": 300, "started_at": "2026-11-09T14:00:00+00:00"}',
+        }
+        float_topic = {**row, "event_type": "topic.close", "topic_id": 11.0}
+        result = m.time_on_task([row, float_topic])
+        assert result.minutes_by_enrollment == {3: pytest.approx(10.0)}
+        # El primero es un cierre de ruta (sin tema); el segundo, de un tema con id en float.
+        assert result.minutes_by_topic == {(3, 11): pytest.approx(5.0)}
+
+    def test_rejects_naive_dates(self) -> None:
+        row = _event("path.view", 0)
+        row["occurred_at"] = datetime(2026, 11, 9, 14, 0)  # noqa: DTZ001 - sin zona a propósito
+        with pytest.raises(ValueError, match="zona horaria"):
+            m.time_on_task([row])
+
+    def test_empty_input(self) -> None:
+        result = m.time_on_task([])
+        assert result.minutes_by_enrollment == {}
+        assert result.closed_segments == 0
