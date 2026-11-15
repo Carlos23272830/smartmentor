@@ -11,6 +11,7 @@ from learner_support import (
     matches_figma,
     no_exception,
 )
+from streamlit.testing.v1 import AppTest
 
 from clients.base import ApiError
 from clients.models import Enrollment
@@ -170,11 +171,33 @@ def test_e4_follows_figma() -> None:
     matches_figma(at, "E4")
 
 
-def test_e4_confirm_goes_to_the_path() -> None:
+def _assert_on_the_path(at: AppTest) -> None:
+    """E5 (la ruta), no E6 (el tema): tiene la tarjeta de la evaluación final y «Continuar tema»."""
+    no_exception(at)
+    assert at.get_by_key("path-continue")
+    assert at.get_by_key("card-final")
+    assert "Evaluación final" in page_texts(at)
+    assert session_of(at).learner.step_id == 813  # el `next_action` queda recordado
+
+
+def test_e4_confirm_goes_to_the_path_b044() -> None:
     at = learner_app("learner_objective", DIAGNOSTIC_RESULT)
     button(at, "Confirmar y ver mi ruta").click().run()
+    _assert_on_the_path(at)
+    # El botón principal de E5 sigue llevando al primer tema.
+    button(at, "Continuar tema").click().run()
     no_exception(at)
-    assert "Regresión logística" in page_texts(at)  # el next_action lleva al tema
+    assert any("Tema " in t and " de " in t for t in page_texts(at))
+    assert "Empezar quiz" in page_texts(at)
+
+
+def test_e4b_save_goes_to_the_path_b044() -> None:
+    at = learner_app("learner_objective", DIAGNOSTIC_RESULT)
+    button(at, "Editar el objetivo").click().run()
+    at.text_input(key="objective-criterion").set_value("con 85 % en la final").run()
+    button(at, "Guardar objetivo").click().run()
+    _assert_on_the_path(at)
+    assert not session_of(at).learner.edit_objective
 
 
 def test_e4b_edit_shows_the_three_part_editor() -> None:

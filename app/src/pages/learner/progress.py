@@ -13,6 +13,7 @@ from clients.models_learner import StudyGoals, StudyGoalsUpdate
 from components.formatting import decimal, short_date
 from components.layout import render_notice, render_page_header
 from components.stat_tiles import render_stat_tiles
+from core import features
 from core.container import get_client
 from core.errors import show_action_error
 from core.identity import current_me, label_for, refresh_me
@@ -88,7 +89,7 @@ with st.container(key="card-progress-route"):
         go_to_action(enrollment.next_action)
 
 
-if enrollment.status == "completed":
+if features.RETENTION_AVAILABLE and enrollment.status == "completed":
     with st.container(key="card-retention"):
         st.markdown("**Prueba de retención disponible · opcional**")
         st.caption(
