@@ -1,5 +1,6 @@
 """AD4, AD4b (piloto), AD5 (cursos e inscripciones) y C4 (catálogo de prompts)."""
 
+import pytest
 from apptest import page_texts
 from staff_support import (
     assert_no_exception,
@@ -8,6 +9,7 @@ from staff_support import (
     staff_text_reader,  # noqa: F401
 )
 
+from clients.fixtures import FixturesClient
 from services.staff_prompts import PROMPTS
 
 PILOT = "pages/admin/pilot.py"
@@ -67,6 +69,17 @@ def test_ad4b_fixed_path_preview_is_read_only() -> None:
     assert any("Después de los 5 temas: evaluación final (80 % para el badge)." in t for t in texts)
     at = click(at, "Cerrar")
     assert "Vista previa · ruta fija" not in page_texts(at)
+
+
+def test_ad4_without_a_pilot_shows_a_notice_and_no_controls(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """F-013: con la API real puede no existir ningún piloto; la página avisa y se detiene."""
+    monkeypatch.setattr(FixturesClient, "find_pilot_id", lambda _: None)
+    at = staff_app("admin", page=PILOT)
+    assert_no_exception(at)
+    assert any("Todavía no hay un piloto configurado" in i.value for i in at.info)
+    assert not any(b.label == "Iniciar piloto" for b in at.button)
 
 
 def test_ad4_forbidden() -> None:
