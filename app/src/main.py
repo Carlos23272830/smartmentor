@@ -136,6 +136,7 @@ with st.container(key=f"role-{role}"):
     action = render_header(
         role=role,
         role_label=label_for(role, short=True),
+        active_role_label=label_for(role),
         full_name=me.full_name,
         email=me.email,
         links=[] if me.requires_consent else menu_links(role),

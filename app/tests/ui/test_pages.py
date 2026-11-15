@@ -13,6 +13,7 @@ from streamlit.testing.v1 import AppTest
 
 from clients.base import ApiError
 from clients.fixtures import FixturesClient
+from core.labels import role_label
 from core.session import AppSession
 
 CATALOG = "pages/learner/catalog.py"
@@ -113,6 +114,23 @@ def test_admin_can_switch_to_the_other_two_profiles() -> None:
     at = signed_in("admin")
     keys = {b.key for b in at.button if b.key and b.key.startswith("switch-role-")}
     assert keys == {"switch-role-instructor", "switch-role-learner"}
+
+
+def _active_role_in_menu(at: AppTest) -> str:
+    texts = header_texts(at)
+    return texts[texts.index("ROL ACTIVO") + 1]
+
+
+def test_account_menu_marks_the_active_role_and_lists_the_others_f004() -> None:
+    at = signed_in("admin")
+    assert _active_role_in_menu(at) == role_label("admin")
+    keys = {b.key for b in at.button if b.key and b.key.startswith("switch-role-")}
+    assert keys == {"switch-role-instructor", "switch-role-learner"}
+    at.button(key="switch-role-learner").click().run()
+    assert_no_exception(at)
+    assert _active_role_in_menu(at) == role_label("learner")
+    keys = {b.key for b in at.button if b.key and b.key.startswith("switch-role-")}
+    assert keys == {"switch-role-admin", "switch-role-instructor"}
 
 
 def test_instructor_and_admin_land_on_their_home_pages() -> None:
