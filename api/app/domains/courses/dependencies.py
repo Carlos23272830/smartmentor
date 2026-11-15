@@ -6,6 +6,7 @@ from app.domains.ai_gateway.factory import AiServiceDep
 from app.domains.courses.repository_impl import (
     SqlAlchemyCourseRepository,
     SqlAlchemyLearningPathRepository,
+    SqlAlchemyMaterialRepository,
     SqlAlchemyOutcomeRepository,
     SqlAlchemyPrerequisiteRepository,
     SqlAlchemySyllabusRepository,
@@ -13,6 +14,7 @@ from app.domains.courses.repository_impl import (
 )
 from app.domains.courses.service import (
     CourseService,
+    MaterialService,
     PublicationService,
     SyllabusService,
     TopicService,
@@ -40,6 +42,14 @@ def get_syllabus_service(session: SessionDep, ai: AiServiceDep) -> SyllabusServi
         SqlAlchemyTopicRepository(session),
         SqlAlchemyPrerequisiteRepository(session),
         ai,
+        SqlAlchemyUnitOfWork(session),
+    )
+
+
+def get_material_service(session: SessionDep) -> MaterialService:
+    return MaterialService(
+        SqlAlchemyCourseRepository(session),
+        SqlAlchemyMaterialRepository(session),
         SqlAlchemyUnitOfWork(session),
     )
 

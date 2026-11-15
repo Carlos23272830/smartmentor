@@ -49,12 +49,16 @@ def build_content_for_container(
     sources: SourceMaterialReader
     if engine is not None:
         from app.adapters.pg_knowledge import PgKnowledgeStore
+        from app.adapters.postgres.course_materials import PostgresCourseMaterialReader
         from app.adapters.postgres.syllabus_sources import PostgresSyllabusSourceReader
 
         knowledge = PgKnowledgeStore(engine)
-        # El syllabus del curso es la fuente mínima del RAG; la carpeta agrega apuntes (DEF-08).
+        # El syllabus del curso es la fuente mínima del RAG; los apuntes que sube el instructor
+        # (R-004) y la carpeta del servidor agregan más fuentes (DEF-08).
         sources = CombinedSourceReader(
-            PostgresSyllabusSourceReader(engine), DirectorySourceReader(sources_dir)
+            PostgresSyllabusSourceReader(engine),
+            PostgresCourseMaterialReader(engine),
+            DirectorySourceReader(sources_dir),
         )
     else:
         knowledge = InMemoryKnowledgeStore()

@@ -9,6 +9,14 @@
   align-items: center;
 }
 
+/* D1b · Apuntes y lecturas (R-004): cada apunte en la misma fila gris que el syllabus. */
+[class*="st-key-new-course-material-row-"] {
+  background: var(--bg-neutral);
+  border-radius: var(--radius-row);
+  padding: var(--space-8) var(--space-12);
+  align-items: center;
+}
+
 /* D1c: tarjeta de carga centrada y de ancho máximo (V-064). */
 .st-key-new-course-loading {
   max-width: 560px;

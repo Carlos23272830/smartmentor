@@ -43,6 +43,14 @@ class SyllabusSourceType(StrEnum):
     TEXT = "text"
 
 
+class MaterialOrigin(StrEnum):
+    """Origen de un apunte del curso (R-004); hace de licencia de la fuente del RAG (DEF-08)."""
+
+    OWN_NOTES = "own_notes"
+    OPEN_LICENSE = "open_license"
+    PERMITTED = "permitted"
+
+
 class TopicOrigin(StrEnum):
     LLM = "llm"
     INSTRUCTOR = "instructor"

@@ -152,17 +152,24 @@ class ApiClient(LearnerApiOps, StaffApiOps):
         return response
 
     def _multipart(
-        self, path: str, files: dict[str, tuple[str, bytes, str]], idempotency_key: str
+        self,
+        path: str,
+        files: dict[str, tuple[str, bytes, str]],
+        idempotency_key: str | None,
+        data: dict[str, str] | None = None,
     ) -> httpx.Response:
-        """POST `multipart/form-data` (carga del syllabus, D1b)."""
+        """POST `multipart/form-data` (syllabus y apuntes, D1b); `data` lleva los demás campos."""
         headers = {
             "Authorization": f"Bearer {self._token_provider()}",
             "X-Request-ID": str(uuid.uuid4()),
-            "Idempotency-Key": idempotency_key,
         }
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         try:
             with loading_indicator():
-                response = self._http.post(f"{API_PREFIX}{path}", files=files, headers=headers)
+                response = self._http.post(
+                    f"{API_PREFIX}{path}", files=files, data=data, headers=headers
+                )
         except httpx.HTTPError as error:
             raise ApiError(503, "SERVICE_UNAVAILABLE", "API unreachable") from error
         if response.is_error:

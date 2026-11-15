@@ -14,6 +14,7 @@ from app.common.constants import (
     CourseStatus,
     JobType,
     LearningPathStatus,
+    MaterialOrigin,
     RoleCode,
     TopicOrigin,
     TopicReviewStatus,
@@ -33,6 +34,7 @@ from app.domains.courses import graph
 from app.domains.courses.entities import (
     Course,
     CourseCounts,
+    CourseMaterial,
     LearningOutcome,
     SyllabusDocument,
     Topic,
@@ -41,6 +43,7 @@ from app.domains.courses.entities import (
 from app.domains.courses.repository import (
     CourseRepository,
     LearningPathRepository,
+    MaterialRepository,
     OutcomeRepository,
     PrerequisiteRepository,
     SyllabusRepository,
@@ -342,6 +345,64 @@ class SyllabusService:
         topics = await self._topics.list_for_course(course_id, include_inactive=True)
         edges = await self._prerequisites.list_for_course(course_id)
         return compute_extraction_metrics(extraction.raw_output, topics, edges)
+
+
+# --- Apuntes y lecturas (R-004) ---------------------------------------------------------------
+
+# Tope de apuntes activos por curso: cada uno se fragmenta e indexa (cuesta embeddings).
+MAX_ACTIVE_MATERIALS = 20
+
+
+class MaterialService:
+    """Apuntes y lecturas del curso, fuentes del RAG además del syllabus (R-004, DEF-08).
+
+    La API guarda el texto ya extraído; `ai/` los lee de `course_materials` y los indexa la
+    próxima vez que genera una explicación (`embeddings.index_course` es idempotente por hash).
+    """
+
+    def __init__(
+        self, courses: CourseRepository, materials: MaterialRepository, uow: UnitOfWork
+    ) -> None:
+        self._courses = courses
+        self._materials = materials
+        self._uow = uow
+
+    async def upload(
+        self,
+        user: CurrentUser,
+        course_id: int,
+        extracted: ExtractedSyllabus,
+        origin: MaterialOrigin,
+    ) -> tuple[CourseMaterial, bool]:
+        """Guarda el apunte; devuelve `(apunte, creado)`. El mismo archivo no se repite."""
+        await load_course(self._courses, user, course_id)
+        existing = await self._materials.find_active(course_id, extracted.sha256)
+        if existing is not None:
+            return existing, False
+        if len(await self._materials.list_for_course(course_id)) >= MAX_ACTIVE_MATERIALS:
+            raise BusinessRuleError(
+                f"A course can have at most {MAX_ACTIVE_MATERIALS} active materials.",
+                code="MATERIAL_LIMIT_REACHED",
+            )
+        material = await self._materials.add(
+            CourseMaterial(
+                course_id=course_id,
+                source_type=extracted.source_type,
+                origin=origin,
+                file_name=extracted.file_name,
+                file_sha256=extracted.sha256,
+                byte_size=extracted.byte_size,
+                page_count=extracted.page_count,
+                extracted_char_count=extracted.char_count,
+                extracted_text=extracted.text,
+            )
+        )
+        await self._uow.commit()
+        return material, True
+
+    async def list_materials(self, user: CurrentUser, course_id: int) -> list[CourseMaterial]:
+        await load_course(self._courses, user, course_id)
+        return await self._materials.list_for_course(course_id)
 
 
 @dataclass(frozen=True)

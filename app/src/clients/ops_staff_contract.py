@@ -13,6 +13,7 @@ from clients.models_staff import (
     Course,
     CourseCreate,
     CourseEvaluator,
+    CourseMaterial,
     CourseTopic,
     CourseTopics,
     Dashboard,
@@ -24,6 +25,7 @@ from clients.models_staff import (
     LearnerDetail,
     LlmCallLog,
     LlmSummary,
+    MaterialOrigin,
     MetricsEvaluation,
     Resource,
     ReviewItem,
@@ -59,6 +61,10 @@ class StaffOps(Protocol):
     def start_extraction(
         self, course_id: int, *, confirm_discard_review: bool, idempotency_key: str
     ) -> JobAccepted: ...
+    def upload_material(
+        self, course_id: int, *, file: tuple[str, bytes], origin: MaterialOrigin
+    ) -> CourseMaterial: ...
+    def list_materials(self, course_id: int) -> list[CourseMaterial]: ...
     def poll_job(self, job_id: str) -> Job: ...
     def list_course_topics(self, course_id: int) -> CourseTopics: ...
     def get_topic_graph(self, course_id: int) -> TopicGraphDoc: ...

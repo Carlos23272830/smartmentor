@@ -9,6 +9,7 @@ from app.common.entities import BaseEntity, require_id
 from app.domains.courses.entities import (
     Course,
     CourseCounts,
+    CourseMaterial,
     LearningOutcome,
     SyllabusDocument,
     SyllabusExtraction,
@@ -246,6 +247,17 @@ class InMemoryPaths(InMemoryRepository[LearningPath]):
 
     async def by_course_ids(self, course_ids: list[int]) -> dict[int, LearningPath]:
         return {p.course_id: p for p in self.items.values() if p.course_id in course_ids}
+
+
+class InMemoryMaterials(InMemoryRepository[CourseMaterial]):
+    async def list_for_course(self, course_id: int) -> list[CourseMaterial]:
+        return [m for m in self.items.values() if m.course_id == course_id and m.active]
+
+    async def find_active(self, course_id: int, file_sha256: str) -> CourseMaterial | None:
+        return next(
+            (m for m in await self.list_for_course(course_id) if m.file_sha256 == file_sha256),
+            None,
+        )
 
 
 class InMemorySyllabus:

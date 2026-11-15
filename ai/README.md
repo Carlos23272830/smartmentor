@@ -44,12 +44,11 @@ Todo sale de variables de entorno (raíz `.env.example`); **el código no trae p
 
 ## Fuentes del RAG (DEF-08)
 
-`content.explain_topic` redacta cada explicación a partir de fragmentos de las fuentes del curso (`source_documents` y `document_chunks`, ADR 0013). Si el curso no tiene fuentes, el trabajo termina en `NO_SOURCE_FRAGMENTS`. Las fuentes salen de dos lugares, en este orden:
+`content.explain_topic` redacta cada explicación a partir de fragmentos de las fuentes del curso (`source_documents` y `document_chunks`, ADR 0013). Si el curso no tiene fuentes, el trabajo termina en `NO_SOURCE_FRAGMENTS`. Las fuentes salen de tres lugares, en este orden:
 
 1. **El syllabus del curso:** el último `syllabus_documents` activo con texto (`app/adapters/postgres/syllabus_sources.py`). Así todo curso tiene al menos una fuente; la explicación queda limitada a lo que diga el syllabus.
-2. **La carpeta de apuntes:** `AI_SOURCES_DIR/<course_id>/sources.yaml` (por defecto `ai/sources`), una lista de `{file, title, url, license}` con los archivos de texto al lado. La imagen no trae esa carpeta: hay que montarla.
-
-Pendiente: que el instructor suba apuntes y libros abiertos desde la interfaz.
+2. **Los apuntes que sube el instructor** (R-004): cada `course_materials` activo con texto (`app/adapters/postgres/course_materials.py`). Los sube desde D1b; la API extrae el texto y su `origin` queda como licencia de la fuente. Un apunte que llega después de publicar se indexa en la siguiente explicación, porque el indexador no repite lo que ya tiene (compara el hash).
+3. **La carpeta de apuntes:** `AI_SOURCES_DIR/<course_id>/sources.yaml` (por defecto `ai/sources`), una lista de `{file, title, url, license}` con los archivos de texto al lado. La imagen no trae esa carpeta: hay que montarla. Sirve para el arnés de evaluación.
 
 ## Comandos
 

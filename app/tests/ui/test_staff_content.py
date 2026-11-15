@@ -170,11 +170,29 @@ def test_d5c_human_grading_hides_the_llm_grade_until_saved() -> None:
     # con la nota del LLM hasta «Siguiente».
     assert "Respuesta #A-0417 · Regresión logística" in texts
     assert "Muestra aleatoria · 13 de 30" in " ".join(texts)
-    assert "Coincide con tu nota" in texts
+    # La nota del LLM (2 de 3) sale del objeto `grading.v1` de la API y no coincide con 3 de 3.
+    assert "2 de 3" in texts
+    assert "0 de 0" not in texts
+    assert "Difiere de tu nota" in texts
+    assert "Coincide con tu nota" not in texts
+    assert "prompt —" in texts
     assert any("Relaciona el umbral con el costo" in t for t in texts)
     assert "Siguiente" in [b.label for b in at.button]
     at = click(at, "Siguiente")
     assert any("No hay respuestas pendientes" in t for t in page_texts(at))
+
+
+def test_d5c_matches_the_llm_when_the_human_marks_the_same_criteria() -> None:
+    at = _open(GRADING)
+    groups = [g for g in at.get("button_group") if g.label != "Cola"]
+    for group, choice in zip(groups, ("Cumple", "Cumple", "No cumple"), strict=True):
+        group.set_value(choice)
+    at.run()
+    assert "Tu nota: 2 de 3" in page_texts(at)
+    texts = page_texts(click(at, "Guardar y siguiente"))
+    assert "2 de 3" in texts
+    assert "Coincide con tu nota" in texts
+    assert "Difiere de tu nota" not in texts
 
 
 def test_d5c_empty_queue() -> None:
