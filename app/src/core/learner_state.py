@@ -72,6 +72,9 @@ class LearnerState:
     # Intento de la final que E9 acaba de abrir (reintento o «Continuar»): E8 lo muestra aunque la
     # inscripción leída todavía diga `review_final` (B-041). Se olvida al entregar o calificar.
     pending_final_attempt_id: int | None = None
+    # E9 pidió el reintento y todavía no hay intento (se generan preguntas, B-011): la inscripción
+    # sigue en `review_final` y E8 no debe devolver a E9 mientras tanto (B-048).
+    awaiting_final_questions: bool = False
     sheet: AnswerSheet = field(default_factory=AnswerSheet)
     finished_jobs: dict[str, Job] = field(default_factory=dict)
     job_polls: dict[str, int] = field(default_factory=dict)
@@ -92,6 +95,7 @@ class LearnerState:
         """
         self.step_id = self.attempt_id = self.final_attempt_id = None
         self.pending_final_attempt_id = None
+        self.awaiting_final_questions = False
         self.job_id = self.diagnostic_job_id = self.quiz_job_id = None
         self.quiz_job_kind = "grade"
         self.edit_objective = False

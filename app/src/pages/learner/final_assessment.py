@@ -56,16 +56,16 @@ client = get_client()
 state = get_session().learner
 enrollment = current_enrollment(client)
 allowed: set[NextActionType] = {"take_final", "continue_attempt", "wait_job"}
-if state.quiz_job_id and state.quiz_job_kind == "final-prepare":
-    allowed.add("review_final")  # el reintento desde E9 espera preguntas nuevas (B-011)
+if state.awaiting_final_questions:
+    # El reintento desde E9 espera preguntas nuevas (B-011): la inscripción sigue en
+    # `review_final` mientras se generan y también cuando termina el trabajo y se pide el intento.
+    allowed.add("review_final")
 if state.pending_final_attempt_id is not None:
     # B-041: E9 acaba de abrir un intento y la inscripción leída puede seguir en `review_final`;
     # sin esto E8 volvía a E9, que pedía el resultado de un intento abierto (409) y quedaba sin
     # salida. Que el intento siga abierto lo confirma `get_attempt` más abajo.
     allowed.add("review_final")
 action = redirect_unless(enrollment, allowed, PAGE)
-if action.type == "continue_attempt":
-    state.pending_final_attempt_id = None  # la API ya refleja el intento abierto
 if action.type == "wait_job" and action.job_id:
     state.quiz_job_id, state.quiz_job_kind = action.job_id, "final-grade"
 
@@ -89,6 +89,7 @@ def _regrade() -> None:
 def _new_final_request() -> None:
     """Después de generar (o para reintentar), el intento se pide con una clave nueva."""
     state.quiz_job_id = None
+    state.awaiting_final_questions = True  # sigue la inscripción en `review_final` (B-048)
     idempotency_key(f"final-{enrollment.id}", fresh=True)
     st.rerun()
 
@@ -133,6 +134,7 @@ try:
         )
         if not isinstance(created, Attempt):
             state.quiz_job_id, state.quiz_job_kind = created.job_id, "final-prepare"
+            state.awaiting_final_questions = True
             st.rerun()
         attempt = created
     path = client.get_path(enrollment.id)
@@ -141,6 +143,11 @@ except ApiError as error:
     st.stop()
 
 state.final_attempt_id = attempt.id
+state.awaiting_final_questions = False
+if action.type == "continue_attempt":
+    # La API ya refleja el intento abierto; se olvida el recordado solo con el intento leído, así
+    # una ejecución interrumpida antes no deja a E9 sin saber que hay un intento abierto.
+    state.pending_final_attempt_id = None
 if attempt.status not in ("created", "in_progress"):
     state.pending_final_attempt_id = None
     st.switch_page(RESULT_PAGE)  # ya enviado: no se vuelve a responder (B-026)
