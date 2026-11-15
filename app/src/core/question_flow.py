@@ -16,7 +16,7 @@ from clients.base import ApiError
 from clients.models import AssessmentItem, LearnerAnswer
 from components.layout import render_notice
 from components.quiz_form import render_options, render_stem
-from core.errors import show_action_error
+from core.errors import defer_to_main, is_global, show_action_error
 from core.learner_state import AnswerSheet
 
 DONT_KNOW_LABEL = "No lo sé"
@@ -34,6 +34,18 @@ def _rerun(scope: Literal["app", "fragment"]) -> None:
         with suppress(StreamlitInvalidLayoutContextError):
             st.rerun(scope="fragment")
     st.rerun()
+
+
+def _show_save_error(error: ApiError) -> None:
+    """Error al guardar o entregar desde la hoja, que suele correr en un `st.fragment`.
+
+    Un error global (401 por token vencido, 403 de rol) no se puede relanzar desde el fragmento
+    (B-031): se deja para `main.py` con una ejecución completa. Las respuestas ya están en la hoja
+    (`st.session_state`), así que no se pierden.
+    """
+    if is_global(error):
+        defer_to_main(error)
+    show_action_error(error)
 
 
 def _is_answered(item: AssessmentItem, sheet: AnswerSheet) -> bool:
@@ -265,7 +277,7 @@ def _sheet(
             try:
                 save(list(sheet.answers.values()))
             except ApiError as error:
-                show_action_error(error)
+                _show_save_error(error)
                 return
             if not is_last:
                 sheet.index = index + 1
@@ -296,7 +308,7 @@ def _sheet(
         else:
             sheet.index = index + 1
     except ApiError as error:
-        show_action_error(error)
+        _show_save_error(error)
         return
     _rerun("app" if forward and is_last else nav_scope)
 

@@ -208,6 +208,41 @@ def test_e6b_first_question_follows_figma() -> None:
     )
 
 
+def test_e6b_expired_token_while_saving_goes_to_a7_and_keeps_the_answers_b031() -> None:
+    """B-031: un 401 dentro del fragmento de la hoja ya no deja el traceback ni bloquea «Siguiente».
+
+    `main.py` atiende el error en una ejecución completa (A7) y las respuestas siguen en la sesión.
+    """
+    at = _open_quiz()
+    client = client_of(at)
+    original = client.save_attempt_answers
+    fail(at, "save_attempt_answers", ApiError(401, "TOKEN_EXPIRED"))
+    at.radio[0].set_value(at.radio[0].options[0]).run()
+    button(at, "Siguiente").click().run()
+    no_exception(at)
+    assert "Tu sesión expiró" in page_texts(at, skip_header=False)
+    sheet = session_of(at).learner.sheet
+    assert sheet.index == 0
+    assert len(sheet.answers) == 1
+    # Con la sesión renovada, la hoja vuelve con lo respondido y «Siguiente» funciona.
+    client.save_attempt_answers = original  # type: ignore[method-assign]
+    at.run()
+    no_exception(at)
+    assert not button(at, "Siguiente").disabled
+    button(at, "Siguiente").click().run()
+    no_exception(at)
+    assert any("Pregunta 2 de 5" in t for t in page_texts(at))
+
+
+def test_e6b_role_error_while_saving_shows_a6_b031() -> None:
+    at = _open_quiz()
+    fail(at, "save_attempt_answers", ApiError(403, "INSUFFICIENT_ROLE"))
+    at.radio[0].set_value(at.radio[0].options[0]).run()
+    button(at, "Siguiente").click().run()
+    no_exception(at)
+    assert "No tienes permiso para ver esta página" in page_texts(at, skip_header=False)
+
+
 def test_e6c_short_answer_shows_the_rubric_and_limit() -> None:
     at = _open_quiz()
     _answer_all(at, 4)

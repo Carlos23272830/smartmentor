@@ -6,7 +6,7 @@ lo conoce, uno genérico por estado HTTP. El `request_id` va al registro, no a l
 """
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, NoReturn
 
 import streamlit as st
 
@@ -44,6 +44,10 @@ MESSAGES: dict[str, str] = {
 ErrorKind = Literal[
     "session_expired", "forbidden", "blocked", "not_found", "conflict", "unavailable"
 ]
+
+# Error global que ocurrió dentro de un `st.fragment` y que `main.py` atiende en la siguiente
+# ejecución completa (B-031).
+_DEFERRED_KEY = "deferred_global_error"
 
 _BLOCKED_CODES = frozenset({"EMAIL_NOT_VERIFIED", "ACCOUNT_DEACTIVATED"})
 # Errores que no se resuelven dentro de una pantalla: los atiende main.py (A6, A7, bloqueo).
@@ -111,3 +115,21 @@ def show_action_error(error: ApiError) -> None:
     if is_global(error):
         raise error
     st.error(action_message(error))
+
+
+def defer_to_main(error: ApiError) -> NoReturn:
+    """Deja un error global para `main.py` y pide una ejecución completa de la aplicación.
+
+    Para los `st.fragment`, que corren fuera del `try/except` de `main.py`: relanzar el error ahí
+    mostraba el traceback de Streamlit y dejaba la hoja de preguntas sin responder (B-031). Lo que
+    la persona respondió sigue en `st.session_state`; en la ejecución completa `main.py` revisa el
+    token (renovación o A7) y, si el token sigue vigente, muestra este error con su pantalla.
+    """
+    st.session_state[_DEFERRED_KEY] = error
+    st.rerun(scope="app")
+
+
+def pop_deferred_error() -> ApiError | None:
+    """El error global que dejó un fragmento, si lo hay; se borra al leerlo."""
+    error = st.session_state.pop(_DEFERRED_KEY, None)
+    return error if isinstance(error, ApiError) else None

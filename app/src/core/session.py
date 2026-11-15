@@ -46,6 +46,11 @@ class AppSession:
     # Claves de idempotencia por operación, estables entre reejecuciones del mismo botón.
     idempotency_keys: dict[str, str] = field(default_factory=dict)
 
+    # Renovación del token (B-030): la página de la última ejecución completa y, al volver de
+    # Keycloak con la sesión recuperada, la página a la que hay que regresar.
+    current_page: str | None = None
+    resume_page: str | None = None
+
     @property
     def is_authenticated(self) -> bool:
         return self.me is not None
@@ -74,3 +79,8 @@ def get_session() -> AppSession:
 
 def reset_session() -> None:
     st.session_state[_KEY] = AppSession()
+
+
+def replace_session(session: AppSession) -> None:
+    """Pone una sesión recuperada (la que se aparcó antes de renovar el token, B-030)."""
+    st.session_state[_KEY] = session

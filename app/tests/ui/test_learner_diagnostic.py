@@ -98,6 +98,23 @@ def test_e3_dont_know_counts_as_an_answer_and_moves_on() -> None:
     assert not button(at, "Siguiente").disabled
 
 
+def test_e3_expired_token_in_dont_know_goes_to_a7_and_keeps_the_answer_b031() -> None:
+    """B-031 en la hoja con `rerun_scope="fragment"` (E3): «No lo sé» con el token vencido."""
+    at = learner_app("learner_diagnostic", DIAGNOSTIC)
+    client = client_of(at)
+    original = client.save_diagnostic_answers
+    fail(at, "save_diagnostic_answers", ApiError(401, "TOKEN_EXPIRED"))
+    button(at, "No lo sé").click().run()
+    no_exception(at)
+    assert "Tu sesión expiró" in page_texts(at, skip_header=False)
+    assert any(a.dont_know for a in session_of(at).learner.sheet.answers.values())
+    client.save_diagnostic_answers = original  # type: ignore[method-assign]
+    at.run()
+    no_exception(at)
+    assert any("Pregunta 4 de 15" in t for t in page_texts(at))
+    assert any(t.startswith("Respondiste «No lo sé».") for t in page_texts(at))
+
+
 def test_e3_back_goes_to_the_previous_question() -> None:
     at = learner_app("learner_diagnostic", DIAGNOSTIC)
     button(at, "Anterior").click().run()
