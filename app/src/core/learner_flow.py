@@ -117,7 +117,8 @@ def grading_screen(
 
     El paso de la rúbrica dice cuántos criterios tiene la pregunta si el intento los informa; si no
     se puede leer el intento, el paso no lleva número. El paso se calcula una sola vez por intento
-    (se guarda en la sesión): la pantalla se repite cada 2 s y no debe sumar una consulta por sondeo.
+    (se guarda en la sesión): la pantalla se repite cada 2 s y no debe sumar una consulta por
+    sondeo.
     """
     rubric_step = st.session_state.get(f"grading-rubric-step-{attempt_id}")
     if rubric_step is None:
