@@ -126,40 +126,45 @@ open_view(
     extra=_resources_shown,
 )
 
-if content.video is not None:
-    render_video(
-        title=content.video.title,
-        duration_label=video_duration(content.video),
-        url=youtube_url(content.video),
-    )
-    sent_key = f"video-feedback-sent-{content.video.video_candidate_id}"
-    if st.session_state.get(sent_key):
-        st.success("¡Gracias! Tu calificación llegó a tu instructor sin tu nombre.")
-    else:
-        feedback = render_video_feedback(key=f"video-{content.video.video_candidate_id}")
-        if feedback.submit and feedback.rating is not None:
-            try:
-                client.send_video_feedback(
-                    video_candidate_id=content.video.video_candidate_id,
-                    enrollment_id=enrollment.id,
-                    rating=feedback.rating,
-                    comment=feedback.comment,
-                    watched_fully=False,
-                )
-            except ApiError as error:
-                show_action_error(error)
-            else:
-                st.session_state[sent_key] = True
-                st.rerun()
+# Dos columnas como en Figma (V-011): video, valoración y explicación a la izquierda y la tarjeta
+# del quiz a la derecha.
+left, right = st.columns([2, 1])
 
-if content.explanation is not None:
-    render_explanation(
-        explanation_text(content.explanation.content),
-        source_note=source_note(content.explanation),
-    )
-if content.personal_example:
-    st.markdown(f"**{content.personal_example.get('title', 'Ejemplo para ti')}**")
-    st.markdown(str(content.personal_example.get("body", "")))
+with left:
+    if content.video is not None:
+        render_video(
+            title=content.video.title,
+            duration_label=video_duration(content.video),
+            url=youtube_url(content.video),
+        )
+        sent_key = f"video-feedback-sent-{content.video.video_candidate_id}"
+        if st.session_state.get(sent_key):
+            st.success("¡Gracias! Tu calificación llegó a tu instructor sin tu nombre.")
+        else:
+            feedback = render_video_feedback(key=f"video-{content.video.video_candidate_id}")
+            if feedback.submit and feedback.rating is not None:
+                try:
+                    client.send_video_feedback(
+                        video_candidate_id=content.video.video_candidate_id,
+                        enrollment_id=enrollment.id,
+                        rating=feedback.rating,
+                        comment=feedback.comment,
+                        watched_fully=False,
+                    )
+                except ApiError as error:
+                    show_action_error(error)
+                else:
+                    st.session_state[sent_key] = True
+                    st.rerun()
+
+    if content.explanation is not None:
+        render_explanation(
+            explanation_text(content.explanation.content),
+            source_note=source_note(content.explanation),
+        )
+    if content.personal_example:
+        st.markdown(f"**{content.personal_example.get('title', 'Ejemplo para ti')}**")
+        st.markdown(str(content.personal_example.get("body", "")))
 
 rules, attempts = content.quiz_rules, content.attempts
 # Un quiz empezado y sin enviar se retoma: pedir otro intento daría 409 ATTEMPT_IN_PROGRESS (B-024).
@@ -194,7 +199,7 @@ def _start_quiz(step_id: int) -> None:
     st.switch_page(QUIZ_PAGE)
 
 
-with st.container(key="card-quiz-entry"):
+with right, st.container(key="card-quiz-entry"):
     eyebrow("QUIZ DEL TEMA")
     if closed_note is not None:  # si la API sí entrega el contenido, se repasa sin quiz
         st.caption(f"{closed_note} Puedes repasar la explicación y el video cuando quieras.")

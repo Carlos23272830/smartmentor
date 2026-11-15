@@ -115,12 +115,16 @@ def render_page_header_with_actions(
     return right.container(horizontal=True, horizontal_alignment="right", key=key)
 
 
-def render_notice(text: str, *, tone: Literal["warning", "success"] = "warning") -> None:
-    """Aviso ámbar de permisos o reglas («Tu rol: Instructor · Solo corriges tus cursos»).
+def render_notice(text: str, *, tone: Literal["warning", "info", "success"] = "warning") -> None:
+    """Aviso de permisos o reglas («Tu rol: Instructor · Solo corriges tus cursos»).
 
-    Con `tone="success"` es la nota verde informativa (E4b: «El 80 % para obtener el badge…»).
+    Ámbar por defecto. Con `tone="info"` va en una caja azul suave (nota del grupo, E5b) y con
+    `tone="success"` es la nota verde informativa (E4b: «El 80 % para obtener el badge…»).
     """
-    if tone == "success":
+    if tone == "info":
+        with st.container(key="notice-info"):
+            st.markdown(text)
+    elif tone == "success":
         st.success(text)
     else:
         st.warning(text)

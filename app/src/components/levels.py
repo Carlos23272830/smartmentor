@@ -23,9 +23,11 @@ def render_levels(rows: Sequence[LevelRow], *, key: str = "levels") -> None:
     with st.container(border=True, key=f"panel-{key}"):
         for row in rows:
             label, color = LEVEL_BADGE[row.classification]
-            name_col, value_col, badge_col = st.columns([5, 1, 2], vertical_alignment="center")
+            name_col, value_col, badge_col = st.columns([9, 1, 2], vertical_alignment="center")
             name_col.markdown(row.name)
-            value_col.markdown(f"**{percent_points(row.level)}**")
+            # Porcentaje en gris normal, pegado a la insignia (V-040).
+            with value_col, st.container(key=f"level-value-{row.topic_id}"):
+                st.caption(percent_points(row.level))
             with badge_col:
                 st.badge(label, color=color)
 

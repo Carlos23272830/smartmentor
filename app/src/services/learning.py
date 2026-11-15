@@ -4,6 +4,8 @@ Solo presenta datos: el estado de cada paso, su motivo de inclusión y los punta
 API. Aquí se redactan las líneas que muestra la pantalla.
 """
 
+from typing import Literal
+
 from clients.models import AssessmentItem, BloomLevel, Enrollment, PathDetail, PathStep
 from components.formatting import approx_duration, duration, percent_points
 from components.path_rows import PathRow
@@ -67,6 +69,16 @@ def detail_line(step: PathStep) -> str | None:
             return None
 
 
+def _reason_tone(step: PathStep) -> Literal["green", "blue"] | None:
+    match step.inclusion_reason:
+        case "skipped_mastered":
+            return "green"
+        case "weak_prerequisite" | "objective_focus":
+            return "blue"
+        case _:
+            return None
+
+
 def path_rows(path: PathDetail, *, fixed: bool) -> list[PathRow]:
     """Una fila por paso; en la ruta fija solo el motivo «Incluido · ruta fija»."""
     return [
@@ -78,6 +90,7 @@ def path_rows(path: PathDetail, *, fixed: bool) -> list[PathRow]:
             reason=reason_line(step),
             detail=None if fixed else detail_line(step),
             openable=step.status not in CLOSED_STEPS,
+            tone=_reason_tone(step),
         )
         for step in path.steps
     ]
