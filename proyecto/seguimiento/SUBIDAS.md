@@ -188,3 +188,10 @@ Revisión con `gh` y `git` del estado real de `dev`, sin subir nada.
 - **Esta entrada:** rama `feature/seguimiento-fusion-pr17-26`, con PR hacia `dev`
 - **Quién aprobó:** el dueño, en el chat («los pr todos ya fueron aprobados y mezclados»)
 - **CI de este PR:** `liquibase (validate)` falló una vez porque el runner descargó `postgresql-42.7.13.jar` con otro SHA-256 (`807ceab0…`); el archivo de Maven Central coincide con el checksum del Dockerfile (`6e0e4cc2…`, y su SHA-1 con el publicado). El checksum hizo su trabajo; se relanzó el trabajo sin cambiar nada
+
+### S-015 · 2026-11-15 09:16 · PR 27 a PR 30 fusionados, PR 31 abierto y recomendaciones al dueño
+
+- **Fusiones (el dueño):** PR 27 (`1acb4df`) y PR 28 (`2cb6009`) el 2026-11-15 08:59, PR 30 (`ec7ac6e`) a las 09:02 y PR 29 (`8852c1d`) a las 09:10
+- **PR 31** (`fix/ci-liquibase-reintentos`): CI en verde. La imagen de Liquibase reintenta y vacía la caché de BuildKit si la descarga del driver llega dañada (el diagnóstico en el runner mostró que Maven Central sirve el jar correcto y que el fallo es intermitente)
+- **Esta entrada:** rama `feature/recomendaciones-dueno`, con la columna «Recomendación (propuesta práctica)» en `PENDIENTES.md`
+- **Quién aprobó:** el dueño, en el chat
