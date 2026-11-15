@@ -251,6 +251,13 @@ LEARNER_SCENARIOS: tuple[LearnerScenarioSpec, ...] = (
         ),
     ),
     LearnerScenarioSpec(
+        "learner_multi_path",
+        "Varias rutas (E11, E12, E14)",
+        "Fundamentos de ML completada con badge; Estadística y Python en curso.",
+        _E + "multi_path",
+        LearnerScript({"history_final": "learner/history_final_passed"}),
+    ),
+    LearnerScenarioSpec(
         "learner_offline",
         "Sin conexión",
         "Toda operación del aprendiz responde 503 SERVICE_UNAVAILABLE.",
