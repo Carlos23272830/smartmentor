@@ -1,8 +1,11 @@
 """E10 · Badge: la insignia Open Badges de la ruta completada y su verificación pública.
 
 Descarga la imagen PNG y el JSON (`assertion.json`) y muestra los datos de verificación que sirve
-la API sin sesión. El puntaje, los temas y el ahorro salen de la API; la encuesta final se ofrece
-mientras `next_action` sea `answer_survey`.
+la API sin sesión. El puntaje, los temas y el ahorro salen de la API.
+
+Al aprobar la final se llega aquí aunque la API diga `answer_survey` (B-045): la encuesta es una
+tarjeta opcional que se ofrece mientras la inscripción leída en esta ejecución siga en
+`answer_survey`; al enviarla la API pasa a `view_badge` y la tarjeta desaparece.
 """
 
 import json

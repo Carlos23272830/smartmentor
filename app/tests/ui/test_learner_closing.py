@@ -4,6 +4,9 @@ from apptest import button, page_texts, session_of
 from learner_support import (
     ACHIEVEMENTS,
     BADGE,
+    FINAL,
+    FINAL_RESULT,
+    PATH,
     PROGRESS,
     RETENTION,
     SURVEY,
@@ -16,6 +19,7 @@ from learner_support import (
 from streamlit.testing.v1 import AppTest
 
 from clients.base import ApiError
+from clients.models import AttemptResult, NextAction
 from clients.models_learner import StudyGoals
 
 
@@ -384,6 +388,118 @@ def test_b037_e14_is_enabled_by_any_completed_route() -> None:
 def test_b037_e14_stays_closed_when_no_route_is_completed() -> None:
     at = learner_app("learner_path", RETENTION)
     assert at.info
+
+
+# --- B-045: al aprobar la final se ve el badge antes que la encuesta ------------------------------
+
+SURVEY_PENDING = NextAction(type="answer_survey", screen="E13a")
+
+
+def _on_badge(at: AppTest, *, survey_card: bool) -> None:
+    """E10: el badge y, si la encuesta sigue pendiente, su tarjeta opcional."""
+    no_exception(at)
+    texts = page_texts(at)
+    assert "¡Ruta completada!" in texts
+    assert "Cuéntanos cómo te fue" not in texts
+    assert ("Encuesta final · opcional" in texts) is survey_card
+    assert any(b.key == "badge-survey" for b in at.button) is survey_card
+
+
+def _answer_survey(at: AppTest) -> None:
+    _fill(at, 8)
+    button(at, "Siguiente").click().run()
+    _fill(at, 5)
+    button(at, "Enviar encuesta").click().run()
+
+
+def _pass_the_final(at: AppTest) -> None:
+    """La entrega aprueba la final y la API manda `answer_survey` (E13a), como en el recorrido."""
+    client = client_of(at)
+    passed = client.doc("attempt_result", AttemptResult).model_copy(
+        update={
+            "assessment_type": "final",
+            "passed": True,
+            "score": 88.0,
+            "next_action": SURVEY_PENDING,
+        }
+    )
+
+    def graded(*_: object, **__: object) -> AttemptResult:
+        client.echo_next_action(SURVEY_PENDING)
+        return passed
+
+    client.submit_attempt = graded  # type: ignore[method-assign,assignment]
+    client.get_attempt_result = graded  # type: ignore[method-assign,assignment]
+
+
+def test_b045_passing_the_final_shows_the_badge_with_the_survey_card() -> None:
+    at = learner_app("learner_final_ready", FINAL, run=False)
+    _pass_the_final(at)
+    at.run()
+    for index in range(8):
+        at.radio[0].set_value(at.radio[0].options[0]).run()
+        button(at, "Siguiente" if index < 7 else "Enviar evaluación").click().run()
+    _on_badge(at, survey_card=True)
+
+
+def test_b045_e9_with_a_passed_final_goes_to_the_badge() -> None:
+    at = learner_app("learner_completed", FINAL_RESULT, run=False)
+    _pass_the_final(at)
+    session_of(at).learner.final_attempt_id = 9002
+    at.run()
+    _on_badge(at, survey_card=True)
+
+
+def test_b045_badge_survey_card_opens_e13a_and_disappears_once_sent() -> None:
+    at = learner_app("learner_completed", BADGE)
+    _on_badge(at, survey_card=True)
+    button(at, "Responder encuesta").click().run()
+    no_exception(at)
+    assert "Cuéntanos cómo te fue" in page_texts(at)
+    # AppTest no conserva el `switch_page`: se abre E13a como lo haría el navegador.
+    at.switch_page(SURVEY).run()
+    _answer_survey(at)
+    _on_badge(at, survey_card=False)
+    # Al volver más tarde (otra ejecución) la encuesta tampoco se ofrece.
+    at.switch_page(BADGE).run()
+    _on_badge(at, survey_card=False)
+
+
+def test_b045_skipping_the_survey_keeps_offering_it() -> None:
+    at = learner_app("learner_completed", SURVEY)
+    button(at, "Ahora no").click().run()
+    _on_badge(at, survey_card=True)
+
+
+def test_b045_e5_continue_with_pending_survey_opens_the_badge() -> None:
+    at = learner_app("learner_completed", PATH)
+    button(at, "Ver badge").click().run()
+    _on_badge(at, survey_card=True)
+
+
+def test_b045_e11_continue_with_pending_survey_opens_the_badge() -> None:
+    at = learner_app("learner_completed", PROGRESS)
+    button(at, "Continuar mi ruta").click().run()
+    _on_badge(at, survey_card=True)
+
+
+def test_b045_e11_continue_after_the_survey_opens_the_badge_without_the_card() -> None:
+    at = learner_app("learner_completed", SURVEY)
+    _answer_survey(at)
+    at.switch_page(PROGRESS).run()
+    button(at, "Continuar mi ruta").click().run()
+    _on_badge(at, survey_card=False)
+
+
+def test_b045_e8_with_the_route_completed_redirects_to_the_badge() -> None:
+    at = learner_app("learner_completed", FINAL)
+    _on_badge(at, survey_card=True)
+
+
+def test_b045_e12_view_badge_keeps_the_pending_survey_card() -> None:
+    at = learner_app("learner_completed", ACHIEVEMENTS)
+    button(at, "Ver badge").click().run()
+    _on_badge(at, survey_card=True)
 
 
 def test_e13b_back_keeps_the_comment() -> None:
