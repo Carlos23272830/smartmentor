@@ -153,6 +153,9 @@ def test_api_client_uploads_a_material_with_its_origin_and_no_idempotency_key() 
         return_value=httpx.Response(201, json=material)
     )
     result = client.upload_material(7, file=("apuntes.md", b"# Tema"), origin="open_license")
+    assert (
+        route.call_count == 1
+    )  # una sola petición: con el indicador «Cargando…» (T-054) se duplicó
     request = route.calls.last.request
     assert result.origin == "own_notes"  # lo que responde la API
     assert "Idempotency-Key" not in request.headers
