@@ -123,28 +123,36 @@ if st.session_state.get("p-preview-open"):
         show_staff_error(error)
     else:
         with st.container(border=True, key="panel-fixed-preview"):
-            st.subheader("Vista previa · ruta fija", anchor=False)
-            st.badge("Solo lectura", color="gray")
+            # «Solo lectura» violeta a la derecha del título (V-086).
+            with st.container(horizontal=True, vertical_alignment="center"):
+                st.subheader("Vista previa · ruta fija", anchor=False, width="content")
+                st.space("stretch")
+                st.badge("Solo lectura", color="violet")
             st.caption(
                 "Así ve la ruta un aprendiz del grupo de ruta fija. Es una vista de referencia: "
                 "el admin no entra a la cuenta de ningún aprendiz ni puede avanzar o responder "
                 "por él."
             )
-            for step in preview.steps:
-                st.markdown(
-                    f"**{step.step_order}** · {step.name} · "
-                    "Incluido para todos los aprendices del grupo"
-                )
+            # Lista en tarjeta gris: número, nombre en negrita y la nota debajo (V-085).
+            with st.container(key="preview-list"):
+                for step in preview.steps:
+                    with st.container(key=f"preview-step-{step.step_order}", gap="xxsmall"):
+                        number_col, text_col = st.columns([1, 20], vertical_alignment="center")
+                        number_col.markdown(f"{step.step_order}")
+                        with text_col.container(gap="xxsmall"):
+                            st.markdown(f"**{step.name}**")
+                            st.caption("Incluido para todos los aprendices del grupo")
             st.markdown(
                 f"Después de los {len(preview.steps)} temas: evaluación final "
                 f"({preview.final_pass_threshold} % para el badge)."
             )
-            st.caption(
+            render_notice(
                 "Ruta personalizada: cada aprendiz omite los temas que domina en el diagnóstico "
                 f"({preview.mastery_skip_threshold} % o más) y suma sus prerrequisitos débiles. "
-                "El contenido, los quizzes y los umbrales son los mismos en los dos grupos."
+                "El contenido, los quizzes y los umbrales son los mismos en los dos grupos.",
+                tone="info",
             )
-            if st.button("Cerrar", key="p-preview-close"):
+            if st.button("Cerrar", type="primary", key="p-preview-close"):
                 st.session_state["p-preview-open"] = False
                 st.rerun()
 
