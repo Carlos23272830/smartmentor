@@ -104,28 +104,32 @@ with render_page_header_with_actions(
         st.session_state["ld-target"] = exhausted[0].step_id if exhausted else FINAL
 
 
+def _close_grant() -> None:
+    """Cierra la ventana D4c (también con la «x» o Esc)."""
+    st.session_state.pop("ld-target", None)
+
+
+@st.dialog("Habilitar nuevos intentos", width="medium", on_dismiss=_close_grant)
 def _grant_panel(target: int) -> None:
     """D4c · Habilitar nuevos intentos."""
     step: ExhaustedStep | None = next((s for s in exhausted if s.step_id == target), None)
-    with st.container(border=True, key="panel-grant"):
-        st.subheader("Habilitar nuevos intentos", anchor=False)
-        if step:
-            used = f"{step.attempts_used} de {step.max_attempts} intentos usados"
-            best = f" (mejor puntaje {percent_points(step.best_score)})" if step.best_score else ""
-            st.caption(f"{detail.user.full_name} · {step.topic_name} · {used}{best}")
-        else:
-            st.caption(f"{detail.user.full_name} · Evaluación final")
-        attempts = st.selectbox("Intentos que se habilitan", [1, 2, 3, 4, 5], index=2, key="ld-n")
-        note = st.text_area("Nota para el aprendiz (opcional)", key="ld-note")
-        max_attempts = step.max_attempts if step else 3
-        st.info(
-            "Cada intento trae preguntas nuevas. El reinicio queda en el historial y se reporta "
-            "aparte en las métricas de intentos por tema, para no mezclarlo con los "
-            f"{max_attempts} intentos de la regla."
-        )
-        with st.container(horizontal=True):
-            cancel = st.button("Cancelar", key="ld-grant-cancel")
-            save = st.button("Habilitar intentos", type="primary", key="ld-grant-ok")
+    if step:
+        used = f"{step.attempts_used} de {step.max_attempts} intentos usados"
+        best = f" (mejor puntaje {percent_points(step.best_score)})" if step.best_score else ""
+        st.caption(f"{detail.user.full_name} · {step.topic_name} · {used}{best}")
+    else:
+        st.caption(f"{detail.user.full_name} · Evaluación final")
+    attempts = st.selectbox("Intentos que se habilitan", [1, 2, 3, 4, 5], index=2, key="ld-n")
+    note = st.text_area("Nota para el aprendiz (opcional)", key="ld-note")
+    max_attempts = step.max_attempts if step else 3
+    st.info(
+        "Cada intento trae preguntas nuevas. El reinicio queda en el historial y se reporta "
+        "aparte en las métricas de intentos por tema, para no mezclarlo con los "
+        f"{max_attempts} intentos de la regla."
+    )
+    with st.container(horizontal=True):
+        cancel = st.button("Cancelar", key="ld-grant-cancel")
+        save = st.button("Habilitar intentos", type="primary", key="ld-grant-ok")
     if cancel:
         st.session_state.pop("ld-target", None)
         st.rerun()

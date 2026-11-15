@@ -72,84 +72,89 @@ def _threshold_field(
     return int(value_out)
 
 
+def _close_config() -> None:
+    """Cierra la ventana D3b (también con la «x» o Esc) y olvida la confirmación del piloto."""
+    st.session_state["pd-open"] = False
+    st.session_state.pop("pd-confirm-needed", None)
+
+
+@st.dialog("Configurar la ruta", width="medium", on_dismiss=_close_config)
 def _config_panel() -> None:
     """D3b · Configurar la ruta."""
     default = settings.default_objective or DefaultObjective()
-    with st.container(border=True, key="panel-path-settings"):
-        st.subheader("Configurar la ruta", anchor=False)
-        eyebrow("OBJETIVO POR DEFECTO · OPCIONAL")
-        verbs = list(BLOOM_VERBS)
-        verb = st.selectbox(
-            "Verbo de Bloom",
-            verbs,
-            index=verbs.index(default.bloom_verb) if default.bloom_verb in verbs else None,
-            placeholder="Elegir",
-            key="pd-verb",
+    eyebrow("OBJETIVO POR DEFECTO · OPCIONAL")
+    verbs = list(BLOOM_VERBS)
+    verb = st.selectbox(
+        "Verbo de Bloom",
+        verbs,
+        index=verbs.index(default.bloom_verb) if default.bloom_verb in verbs else None,
+        placeholder="Elegir",
+        key="pd-verb",
+    )
+    content = st.text_input(
+        "Contenido",
+        value=default.content or "",
+        placeholder="Ej.: modelos de clasificación",
+        key="pd-content",
+    )
+    criterion = st.text_input(
+        "Criterio medible",
+        value=default.criterion or "",
+        placeholder="Ej.: con F1 ≥ 0,7 en un caso real",
+        key="pd-criterion",
+    )
+    st.caption(
+        "Si lo dejas vacío, la IA propone un objetivo para cada aprendiz a partir de su perfil "
+        "y su diagnóstico."
+    )
+    eyebrow("UMBRALES")
+    topic_pass = _threshold_field(
+        "Aprobar un tema",
+        "Puntaje mínimo en el quiz del tema.",
+        "pd-topic",
+        settings.topic_pass_threshold,
+        0,
+        100,
+        unit="%",
+    )
+    final_pass = _threshold_field(
+        "Obtener el badge",
+        "Puntaje mínimo en la evaluación final.",
+        "pd-final",
+        settings.final_pass_threshold,
+        0,
+        100,
+        unit="%",
+    )
+    attempts = _threshold_field(
+        "Intentos por evaluación",
+        "Cada intento trae preguntas nuevas.",
+        "pd-attempts",
+        settings.max_attempts,
+        1,
+        10,
+        unit="",
+    )
+    skip = _threshold_field(
+        "Omitir un tema",
+        "Dominio en el diagnóstico desde el cual el tema se omite.",
+        "pd-skip",
+        settings.mastery_skip_threshold,
+        0,
+        100,
+        unit="%",
+    )
+    needs_confirm = dashboard.pilot_running or st.session_state.get("pd-confirm-needed")
+    confirmed = True
+    if needs_confirm:
+        st.warning(
+            "Durante el piloto, cambiar los umbrales afecta la comparación de resultados "
+            "entre aprendices."
         )
-        content = st.text_input(
-            "Contenido",
-            value=default.content or "",
-            placeholder="Ej.: modelos de clasificación",
-            key="pd-content",
-        )
-        criterion = st.text_input(
-            "Criterio medible",
-            value=default.criterion or "",
-            placeholder="Ej.: con F1 ≥ 0,7 en un caso real",
-            key="pd-criterion",
-        )
-        st.caption(
-            "Si lo dejas vacío, la IA propone un objetivo para cada aprendiz a partir de su perfil "
-            "y su diagnóstico."
-        )
-        eyebrow("UMBRALES")
-        topic_pass = _threshold_field(
-            "Aprobar un tema",
-            "Puntaje mínimo en el quiz del tema.",
-            "pd-topic",
-            settings.topic_pass_threshold,
-            0,
-            100,
-            unit="%",
-        )
-        final_pass = _threshold_field(
-            "Obtener el badge",
-            "Puntaje mínimo en la evaluación final.",
-            "pd-final",
-            settings.final_pass_threshold,
-            0,
-            100,
-            unit="%",
-        )
-        attempts = _threshold_field(
-            "Intentos por evaluación",
-            "Cada intento trae preguntas nuevas.",
-            "pd-attempts",
-            settings.max_attempts,
-            1,
-            10,
-            unit="",
-        )
-        skip = _threshold_field(
-            "Omitir un tema",
-            "Dominio en el diagnóstico desde el cual el tema se omite.",
-            "pd-skip",
-            settings.mastery_skip_threshold,
-            0,
-            100,
-            unit="%",
-        )
-        needs_confirm = dashboard.pilot_running or st.session_state.get("pd-confirm-needed")
-        confirmed = True
-        if needs_confirm:
-            st.warning(
-                "Durante el piloto, cambiar los umbrales afecta la comparación de resultados "
-                "entre aprendices."
-            )
-            confirmed = st.checkbox("Entiendo el efecto y quiero guardar el cambio", key="pd-ok")
-        with st.container(horizontal=True):
-            cancel = st.button("Cancelar", key="pd-cancel")
-            save = st.button("Guardar", type="primary", key="pd-save", disabled=not confirmed)
+        confirmed = st.checkbox("Entiendo el efecto y quiero guardar el cambio", key="pd-ok")
+    with st.container(horizontal=True):
+        cancel = st.button("Cancelar", key="pd-cancel")
+        save = st.button("Guardar", type="primary", key="pd-save", disabled=not confirmed)
     if cancel:
         st.session_state["pd-open"] = False
         st.rerun()
