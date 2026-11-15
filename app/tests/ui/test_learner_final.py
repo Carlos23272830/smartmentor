@@ -218,17 +218,31 @@ def test_e9_retry_follows_continue_attempt_b041() -> None:
     _on_new_final_attempt(at)
 
 
-def test_e9_with_an_open_attempt_offers_to_continue_b041() -> None:
-    """B-041: si el intento pedido sigue abierto (409), E9 ofrece «Continuar evaluación final»."""
+def test_e9_with_an_open_attempt_opens_e8_without_a_screen_in_between_b050() -> None:
+    """B-041, B-050: con el intento pedido abierto (409), E9 abre E8 sin pantalla intermedia."""
     at = learner_app("learner_final_failed", FINAL_RESULT, run=False)
     client = client_of(at)
     client.create_final_attempt(7, idempotency_key="k")
     session_of(at).learner.final_attempt_id = 9101
     at.run()
     no_exception(at)
-    assert "Continuar evaluación final" in [b.label for b in at.button]
-    button(at, "Continuar evaluación final").click().run()
+    assert "Continuar evaluación final" not in [b.label for b in at.button]
+    assert "Tu evaluación final sigue abierta" not in " ".join(page_texts(at, alerts=True))
     _on_new_final_attempt(at)
+
+
+def test_e9_with_a_graded_attempt_without_job_does_not_loop_to_e8_b050() -> None:
+    """Un 409 de un intento que ya no está abierto y sin trabajo: se avisa en E9, sin ciclo."""
+    at = learner_app("learner_final_failed", FINAL_RESULT, run=False)
+    client = client_of(at)
+    client.create_final_attempt(7, idempotency_key="k")
+    client._open_final_attempts[9101].status = "submitted"
+    client.get_attempt = lambda attempt_id: client._open_final_attempts[attempt_id]  # type: ignore[method-assign]
+    session_of(at).learner.final_attempt_id = 9101
+    at.run()
+    no_exception(at)
+    assert any("sigue abierta" in t for t in page_texts(at, alerts=True))
+    assert "Volver a mi ruta" in [b.label for b in at.button]
 
 
 def test_e9c_exhausted_attempts_show_history_and_weak_topics() -> None:
