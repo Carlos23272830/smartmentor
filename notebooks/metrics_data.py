@@ -6,14 +6,15 @@ que ``synthetic_data.generate``. La URL llega por la variable de entorno ``METRI
 (nunca se escribe en el cuaderno ni en el repositorio); el usuario y la clave de ese rol son
 ``METRICS_DATABASE_USER`` y ``METRICS_DATABASE_PASSWORD`` del ``.env``.
 
-Las consultas se contrastaron con el esquema ``v2.0.0`` (rama ``feature/database-v2-rebase``). Dos
-columnas son ``jsonb`` libres que fija la API, no el esquema, y quedan marcadas ``SUPUESTO``:
-``diagnostics.level_by_topic`` y ``survey_responses.likert``. ``check_shapes`` falla con un mensaje
-claro si la forma real es otra.
+Las consultas se contrastaron con el esquema ``v2.0.0`` y, el 2026-11-15, con la base real. Dos
+columnas son ``jsonb`` libres que fija la API, no el esquema: ``diagnostics.level_by_topic``
+(``DiagnosticResult``: objeto con la lista ``level_by_topic``) y ``survey_responses.likert``
+(claves ``q1``, ``q2`` y ``q3``). ``check_shapes`` falla con un mensaje claro si la forma real es
+otra.
 
-``interaction_events`` (tiempo en tarea, m27) va en ``OPTIONAL_QUERIES``: el changeset
-``v2.0.0-049`` todavía no da ``SELECT`` sobre esa tabla al rol de métricas. Si falta el permiso, el
-cuaderno sigue con un marco vacío y un aviso en lugar de fallar.
+``interaction_events`` (tiempo en tarea, m27) va en ``OPTIONAL_QUERIES``: el ``SELECT`` sobre esa
+tabla llegó con un changeset posterior al ``v2.0.0-049``. Si el permiso falta, el cuaderno sigue con
+un marco vacío y un aviso en lugar de fallar.
 """
 
 from __future__ import annotations
@@ -31,7 +32,7 @@ class UnexpectedShapeError(RuntimeError):
     """Un ``jsonb`` libre no tiene la forma que el cuaderno espera."""
 
 
-LIKERT_KEYS = ("satisfaction", "usefulness", "self_efficacy")
+LIKERT_KEYS = ("q1", "q2", "q3")  # satisfacción, utilidad percibida, autoeficacia
 
 # Solo se incluyen inscripciones marcadas para análisis (enrollments.analysis_included).
 QUERIES: dict[str, str] = {
@@ -122,28 +123,31 @@ QUERIES: dict[str, str] = {
               AND fa.attempt_number = 1 AND fa.active
         WHERE en.analysis_included AND ps.active
     """,
-    # SUPUESTO: diagnostics.level_by_topic es un objeto con el id del tema como clave y, por
-    # tema, test_score entre 0 y 1 (plan 5.2.1). Pre-test = media de test_score por 100.
-    # Post-test: mejor nota de la evaluación final (assessment_type = 'final').
+    # diagnostics.level_by_topic es un objeto {"level_by_topic": [{"topic_id", "test_score" 0-100
+    # o nulo, ...}], "overall_score", "focus_topic_ids", ...} (DiagnosticResult, ai-service-v1).
+    # Pre-test = media de test_score de los temas con prueba. Post-test: mejor nota de la
+    # evaluación final (assessment_type = 'final').
     "learning_gain": """
         SELECT en.id AS enrollment_id, en.pilot_arm,
-               100 * (SELECT AVG((v.value ->> 'test_score')::float)
-                        FROM jsonb_each(
-                               CASE WHEN jsonb_typeof(d.level_by_topic) = 'object'
-                                    THEN d.level_by_topic ELSE '{}'::jsonb END) AS v
-                     ) AS pre_score,
+               (SELECT AVG((t.value ->> 'test_score')::float)
+                  FROM jsonb_array_elements(
+                         CASE WHEN jsonb_typeof(d.level_by_topic -> 'level_by_topic') = 'array'
+                              THEN d.level_by_topic -> 'level_by_topic' ELSE '[]'::jsonb END
+                       ) AS t(value)
+               ) AS pre_score,
                (SELECT MAX(a.score) FROM assessment_attempts a
                  WHERE a.enrollment_id = en.id AND a.assessment_type = 'final') AS post_score
         FROM enrollments en
         JOIN diagnostics d ON d.enrollment_id = en.id
         WHERE en.analysis_included AND d.active
     """,
-    # SUPUESTO: survey_responses.likert es un objeto con las claves de LIKERT_KEYS (1 a 5).
+    # survey_responses.likert es un objeto {"q1": 1..5, "q2": 1..5, "q3": 1..5} (SurveyBody de la
+    # API): q1 satisfacción, q2 utilidad percibida, q3 autoeficacia (app: EXPERIENCE_ITEMS).
     "surveys": """
         SELECT sr.enrollment_id, en.pilot_arm, sr.sus_items,
-               (sr.likert ->> 'satisfaction')::int AS likert_satisfaction,
-               (sr.likert ->> 'usefulness')::int AS likert_usefulness,
-               (sr.likert ->> 'self_efficacy')::int AS likert_self_efficacy
+               (sr.likert ->> 'q1')::int AS likert_satisfaction,
+               (sr.likert ->> 'q2')::int AS likert_usefulness,
+               (sr.likert ->> 'q3')::int AS likert_self_efficacy
         FROM survey_responses sr
         JOIN enrollments en ON en.id = sr.enrollment_id
         WHERE sr.survey_type = 'final' AND en.analysis_included AND sr.active
@@ -188,25 +192,28 @@ SHAPE_CHECKS: dict[str, tuple[str, str]] = {
     "diagnostics.level_by_topic": (
         """
         SELECT COUNT(*) FILTER (WHERE jsonb_typeof(level_by_topic) <> 'object'
-                                   OR EXISTS (SELECT 1 FROM jsonb_each(
-                                          CASE WHEN jsonb_typeof(level_by_topic) = 'object'
-                                               THEN level_by_topic ELSE '{}'::jsonb END) v
+                                   OR jsonb_typeof(level_by_topic -> 'level_by_topic') <> 'array'
+                                   OR EXISTS (SELECT 1 FROM jsonb_array_elements(
+                                          CASE WHEN jsonb_typeof(level_by_topic -> 'level_by_topic')
+                                                    = 'array'
+                                               THEN level_by_topic -> 'level_by_topic'
+                                               ELSE '[]'::jsonb END) v
                                        WHERE jsonb_typeof(v.value) <> 'object'
-                                          OR (v.value ->> 'test_score') IS NULL)),
+                                          OR jsonb_typeof(v.value -> 'test_score')
+                                             NOT IN ('number', 'null'))),
                COUNT(*)
         FROM diagnostics WHERE level_by_topic IS NOT NULL AND active
         """,
-        "un objeto {id_del_tema: {test_score: 0..1, ...}}",
+        "un objeto {level_by_topic: [{topic_id, test_score: 0..100 o nulo, ...}], ...}",
     ),
     "survey_responses.likert": (
         """
         SELECT COUNT(*) FILTER (WHERE jsonb_typeof(likert) <> 'object'
-                                   OR NOT (likert ?& ARRAY['satisfaction', 'usefulness',
-                                                           'self_efficacy'])),
+                                   OR NOT (likert ?& ARRAY['q1', 'q2', 'q3'])),
                COUNT(*)
         FROM survey_responses WHERE likert IS NOT NULL AND active
         """,
-        "un objeto con las claves satisfaction, usefulness y self_efficacy (1 a 5)",
+        "un objeto con las claves q1, q2 y q3 (1 a 5)",
     ),
 }
 
