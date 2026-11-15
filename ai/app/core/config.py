@@ -90,6 +90,13 @@ class Settings(BaseSettings):
     ai_job_max_attempts: int = Field(default=3, ge=1)
     ai_job_retry_backoff_seconds: int = Field(default=30, ge=0)
 
+    # --- Videos (ADR 0016, R-001) ---
+    # La colecta es por tema y la comparte todo el curso: el inglés entra como respaldo del
+    # español, con un puntaje de idioma menor (el español puntúa 1). Valor inicial sin validar
+    # (plan 4.3). El español se prefiere siempre; con AI_VIDEO_ENGLISH_FALLBACK=false se descarta.
+    ai_video_english_fallback: bool = True
+    ai_video_english_score: float = Field(default=0.3, ge=0, le=1)
+
     # 1 = the evaluation harness may call the real LLM (never in CI).
     ai_eval_live: bool = False
 

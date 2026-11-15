@@ -238,8 +238,9 @@ async def test_collect_candidates_ranks_by_topic_and_picks_top_three(world: Eval
     assert len(resource.backup_video_ids) == 2
     titles = " ".join(c.title for c in resource.candidates)
     assert "curso completo" not in titles  # too long
-    assert "in ten minutes" not in titles  # English
     assert "en un minuto" not in titles  # too short
+    # R-001: English is a fallback (not discarded); the topic similarity still decides the order
+    assert "en" in [c.language for c in resource.candidates]
     assert all(c.characterization_source == "metadata" for c in resource.candidates)
     assert any(c.characterization for c in resource.candidates)
     search = world.runtime.video_search
@@ -297,7 +298,11 @@ async def test_video_rank_computes_missing_similarities(world: EvalWorld) -> Non
     ]
     result = await world.call(
         "video.rank",
-        {"topic_id": "3", "candidates": candidates, "preferences": {"language": "es"}},
+        {
+            "topic_id": "3",
+            "candidates": candidates,
+            "preferences": {"language": "es", "english_allowed": True},
+        },
         REFS,
     )
     resource = VideoResource.model_validate(result.result)

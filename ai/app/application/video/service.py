@@ -106,7 +106,12 @@ class VideoRecommender:
         search: VideoSearchProvider | None,
         transcripts: TranscriptProvider,
         embeddings: EmbeddingRunner,
+        english_fallback: bool = True,
+        english_score: float = 0.3,
     ) -> None:
+        # La colecta es por tema (la comparte todo el curso): el inglés es respaldo, no descarte.
+        self._english_fallback = english_fallback
+        self._english_score = english_score
         self._catalog = catalog
         self._search = search
         self._transcripts = transcripts
@@ -131,6 +136,13 @@ class VideoRecommender:
             logger.warning("video search unavailable; using the instructor's list only")
             return []
 
+    def _collect_prefs(self, data: CollectInput) -> RankingPreferences:
+        return RankingPreferences(
+            language=data.language,
+            english_allowed=self._english_fallback,
+            english_score=self._english_score,
+        )
+
     async def collect(self, data: CollectInput, ctx: CallContext) -> VideoResource:
         topic = await load_topic(self._catalog, data.topic_id)
         instructor_ids = {v.youtube_video_id for v in data.instructor_videos}
@@ -149,7 +161,7 @@ class VideoRecommender:
             for v in data.instructor_videos
         ]
         if not hits:
-            return self._resource(topic.id, [], [], RankingPreferences(language=data.language))
+            return self._resource(topic.id, [], [], self._collect_prefs(data))
 
         texts: list[str] = []
         covered_by_id: dict[str, list[str]] = {}
@@ -178,7 +190,7 @@ class VideoRecommender:
             )
             for i, hit in enumerate(hits)
         ]
-        prefs = RankingPreferences(language=data.language)
+        prefs = self._collect_prefs(data)
         ranked, excluded = rank_videos(rankables, prefs)
         if excluded:
             logger.info("candidates excluded by filters", extra={"excluded": excluded})

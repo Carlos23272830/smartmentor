@@ -38,6 +38,9 @@ class RankingPreferences:
     ideal_min_seconds: int = IDEAL_MIN_SECONDS
     ideal_max_seconds: int = IDEAL_MAX_SECONDS
     english_allowed: bool = False
+    # Puntaje de idioma de un video en inglés cuando se permite (el español puntúa 1): la
+    # penalización frente al español. Configurable con AI_VIDEO_ENGLISH_SCORE.
+    english_score: float = 0.3
     language_weight: float = 0.05
     duration_weight: float = 0.05
     backup_count: int = 2
@@ -91,12 +94,12 @@ def exclusion_reason(video: Rankable, prefs: RankingPreferences) -> str | None:
 
 
 def language_score(language: str | None, prefs: RankingPreferences) -> float:
-    """1 for the preferred language, 0.3 for English when allowed, 0.5 when unknown, else 0."""
+    """1 for the preferred language, ``english_score`` if English is allowed, 0.5 unknown, else 0"""
     if language is None:
         return UNKNOWN_SCORE
     if language == prefs.language:
         return 1.0
-    return 0.3 if prefs.english_allowed and language == "en" else 0.0
+    return prefs.english_score if prefs.english_allowed and language == "en" else 0.0
 
 
 def duration_score(seconds: int | None, prefs: RankingPreferences) -> float:
