@@ -207,21 +207,27 @@ if result.next_action.type == "wait_instructor" or result.attempts.remaining <= 
     st.stop()
 
 # E7b · Quiz no aprobado (refuerzo)
+explanation = content.explanation
+# La API aún no genera la explicación alterna (B-049): solo se promete si llegó en los datos.
+has_alternate = explanation is not None and explanation.resource_id == result.remedial_resource_id
 render_page_header(
     "Aún no apruebas este tema",
     breadcrumb=_breadcrumb(content, path),
     caption=(
         f"Obtuviste {score} ({correct} de {len(result.answers)}) en el intento {used} de "
-        f"{maximum}. Necesitas {threshold}. No pasa nada: te mostramos otra forma de verlo y el "
-        "próximo intento trae preguntas nuevas."
+        f"{maximum}. Necesitas {threshold}. No pasa nada: "
+        + (
+            "te mostramos otra forma de verlo y el próximo intento trae preguntas nuevas."
+            if has_alternate
+            else "el próximo intento trae preguntas nuevas."
+        )
     ),
 )
-explanation = content.explanation
 review_col, alternate_col = st.columns([3, 2])
 with review_col:
     _review()
 with alternate_col:
-    if explanation is not None and explanation.resource_id == result.remedial_resource_id:
+    if explanation is not None and has_alternate:
         with st.container(key="card-alt-view"):
             eyebrow("OTRA FORMA DE VERLO · GENERADO CON IA")
             st.markdown(f"**{explanation_title(explanation)}**")

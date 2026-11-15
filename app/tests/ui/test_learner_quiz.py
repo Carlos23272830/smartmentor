@@ -616,3 +616,63 @@ def test_quiz_short_answer_has_one_counter_and_a_rubric_box() -> None:
     assert at.get_by_key("card-rubric-quiz")
     assert not any("caracteres" in c.value for c in at.caption)
     assert not any(t.startswith("Quiz: ") for t in page_texts(at))
+
+
+# --- B-052 · número de criterios en U1c ------------------------------------------------------
+
+
+def _quiz_with_summary(summary: str | None) -> AppTest:
+    at = _open_quiz(script=GRADE_SCRIPT)
+    client = client_of(at)
+    original = client.get_attempt
+
+    def attempt(attempt_id: int):  # type: ignore[no-untyped-def]
+        doc = original(attempt_id)
+        items = [
+            i.model_copy(update={"rubric_summary": summary}) if i.item_type == "short_answer" else i
+            for i in doc.items
+        ]
+        return doc.model_copy(update={"items": items})
+
+    client.get_attempt = attempt  # type: ignore[method-assign]
+    _answer_all(at, 5)
+    return at
+
+
+def test_u1c_names_the_real_number_of_criteria_b052() -> None:
+    at = _quiz_with_summary("Se califica con una rúbrica de 2 criterios: (1) a y (2) b.")
+    no_exception(at)
+    texts = page_texts(at)
+    assert "En curso · Aplicar la rúbrica de 2 criterios a tu respuesta corta" in texts
+    assert not any("de 3 criterios" in t for t in texts)
+
+
+def test_u1c_without_the_criteria_count_has_no_number_b052() -> None:
+    at = _quiz_with_summary(None)
+    no_exception(at)
+    assert "En curso · Aplicar la rúbrica a tu respuesta corta" in page_texts(at)
+
+
+def test_grading_screen_reads_the_attempt_once_per_attempt_b052() -> None:
+    """La pantalla de espera se repite cada 2 s: la rúbrica no suma una consulta por sondeo."""
+
+    def app() -> None:
+        import streamlit as st
+
+        from clients.fixtures import FixturesClient
+        from core.learner_flow import grading_screen
+
+        client = FixturesClient()
+        original = client.get_attempt
+
+        def counting(attempt_id: int):  # type: ignore[no-untyped-def]
+            st.session_state.setdefault("calls", []).append(attempt_id)
+            return original(attempt_id)
+
+        client.get_attempt = counting  # type: ignore[method-assign]
+        for _ in range(3):  # tres sondeos seguidos del mismo intento
+            grading_screen(client, key="g", attempt_id=1, error_message="x")
+
+    at = AppTest.from_function(app).run()
+    assert not at.exception
+    assert len(at.session_state["calls"]) == 1

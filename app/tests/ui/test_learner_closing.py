@@ -573,3 +573,63 @@ def test_e13b_back_keeps_the_comment() -> None:
     button(at, "Anterior").click().run()
     button(at, "Siguiente").click().run()
     assert at.text_area(key="survey-comment").value == "Más ejemplos."
+
+
+# --- B-052 · ahorro y metas ---------------------------------------------------------------------
+
+
+def _with_savings(at: AppTest, topics: int, minutes: int) -> None:
+    client = client_of(at)
+    original = client.get_path
+
+    def path(enrollment_id: int):  # type: ignore[no-untyped-def]
+        doc = original(enrollment_id)
+        savings = doc.savings.model_copy(
+            update={"skipped_topics": topics, "skipped_minutes": minutes}
+        )
+        return doc.model_copy(update={"savings": savings})
+
+    client.get_path = path  # type: ignore[method-assign]
+
+
+@pytest.mark.parametrize("page", [BADGE, PROGRESS])
+def test_savings_without_minutes_is_a_dash_not_zero_b052(page: str) -> None:
+    """Inscripción nueva (nada omitido) u omitidos sin minutos: «—», nunca «0 min»."""
+    for topics in (0, 2):
+        at = learner_app("learner_completed", page, run=False)
+        _with_savings(at, topics, 0)
+        at.run()
+        no_exception(at)
+        texts = page_texts(at)
+        assert "—" in texts
+        assert "0 min" not in texts
+
+
+@pytest.mark.parametrize("page", [BADGE, PROGRESS])
+def test_savings_with_minutes_shows_them_b052(page: str) -> None:
+    at = learner_app("learner_completed", page, run=False)
+    _with_savings(at, 2, 80)
+    at.run()
+    no_exception(at)
+    assert "1 h 20 min" in page_texts(at)
+
+
+def test_e11_goal_met_is_said_instead_of_an_odd_count_b052() -> None:
+    at = learner_app("learner_path", PROGRESS, run=False)
+    client = client_of(at)
+    original = client.get_study_goals
+    client.get_study_goals = lambda: original().model_copy(update={"monthly_topics_done": 5})  # type: ignore[method-assign,union-attr]
+    at.run()
+    no_exception(at)
+    texts = page_texts(at)
+    assert "de 3 temas" in texts
+    assert "Meta cumplida" in texts
+    assert not any(t.startswith("Falta ") and "temas" in t for t in texts)
+    assert "Falta 1" not in texts
+
+
+def test_e11_goal_in_progress_still_says_what_is_missing_b052() -> None:
+    at = learner_app("learner_path", PROGRESS)
+    texts = page_texts(at)
+    assert "Falta 1" in texts
+    assert "Meta cumplida" not in texts

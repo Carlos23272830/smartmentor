@@ -19,6 +19,7 @@ from core.errors import is_global, show_action_error
 from core.navigation import CATALOG, page_for_next_action
 from core.polling import enter_wait_mode, leave_wait_mode
 from core.session import get_session
+from services.assessment import grading_rubric_step
 
 POLL_SECONDS = 2
 ESTIMATE = "menos de 20 segundos"
@@ -107,6 +108,38 @@ class JobScreen:
     title: str
     steps: Sequence[str]
     error_message: str
+
+
+def grading_screen(
+    client: SmartMentorClient, *, key: str, attempt_id: int | None, error_message: str
+) -> JobScreen:
+    """Pantalla «Calificando tu respuesta corta» (U1c y U1d).
+
+    El paso de la rúbrica dice cuántos criterios tiene la pregunta si el intento los informa; si no
+    se puede leer el intento, el paso no lleva número. El paso se calcula una sola vez por intento
+    (se guarda en la sesión): la pantalla se repite cada 2 s y no debe sumar una consulta por
+    sondeo.
+    """
+    rubric_step = st.session_state.get(f"grading-rubric-step-{attempt_id}")
+    if rubric_step is None:
+        items = []
+        if attempt_id is not None:
+            try:
+                items = client.get_attempt(attempt_id).items
+            except ApiError:
+                items = []
+        rubric_step = grading_rubric_step(items)
+        st.session_state[f"grading-rubric-step-{attempt_id}"] = rubric_step
+    return JobScreen(
+        key=key,
+        title="Calificando tu respuesta corta",
+        steps=(
+            "Calificar las preguntas de opción múltiple",
+            rubric_step,
+            "Preparar tu retroalimentación",
+        ),
+        error_message=error_message,
+    )
 
 
 def _step_states(job: Job | None, polls: int, count: int) -> list[StepState]:

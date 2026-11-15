@@ -25,6 +25,7 @@ DATA_RIGHTS_PAGE = "pages/common/data_rights.py"
 RETENTION_PAGE = "pages/learner/retention_test.py"
 ARM_LABEL = {"personalized": "ruta personalizada", "fixed": "ruta fija"}
 NO_GOAL_YET = "Aún no elegiste tu meta"
+GOAL_MET = "Meta cumplida"
 LEAVE_PILOT = "Salir del piloto"
 REVOKE_ALL = "Revocar la autorización y borrar mis datos"
 NO_GOALS = StudyGoals(
@@ -122,6 +123,9 @@ def _goal_card(
             # Sin meta elegida no hay cifra que mostrar: un «0» parecería un avance real.
             st.caption(NO_GOAL_YET)
             return
+        # Con varias inscripciones lo hecho supera la meta («5 de 3»): se dice que se cumplió.
+        if goal > 0 and done >= goal:
+            missing_text = GOAL_MET
         with st.container(horizontal=True, vertical_alignment="bottom"):
             st.markdown(f"## {done}")
             st.caption(goal_text)

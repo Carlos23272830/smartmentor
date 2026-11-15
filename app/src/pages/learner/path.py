@@ -21,14 +21,21 @@ from services.learning import continue_label, path_rows, progress_line
 
 TOPIC_PAGE = "pages/learner/topic.py"
 DIAGNOSTIC_RESULT_PAGE = "pages/learner/diagnostic_result.py"
-ORIGIN_LABEL = {
+# El texto de origen depende de si la ruta ya está confirmada: «confirmado por ti» solo es cierto
+# después (B-051).
+ORIGIN_LABEL_CONFIRMED = {
     "llm_proposed": "TU OBJETIVO · PROPUESTO CON IA Y CONFIRMADO POR TI",
     "learner_edited": "TU OBJETIVO · EDITADO POR TI",
     "path_default": "TU OBJETIVO · DEFINIDO POR LA RUTA",
 }
+ORIGIN_LABEL_PENDING = {
+    **ORIGIN_LABEL_CONFIRMED,
+    "llm_proposed": "TU OBJETIVO · PROPUESTO CON IA, SIN CONFIRMAR",
+}
 DEFAULT_ORIGIN_LABEL = "TU OBJETIVO"
 OBJECTIVE_PENDING = "objective_pending"
-OBJECTIVE_FIXED_NOTE = "El objetivo se fija al confirmar la ruta"
+OBJECTIVE_PENDING_NOTE = "El objetivo se fija al confirmar la ruta"
+OBJECTIVE_FIXED_NOTE = "El objetivo quedó fijado al confirmar tu ruta"
 
 client = get_client()
 state = get_session().learner
@@ -74,15 +81,19 @@ else:
     )
     if enrollment.objective is not None:
         with st.container(key="card-objective"):
-            eyebrow(ORIGIN_LABEL.get(enrollment.objective.origin or "", DEFAULT_ORIGIN_LABEL))
+            confirmed = enrollment.status != OBJECTIVE_PENDING
+            origins = ORIGIN_LABEL_CONFIRMED if confirmed else ORIGIN_LABEL_PENDING
+            eyebrow(origins.get(enrollment.objective.origin or "", DEFAULT_ORIGIN_LABEL))
             st.markdown(enrollment.objective.statement)
             # La API solo acepta el objetivo en `objective_pending`; con la ruta confirmada
             # respondería `409 INVALID_STATE_TRANSITION` (B-032, decisión del 2026-11-15).
-            if enrollment.status != OBJECTIVE_PENDING:
+            if confirmed:
                 st.caption(OBJECTIVE_FIXED_NOTE)
-            elif st.button("Editar objetivo", key="path-edit-objective"):
-                state.edit_objective = True
-                st.switch_page(DIAGNOSTIC_RESULT_PAGE)
+            else:
+                st.caption(OBJECTIVE_PENDING_NOTE)
+                if st.button("Editar objetivo", key="path-edit-objective"):
+                    state.edit_objective = True
+                    st.switch_page(DIAGNOSTIC_RESULT_PAGE)
 
 opened = render_path_rows(rows, grouped=fixed)
 if opened is not None:
