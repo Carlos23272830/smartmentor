@@ -11,7 +11,9 @@ headless = true
 gatherUsageStats = false
 
 [client]
-toolbarMode = "viewer"
+# "minimal" quita el menú «⋮» de Streamlit (Settings, Print, Record, Rerun…): la barra propia de la
+# app (render_header) queda pegada arriba, como en Figma (V-088).
+toolbarMode = "minimal"
 
 [theme]
 base = "light"
