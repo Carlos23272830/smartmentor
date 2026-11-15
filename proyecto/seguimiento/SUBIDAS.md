@@ -184,6 +184,7 @@ Revisión con `gh` y `git` del estado real de `dev`, sin subir nada.
 - **Fusiones (el dueño, en GitHub, 2026-11-15):** PR 26 (`e1c44df`, 08:41), que incluía los PR 19, 21, 23, 24 y 25; PR 17 (`721f1a2`), 18 (`1a3677b`) y 20 (`eb8b638`) a las 08:44; PR 22 (`76da200`) a las 08:46
 - **IDs:** E8, B-037, R-003 (m27), V-011 a V-013, V-040, V-042, V-043, B-030, B-031, B-034, V-045 a V-048, V-038, V-039, V-041, V-044, V-051, V-052, V-055, V-034 a V-036, V-054, R-008, R-009, G-001
 - **Antes de fusionar:** las ramas de la app se probaron juntas en una copia (847 pruebas en verde) y cada PR tuvo la CI en verde
-- **Abiertos:** [PR 27](https://github.com/armandoordonez/smartmentor/pull/27) (`fix/detalles-recorrido`, B-039) y [PR 28](https://github.com/armandoordonez/smartmentor/pull/28) (`fix/visual-nuevo-curso`, V-061 a V-069). Juntos encima de `dev`: 857 pruebas de la app en verde
+- **Abiertos:** [PR 27](https://github.com/armandoordonez/smartmentor/pull/27) (`fix/detalles-recorrido`, B-039) , [PR 28](https://github.com/armandoordonez/smartmentor/pull/28) (`fix/visual-nuevo-curso`, V-061 a V-069) y [PR 30](https://github.com/armandoordonez/smartmentor/pull/30) (`fix/visual-instructor-admin`, V-058 a V-087). Juntos encima de `dev`: 871 pruebas de la app en verde
 - **Esta entrada:** rama `feature/seguimiento-fusion-pr17-26`, con PR hacia `dev`
 - **Quién aprobó:** el dueño, en el chat («los pr todos ya fueron aprobados y mezclados»)
+- **CI de este PR:** `liquibase (validate)` falló una vez porque el runner descargó `postgresql-42.7.13.jar` con otro SHA-256 (`807ceab0…`); el archivo de Maven Central coincide con el checksum del Dockerfile (`6e0e4cc2…`, y su SHA-1 con el publicado). El checksum hizo su trabajo; se relanzó el trabajo sin cambiar nada
