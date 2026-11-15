@@ -147,6 +147,12 @@ def test_rubric_result_states_each_criterion_in_words() -> None:
     assert "No cumple · Justifica con datos del caso" in shown
 
 
+def test_rubric_result_colors_met_green_and_unmet_red() -> None:
+    raw = [e.value for e in run(_rubric).markdown]
+    assert ":green[Cumple · Relaciona el umbral con el costo]" in raw
+    assert ":red[No cumple · Justifica con datos del caso]" in raw
+
+
 # --- attempt_history -----------------------------------------------------------------------------
 
 

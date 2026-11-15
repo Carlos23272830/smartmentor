@@ -44,8 +44,12 @@ def render_answer_review(
 ) -> None:
     """Fila de «Revisión de respuestas» (E7): la pregunta, si fue correcta y la explicación."""
     label, color = ANSWER_BADGE[correct]
-    with st.container(border=True, key=f"panel-review-{number}"):
-        st.badge(label, color=color)
-        st.markdown(f"**Pregunta {number}** · {stem}")
+    with st.container(key=f"answer-review-{number}"):
+        # Insignia y pregunta en una sola línea, como en Figma (V-045).
+        with st.container(
+            horizontal=True, vertical_alignment="center", key=f"answer-line-{number}"
+        ):
+            st.badge(label, color=color)
+            st.markdown(f"**Pregunta {number}** · {stem}")
         if explanation:
             st.caption(explanation)

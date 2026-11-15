@@ -138,29 +138,33 @@ used, maximum = result.attempts.used, result.attempts.max
 
 
 def _review() -> None:
-    st.subheader("Revisión de respuestas", anchor=False)
-    for number, answer in enumerate(result.answers, start=1):
-        item = stems.get(answer.item_id)
-        stem = item.stem if item else f"Pregunta {number}"
-        is_short = answer.grading.get("item_type") == "short_answer"
-        ok = bool(answer.grading.get("is_correct"))
-        render_answer_review(
-            number=number,
-            stem=f"{stem} · Respuesta corta" if is_short else stem,
-            correct=ok,
-            explanation=None if ok or is_short else str(answer.grading.get("feedback", "")) or None,
-        )
-        if is_short and (view := rubric_view(answer.grading)):
-            render_rubric_result(view, key=f"answer-{answer.attempt_answer_id}")
-            if not answer.review_requested and st.button(
-                "Pedir revisión del instructor", key=f"review-{answer.attempt_answer_id}"
-            ):
-                try:
-                    client.request_answer_review(answer.attempt_answer_id, "")
-                except ApiError as error:
-                    show_action_error(error)
-                else:
-                    st.success("Listo: tu instructor revisará esta respuesta.")
+    with st.container(key="card-review"):
+        st.subheader("Revisión de respuestas", anchor=False)
+        for number, answer in enumerate(result.answers, start=1):
+            item = stems.get(answer.item_id)
+            stem = item.stem if item else f"Pregunta {number}"
+            is_short = answer.grading.get("item_type") == "short_answer"
+            ok = bool(answer.grading.get("is_correct"))
+            feedback = None if ok or is_short else str(answer.grading.get("feedback", "")) or None
+            render_answer_review(
+                number=number,
+                stem=f"{stem} · Respuesta corta" if is_short else stem,
+                correct=ok,
+                explanation=feedback,
+            )
+            if is_short and (view := rubric_view(answer.grading)):
+                render_rubric_result(view, key=f"answer-{answer.attempt_answer_id}")
+                if not answer.review_requested and st.button(
+                    "Pedir revisión del instructor",
+                    type="tertiary",
+                    key=f"request-review-{answer.attempt_answer_id}",
+                ):
+                    try:
+                        client.request_answer_review(answer.attempt_answer_id, "")
+                    except ApiError as error:
+                        show_action_error(error)
+                    else:
+                        st.success("Listo: tu instructor revisará esta respuesta.")
 
 
 if result.passed:
