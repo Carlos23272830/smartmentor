@@ -31,6 +31,7 @@ from core.learner_flow import (
 )
 from core.question_flow import render_question_sheet
 from core.session import get_session
+from core.usage_events import build_event, close_view, open_view, record_once
 from services.learning import bloom_label
 
 PAGE = "pages/learner/final_assessment.py"
@@ -142,6 +143,27 @@ number = min(state.sheet.index, max(len(attempt.items) - 1, 0)) + 1
 final = path.final
 attempt_number = min(final.attempts_used + 1, final.max_attempts)
 
+# Tiempo en tarea (m27): `final.start` una vez por intento; cada visita a las preguntas es un tramo
+# que se cierra con `final.submit` al entregar o con `final.pause` si sale sin entregar.
+final_view = f"final:{attempt.id}"
+final_payload = {
+    "screen": "E8",
+    "attempt_id": attempt.id,
+    "attempt_number": attempt.attempt_number or attempt_number,
+}
+record_once(
+    client,
+    f"final.start:{attempt.id}",
+    lambda: [build_event(enrollment.id, "final.start", payload=final_payload)],
+)
+open_view(
+    client,
+    final_view,
+    enrollment_id=enrollment.id,
+    close_type="final.pause",
+    payload=final_payload,
+)
+
 st.caption(BANNER)
 render_page_header(
     "Evaluación final",
@@ -164,6 +186,13 @@ def _save(answers: list[LearnerAnswer]) -> None:
 def _submit(_answers: list[LearnerAnswer]) -> None:
     sent = client.submit_attempt(
         attempt.id, idempotency_key=idempotency_key(f"submit-{attempt.id}")
+    )
+    graded = isinstance(sent, AttemptResult)
+    close_view(
+        client,
+        final_view,
+        event_type="final.submit",
+        payload={"items": len(attempt.items), "grading": "done" if graded else "job"},
     )
     if isinstance(sent, AttemptResult):
         st.switch_page(RESULT_PAGE)

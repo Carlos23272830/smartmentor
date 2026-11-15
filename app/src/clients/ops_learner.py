@@ -8,7 +8,7 @@
 """
 
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
@@ -20,17 +20,29 @@ from pydantic import BaseModel
 from clients.base import ApiError
 from clients.models import Enrollment, Job, JobAccepted, NextAction
 from clients.models_learner import (
+    MAX_EVENTS_PER_BATCH,
     AttemptSummary,
     BadgeAssertion,
+    InteractionEvent,
     StudyGoals,
     StudyGoalsUpdate,
 )
+
+# Los eventos de uso son telemetría: una llamada corta, para no frenar la pantalla si la API tarda.
+EVENTS_TIMEOUT = httpx.Timeout(2.0, connect=1.0)
 
 
 class LearnerApiOps:
     """Mezcla de `ApiClient`: operaciones HTTP del aprendiz fuera de `base.py`."""
 
-    def _request(self, method: str, path: str, *, json: Any = None) -> httpx.Response:
+    def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        json: Any = None,
+        timeout: httpx.Timeout | None = None,
+    ) -> httpx.Response:
         raise NotImplementedError  # lo implementa ApiClient
 
     def get_badge_assertion(self, public_id: str) -> BadgeAssertion:
@@ -60,6 +72,15 @@ class LearnerApiOps:
     def set_study_goals(self, update: StudyGoalsUpdate) -> StudyGoals:
         response = self._request("PUT", "/me/study-goals", json=update.model_dump(mode="json"))
         return StudyGoals.model_validate(response.json())
+
+    def record_events(self, events: Sequence[InteractionEvent]) -> int:
+        """`POST /me/events`: un lote de 1 a 100 eventos; responde `202 {accepted: n}`."""
+        body = {"events": [event.model_dump(mode="json") for event in events]}
+        response = self._request("POST", "/me/events", json=body, timeout=EVENTS_TIMEOUT)
+        try:
+            return int(response.json()["accepted"])
+        except (ValueError, KeyError, TypeError) as error:
+            raise ApiError(502, "INVALID_RESPONSE", "EventsAccepted") from error
 
 
 # --- Fixtures ------------------------------------------------------------------------------------
@@ -263,6 +284,7 @@ class LearnerFixtureOps:
     _script: LearnerScript
     _job_polls: dict[str, int]
     _enrollments: list[Enrollment]
+    recorded_events: list[InteractionEvent]
 
     def echo_next_action(self, action: NextAction | None) -> None:
         """Repite en la inscripción de la sesión lo que dijo la API (eco, sin reglas de negocio)."""
@@ -326,6 +348,14 @@ class LearnerFixtureOps:
         del public_id
         self.check_online()
         return TINY_PNG
+
+    def record_events(self, events: Sequence[InteractionEvent]) -> int:
+        """Guarda los eventos en memoria (para probarlos); valida el tamaño del lote como la API."""
+        self.check_online()
+        if not 1 <= len(events) <= MAX_EVENTS_PER_BATCH:
+            raise ApiError(422, "VALIDATION_ERROR", "events must have 1 to 100 items")
+        self.recorded_events.extend(event.model_copy(deep=True) for event in events)
+        return len(events)
 
     def get_study_goals(self) -> StudyGoals | None:
         saved: StudyGoals | None = getattr(self, "_saved_goals", None)

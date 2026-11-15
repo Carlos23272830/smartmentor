@@ -14,6 +14,7 @@ from clients.base import ApiError
 from components.layout import HeaderAction, render_header, render_status_screen
 from core import auth
 from core.config import get_settings
+from core.container import get_client
 from core.errors import describe_error
 from core.identity import active_role, current_me, label_for, load_me
 from core.navigation import (
@@ -23,6 +24,7 @@ from core.navigation import (
 )
 from core.session import get_session, reset_session
 from core.styles import inject_styles
+from core.usage_events import close_views_outside
 
 logger = logging.getLogger("smartmentor.app")
 
@@ -130,6 +132,8 @@ elif not session.is_authenticated:
 me = current_me()
 role = active_role(session)
 page = build_navigation(role, authenticated=True, consent_only=me.requires_consent)
+# Tiempo en tarea (m27): al pasar a otra página se cierran las visitas abiertas (tema, quiz…).
+close_views_outside(page.url_path, get_client)
 
 with st.container(key=f"role-{role}"):
     other_roles = [(other, label_for(other)) for other in me.roles if other != role]

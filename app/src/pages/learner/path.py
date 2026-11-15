@@ -16,6 +16,7 @@ from core.errors import show_action_error
 from core.learner_flow import current_enrollment, go_to_action, remember
 from core.navigation import CATALOG
 from core.session import get_session
+from core.usage_events import open_view
 from services.learning import path_rows, progress_line, step_name
 
 TOPIC_PAGE = "pages/learner/topic.py"
@@ -38,6 +39,15 @@ except ApiError as error:
     st.stop()
 
 fixed = enrollment.pilot_arm == "fixed"
+# Tiempo en tarea (m27): `path.view` una vez por visita; `path.close` con los segundos al salir.
+open_view(
+    client,
+    f"path:{enrollment.id}",
+    enrollment_id=enrollment.id,
+    event_type="path.view",
+    close_type="path.close",
+    payload={"screen": "E5b" if fixed else "E5", "steps_total": len(path.steps)},
+)
 rows = path_rows(path, fixed=fixed)
 total = enrollment.progress.steps_total
 course = enrollment.learning_path.name
