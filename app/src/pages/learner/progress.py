@@ -62,6 +62,8 @@ render_stat_tiles(
 
 with st.container(key="card-progress-route"):
     st.markdown(f"**{enrollment.learning_path.name}**")
+    if progress.steps_total:
+        st.progress(min(progress.steps_done / progress.steps_total, 1.0))
     next_name = step_name(path, enrollment.next_action.step_id)
     if next_name:
         st.caption(f"Siguiente paso: {next_name}")
@@ -76,11 +78,39 @@ if enrollment.status == "completed":
             "10 preguntas · unos 10 minutos. Nos ayuda a medir cuánto recuerdas semanas después "
             "de terminar la ruta."
         )
-        if st.button("Empezar prueba", key="progress-retention"):
+        if st.button("Empezar prueba", type="primary", key="progress-retention"):
             st.switch_page(RETENTION_PAGE)
 
 
-def _goals(current: StudyGoals, *, new: bool) -> None:
+def _goal_card(
+    *,
+    key: str,
+    title: str,
+    unit: str,
+    done: int,
+    goal: int,
+    goal_text: str,
+    missing_text: str,
+    new: bool,
+) -> None:
+    """Subtarjeta de una meta: cifra con «de N» en línea, barra de avance y lo que falta."""
+    with st.container(key=key):
+        with st.container(horizontal=True):
+            st.markdown(f"**{title}**")
+            with st.container(key=f"goal-right-unit-{key}"):
+                st.caption(unit)
+        with st.container(horizontal=True, vertical_alignment="bottom"):
+            st.markdown(f"## {done}")
+            if not new:
+                st.caption(goal_text)
+            if missing_text:
+                with st.container(key=f"goal-right-missing-{key}"):
+                    st.caption(missing_text)
+        if goal > 0 and not new:
+            st.progress(min(done / goal, 1.0))
+
+
+def _goals(current: StudyGoals, *, new: bool) -> tuple[int | None, int | None]:
     """Metas del día y del mes; `new` cuando la persona aún no las ha elegido (sin preselección)."""
     st.subheader("Mis metas · opcional", anchor=False)
     st.caption(
@@ -89,17 +119,21 @@ def _goals(current: StudyGoals, *, new: bool) -> None:
     if new:
         st.caption("Todavía no tienes metas. Elige una para hoy y otra para este mes.")
     else:
-        st.markdown(f"**Racha de {current.streak_days} días**")
+        st.badge(f"Racha de {current.streak_days} días", color="gray")
     today, month = st.columns(2)
+    missing = max(current.daily_minutes_goal - current.daily_minutes_done, 0)
+    left = max(current.monthly_topics_goal - current.monthly_topics_done, 0)
     with today:
-        st.markdown("**Hoy**")
-        st.caption("minutos de estudio")
-        st.markdown(f"## {current.daily_minutes_done}")
-        if not new:
-            st.caption(f"de {current.daily_minutes_goal} min")
-        missing = max(current.daily_minutes_goal - current.daily_minutes_done, 0)
-        if missing:
-            st.caption(f"Faltan {missing} min")
+        _goal_card(
+            key="goal-card-today",
+            title="Hoy",
+            unit="minutos de estudio",
+            done=current.daily_minutes_done,
+            goal=current.daily_minutes_goal,
+            goal_text=f"de {current.daily_minutes_goal} min",
+            missing_text=f"Faltan {missing} min" if missing else "",
+            new=new,
+        )
         daily = st.segmented_control(
             "Meta:",
             current.daily_options,
@@ -108,14 +142,16 @@ def _goals(current: StudyGoals, *, new: bool) -> None:
             key="goal-daily",
         )
     with month:
-        st.markdown("**Este mes**")
-        st.caption("temas aprobados")
-        st.markdown(f"## {current.monthly_topics_done}")
-        if not new:
-            st.caption(f"de {current.monthly_topics_goal} temas")
-        left = max(current.monthly_topics_goal - current.monthly_topics_done, 0)
-        if left:
-            st.caption(f"Falta {left}" if left == 1 else f"Faltan {left}")
+        _goal_card(
+            key="goal-card-month",
+            title="Este mes",
+            unit="temas aprobados",
+            done=current.monthly_topics_done,
+            goal=current.monthly_topics_goal,
+            goal_text=f"de {current.monthly_topics_goal} temas",
+            missing_text=(f"Falta {left}" if left == 1 else f"Faltan {left}") if left else "",
+            new=new,
+        )
         monthly = st.segmented_control(
             "Meta:",
             current.monthly_options,
@@ -123,41 +159,50 @@ def _goals(current: StudyGoals, *, new: bool) -> None:
             format_func=str,
             key="goal-monthly",
         )
-    if (daily, monthly) != (current.daily_minutes_goal, current.monthly_topics_goal) and (
-        daily is not None and monthly is not None
-    ):
-        try:
-            client.set_study_goals(
-                StudyGoalsUpdate(daily_minutes_goal=daily, monthly_topics_goal=monthly)
-            )
-        except ApiError as error:
-            show_action_error(error)
-        else:
-            st.rerun()
+    return daily, monthly
 
 
 # La API responde 404 mientras la persona no tenga metas; antes la sección no se mostraba y nunca
 # se podían elegir (B-028). Sin metas se muestra vacía, con las opciones por omisión.
-_goals(goals or NO_GOALS, new=goals is None)
+current_goals = goals or NO_GOALS
+with st.container(key="card-goals"):
+    daily, monthly = _goals(current_goals, new=goals is None)
+if (daily, monthly) != (current_goals.daily_minutes_goal, current_goals.monthly_topics_goal) and (
+    daily is not None and monthly is not None
+):
+    try:
+        client.set_study_goals(
+            StudyGoalsUpdate(daily_minutes_goal=daily, monthly_topics_goal=monthly)
+        )
+    except ApiError as error:
+        show_action_error(error)
+    else:
+        st.rerun()
 
 # --- Tus datos y autorizaciones ------------------------------------------------------------------
 
 status = me.consent_status
-st.subheader("Tus datos y autorizaciones", anchor=False)
-if status.data_processing.granted_at is not None:
-    st.markdown(f"Datos: autorizado el {short_date(status.data_processing.granted_at.date())}")
-if status.pilot_research.granted:
-    arm = ARM_LABEL.get(enrollment.pilot_arm or "", "")
-    st.markdown(f"Piloto: participas · {arm}" if arm else "Piloto: participas")
-else:
-    st.markdown("Piloto: no participas")
-st.caption(
-    "Puedes salir del piloto sin perder tu ruta ni tu badge, o revocar la autorización y pedir "
-    "que borremos tus datos."
-)
-if st.button("Gestionar mis autorizaciones", key="consents-manage"):
-    state.manage_consents = True
-st.page_link(DATA_RIGHTS_PAGE, label="Tus derechos y quién ve cada dato →")
+with st.container(key="card-data"):
+    st.subheader("Tus datos y autorizaciones", anchor=False)
+    with st.container(horizontal=True):
+        if status.data_processing.granted_at is not None:
+            st.badge(
+                f"Datos: autorizado el {short_date(status.data_processing.granted_at.date())}",
+                color="green",
+            )
+        if status.pilot_research.granted:
+            arm = ARM_LABEL.get(enrollment.pilot_arm or "", "")
+            st.badge(f"Piloto: participas · {arm}" if arm else "Piloto: participas", color="blue")
+        else:
+            st.badge("Piloto: no participas", color="gray")
+    st.caption(
+        "Puedes salir del piloto sin perder tu ruta ni tu badge, o revocar la autorización y "
+        "pedir que borremos tus datos."
+    )
+    with st.container(horizontal=True, vertical_alignment="center"):
+        if st.button("Gestionar mis autorizaciones", key="consents-manage"):
+            state.manage_consents = True
+        st.page_link(DATA_RIGHTS_PAGE, label="Tus derechos y quién ve cada dato →")
 
 if state.manage_consents:
     # E11b · Gestionar autorizaciones

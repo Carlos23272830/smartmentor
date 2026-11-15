@@ -1,0 +1,21 @@
+/* Mi progreso (E11): tarjetas de metas, datos y prueba de retención (V-050). */
+.st-key-card-retention {
+  background: var(--learner-soft);
+  border-color: transparent;
+}
+
+/* Subtarjetas «Hoy» y «Este mes» dentro de «Mis metas». */
+[class*="st-key-goal-card-"] {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  padding: var(--space-14);
+}
+
+/* «minutos de estudio» y «Faltan 10 min» van a la derecha de la subtarjeta. */
+[data-testid="stLayoutWrapper"]:has(> [class*="st-key-goal-right-"]) {
+  flex: 1;
+}
+[class*="st-key-goal-right-"] {
+  align-items: flex-end;
+}
