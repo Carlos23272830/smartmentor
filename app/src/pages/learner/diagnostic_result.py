@@ -56,7 +56,7 @@ render_levels(
 if objective is not None:
     with st.container(key="card-objective"):
         eyebrow(ORIGIN_LABEL.get(objective.origin or "", DEFAULT_ORIGIN_LABEL))
-        st.markdown(f"**{objective.statement}**")
+        st.markdown(objective.statement)
 
 
 def _save(chosen: Objective) -> None:

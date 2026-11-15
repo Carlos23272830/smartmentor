@@ -398,8 +398,8 @@ def _levels() -> None:
 
 def test_levels_write_the_state_next_to_the_percentage() -> None:
     at = run(_levels)
-    markdown = [e.value for e in at.markdown]
-    assert "**92 %**" in markdown
+    # El porcentaje va en gris normal (caption), no en negrita (V-040).
+    assert "92 %" in [e.value for e in at.caption]
     shown = badges(at)
     assert shown == {
         "Dominado",
@@ -515,3 +515,37 @@ def test_role_card_has_an_enter_button() -> None:
     at = run(_role_card)
     assert at.button(key="enter-admin").label == "Entrar como admin"
     assert badges(at) == {"Admin"}
+
+
+def _path_rows() -> None:
+    from components.path_rows import PathRow, render_path_rows
+
+    render_path_rows(
+        [
+            PathRow(1, 1, "Introducción", "skipped", "Omitido", tone="green", openable=False),
+            PathRow(
+                2, 2, "Regresión", "in_progress", "Parte de tu objetivo", "Intento 2", tone="blue"
+            ),
+        ],
+        grouped=True,
+    )
+
+
+def test_path_rows_color_the_reason_and_mark_the_current_topic() -> None:
+    at = run(_path_rows)
+    captions = [e.value for e in at.caption]
+    assert ":green[Omitido]" in captions
+    assert ":blue[Parte de tu objetivo]  \nIntento 2" in captions
+    assert [b.key for b in at.button] == ["open-step-2"]
+
+
+def _info_notice() -> None:
+    from components.layout import render_notice
+
+    render_notice("Grupo asignado al azar", tone="info")
+
+
+def test_info_notice_is_a_soft_blue_box_not_a_warning() -> None:
+    at = run(_info_notice)
+    assert [e.value for e in at.markdown] == ["Grupo asignado al azar"]
+    assert not at.warning
