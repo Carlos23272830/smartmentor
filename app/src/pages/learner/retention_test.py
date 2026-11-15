@@ -10,6 +10,7 @@ import streamlit as st
 from clients.base import ApiError
 from clients.models import AssessmentItem, Attempt, AttemptResult, LearnerAnswer
 from components.layout import render_page_header
+from core import features
 from core.container import get_client
 from core.errors import show_action_error
 from core.learner_flow import current_enrollment, idempotency_key
@@ -22,6 +23,12 @@ NOTE = (
     "Preguntas equivalentes a las del diagnóstico y la evaluación final, generadas con IA y "
     "revisadas por tu instructor."
 )
+
+if not features.RETENTION_AVAILABLE:
+    # B-042: la API aún rechaza los intentos de retención; no se llama a nada.
+    st.info("La prueba de retención todavía no está disponible.")
+    st.page_link(PROGRESS_PAGE, label="Volver a Mi progreso")
+    st.stop()
 
 client = get_client()
 state = get_session().learner

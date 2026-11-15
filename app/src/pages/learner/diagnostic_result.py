@@ -3,7 +3,8 @@
 Muestra el nivel por tema y el objetivo propuesto por la IA. «Confirmar» o «Guardar objetivo»
 llaman a `PUT /me/enrollments/{id}/objective`; el objetivo medible y el verbo de Bloom los valida
 la API (`OBJECTIVE_NOT_MEASURABLE`, `INVALID_BLOOM_VERB`) y el error se muestra con el texto de
-`core/errors.py`. La pantalla que sigue la dicta el `next_action` de la respuesta.
+`core/errors.py`. La pantalla que sigue la dicta el `next_action` de la respuesta, salvo que si
+apunta al primer tema se pasa antes por la ruta (E5, B-044).
 
 `result.proposed_objective` es la propuesta original guardada por la API, aparte del objetivo
 confirmado (B-033): «Volver a la propuesta de la IA» la usa aunque el objetivo ya se haya editado.
@@ -18,10 +19,13 @@ from components.levels import LevelRow, render_levels
 from components.objective_editor import ObjectiveDraft, render_objective_editor
 from core.container import get_client
 from core.errors import show_action_error
-from core.learner_flow import current_enrollment, go_to_action, redirect_unless
+from core.learner_flow import current_enrollment, go_to_action, redirect_unless, remember
+from core.navigation import page_for_next_action
 from core.session import get_session
 
 PAGE = "pages/learner/diagnostic_result.py"
+PATH_PAGE = "pages/learner/path.py"
+TOPIC_PAGE = "pages/learner/topic.py"
 FORMULA = (
     "Nivel por tema: diagnóstico 80 % + hoja de vida 10 % + descripción 10 %. Si falta un dato, "
     "su peso pasa al diagnóstico. Desde 80 % el tema se omite."
@@ -72,6 +76,11 @@ def _save(chosen: Objective) -> None:
         show_action_error(error)
         return
     state.edit_objective = False
+    if page_for_next_action(updated.next_action) == TOPIC_PAGE:
+        # B-044: al confirmar el objetivo la API apunta al primer tema (E6); antes se ve la ruta
+        # (E5), cuyo botón principal sigue ese mismo `next_action`.
+        remember(updated.next_action)
+        st.switch_page(PATH_PAGE)
     go_to_action(updated.next_action)
 
 
