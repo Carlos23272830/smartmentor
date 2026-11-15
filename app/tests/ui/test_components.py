@@ -127,9 +127,24 @@ def _rubric() -> None:
     render_rubric_result(
         RubricView(
             criteria=(
-                CriterionView("Relaciona el umbral con el costo", True, "Menciona el fraude."),
-                CriterionView("Nombra la sensibilidad", True, ""),
-                CriterionView("Justifica con datos del caso", False, "No da la proporción."),
+                CriterionView(
+                    "Relaciona el umbral con el costo",
+                    True,
+                    evidence="Un fraude sin detectar cuesta mucho.",
+                    reason="Se cumple porque conectas el umbral con el costo del error.",
+                ),
+                CriterionView(
+                    "Nombra la sensibilidad",
+                    True,
+                    evidence="",
+                    reason="Se cumple porque nombras la métrica que conviene vigilar.",
+                ),
+                CriterionView(
+                    "Justifica con datos del caso",
+                    False,
+                    evidence="",
+                    reason="No se cumple porque no usas ningún dato del caso.",
+                ),
             ),
             criteria_met=2,
             criteria_total=3,
@@ -147,6 +162,37 @@ def test_rubric_result_states_each_criterion_in_words() -> None:
     assert "Cuenta como correcta: cumple 2 de 3 criterios (mínimo 2)." in shown
     assert "Cumple · Relaciona el umbral con el costo" in shown
     assert "No cumple · Justifica con datos del caso" in shown
+
+
+def test_rubric_result_shows_the_reason_and_quotes_the_evidence() -> None:
+    at = run(_rubric)
+    captions = [c.value for c in at.caption]
+    assert "Se cumple porque conectas el umbral con el costo del error." in captions
+    assert "En tu respuesta: «Un fraude sin detectar cuesta mucho.»" in captions
+    assert "No se cumple porque no usas ningún dato del caso." in captions
+    # Sin cita no se muestra «En tu respuesta»: solo hay una cita entre los tres criterios.
+    assert sum(c.startswith("En tu respuesta:") for c in captions) == 1
+
+
+def _legacy_rubric() -> None:
+    from components.rubric_result import CriterionView, RubricView, render_rubric_result
+
+    render_rubric_result(
+        RubricView(
+            criteria=(CriterionView("Nombra la sensibilidad", False, "No menciona el recall."),),
+            criteria_met=0,
+            criteria_total=1,
+            min_met=None,
+            is_correct=False,
+            graded_by="IA",
+        ),
+        key="e7-legacy",
+    )
+
+
+def test_rubric_result_without_reason_keeps_the_evidence_as_before() -> None:
+    captions = [c.value for c in run(_legacy_rubric).caption]
+    assert captions == ["No menciona el recall."]
 
 
 def test_rubric_result_colors_met_green_and_unmet_red() -> None:

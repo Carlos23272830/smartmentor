@@ -97,13 +97,15 @@
             "met": true,
             "points": 0.3333,
             "points_awarded": 0.3333,
-            "evidence": ""
+            "reason": "Se cumple porque conectas el umbral con lo que cuesta dejar pasar un fraude.",
+            "evidence": "Bajaría el umbral porque un fraude sin detectar cuesta mucho."
           },
           {
             "criterion": "Nombra la sensibilidad (recall) como métrica para revisar.",
             "met": true,
             "points": 0.3333,
             "points_awarded": 0.3333,
+            "reason": "Se cumple porque nombras la métrica que conviene vigilar.",
             "evidence": ""
           },
           {
@@ -111,6 +113,7 @@
             "met": false,
             "points": 0.3333,
             "points_awarded": 0.0,
+            "reason": "No se cumple porque tu respuesta no usa ningún dato del caso para respaldar el cambio.",
             "evidence": ""
           }
         ],

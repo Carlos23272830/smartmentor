@@ -351,7 +351,12 @@ def grading(request: LlmRequest) -> str:
                 "criterion": entry["criterion"],
                 "met": met,
                 "points_awarded": entry["points"] if met else 0.0,
-                "evidence": blocks[3][:120] if met else "No aparece en la respuesta.",
+                "reason": (
+                    "Se cumple: la respuesta aborda lo que pide el criterio."
+                    if met
+                    else "No se cumple: la respuesta todavía no aborda lo que pide el criterio."
+                ),
+                "evidence": blocks[3][:120] if met else "",
             }
         )
     return _dump(
