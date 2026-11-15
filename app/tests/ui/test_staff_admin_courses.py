@@ -55,6 +55,45 @@ def test_ad5_assign_an_instructor() -> None:
     assert not at.error
 
 
+def test_ad5_shows_the_course_evaluators_with_the_owner_marked() -> None:
+    """B-036: el dueño aparece como evaluador del curso publicado, con su insignia."""
+    at = staff_app("admin", page=COURSES)
+    at = at.button(key="admin-courses-2-evaluators").click().run()
+    assert_no_exception(at)
+    texts = page_texts(at)
+    assert "Evaluadores de «Python para análisis de datos»" in texts
+    assert "Dueño del curso" in texts
+    rows = [m.value for m in at.markdown]
+    assert "Elena Ramírez" in rows
+    # Solo se ofrecen instructores activos que todavía no son evaluadores.
+    assert at.selectbox(key="ce-evaluator").options == ["Marta Gómez"]
+
+
+def test_ad5_assign_and_remove_an_evaluator_keeps_the_panel_open() -> None:
+    at = staff_app("admin", page=COURSES)
+    at = at.button(key="admin-courses-2-evaluators").click().run()
+    at.selectbox(key="ce-evaluator").set_value(13).run()
+    at = click(at, "Asignar evaluador")
+    assert_no_exception(at)
+    assert not at.error
+    assert "Marta Gómez" in [m.value for m in at.markdown]
+    assert at.selectbox(key="ce-evaluator").options == []
+    at = at.button(key="course-evaluators-1-remove").click().run()
+    assert_no_exception(at)
+    # Sin el dueño ya no hay insignia, su fila no está y vuelve a ofrecerse para asignarlo.
+    assert "Dueño del curso" not in page_texts(at)
+    assert not any(b.key == "course-evaluators-1-remove" for b in at.button)
+    assert at.selectbox(key="ce-evaluator").options == ["Elena Ramírez"]
+
+
+def test_ad5_a_course_without_evaluators_says_so() -> None:
+    at = staff_app("admin", page=COURSES)
+    at = at.button(key="admin-courses-3-evaluators").click().run()
+    assert_no_exception(at)
+    assert "Este curso todavía no tiene evaluadores." in page_texts(at)
+    assert at.selectbox(key="ce-evaluator").options == ["Elena Ramírez", "Marta Gómez"]
+
+
 def test_ad5_withdraw_and_move_enrollment() -> None:
     at = staff_app("admin", page=COURSES)
     at = next(b for b in at.button if b.label == "Retirar").click().run()

@@ -47,6 +47,7 @@ from clients.models_staff import (
     AttemptGrant,
     Course,
     CourseCreate,
+    CourseEvaluator,
     CourseTopic,
     CourseTopics,
     Dashboard,
@@ -421,6 +422,20 @@ class StaffApiOps:
         response = self._request("GET", "/metrics/evaluation", params=params)
         return _parse(MetricsEvaluation, metrics_from_api(_json(response)))
 
+    # AD5 · Evaluadores de un curso (B-036). La API los asigna y los quita (solo administrador).
+
+    def list_course_evaluators(self, course_id: int) -> list[CourseEvaluator]:
+        data = _json(self._request("GET", f"/courses/{course_id}/evaluators"))
+        return [_parse(CourseEvaluator, item) for item in data or []]
+
+    def assign_course_evaluator(self, course_id: int, user_id: int) -> CourseEvaluator:
+        body = {"user_id": user_id}
+        return self._send(CourseEvaluator, "POST", f"/courses/{course_id}/evaluators", body)
+
+    def remove_course_evaluator(self, evaluator_id: int) -> CourseEvaluator:
+        path = f"/course-evaluators/{evaluator_id}/deactivate"
+        return self._send(CourseEvaluator, "PATCH", path)
+
     def list_admin_enrollments(self, *, limit: int = 100, offset: int = 0) -> Page[AdminEnrollment]:
         response = self._request("GET", "/enrollments", params={"limit": limit, "offset": offset})
         return _page(AdminEnrollment, admin_enrollments_page_from_api(_json(response)))
@@ -754,6 +769,35 @@ class StaffFixturesOps:
     def get_evaluation_metrics(self, learning_path_id: int | None = None) -> MetricsEvaluation:
         del learning_path_id
         return self._model(MetricsEvaluation, "metrics")
+
+    def _evaluators(self) -> list[CourseEvaluator]:
+        """Eco mínimo de asignar y quitar: los evaluadores activos de esta sesión de fixtures."""
+        if not hasattr(self, "_course_evaluators"):
+            self._course_evaluators: list[CourseEvaluator] = self._list(
+                CourseEvaluator, "course_evaluators"
+            )
+        return self._course_evaluators
+
+    def list_course_evaluators(self, course_id: int) -> list[CourseEvaluator]:
+        return [e for e in self._evaluators() if e.course_id == course_id]
+
+    def assign_course_evaluator(self, course_id: int, user_id: int) -> CourseEvaluator:
+        evaluators = self._evaluators()
+        if any(e.course_id == course_id and e.user_id == user_id for e in evaluators):
+            raise ApiError(409, "CONFLICT", "The user is already an evaluator of the course.")
+        created = CourseEvaluator(
+            id=max((e.id for e in evaluators), default=0) + 1, course_id=course_id, user_id=user_id
+        )
+        evaluators.append(created)
+        return created
+
+    def remove_course_evaluator(self, evaluator_id: int) -> CourseEvaluator:
+        evaluators = self._evaluators()
+        found = next((e for e in evaluators if e.id == evaluator_id), None)
+        if found is None:
+            raise ApiError(404, "NOT_FOUND", "Course evaluator not found.")
+        evaluators.remove(found)
+        return found
 
     def list_admin_enrollments(self, *, limit: int = 100, offset: int = 0) -> Page[AdminEnrollment]:
         page = self._model(Page[AdminEnrollment], "admin_enrollments")

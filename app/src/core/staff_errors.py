@@ -22,7 +22,10 @@ STAFF_MESSAGES: dict[str, str] = {
     "OWNER_NOT_FOUND": "No encontramos a ese instructor.",
     "ANNOTATION_ALREADY_EXISTS": "Ya anotaste esta pregunta.",
     "EVALUATOR_SLOTS_FULL": "Esta pregunta ya tiene sus dos evaluadores.",
-    "EVALUATOR_NOT_ASSIGNED": "No estás asignado como evaluador de este curso.",
+    "EVALUATOR_NOT_ASSIGNED": (
+        "No estás asignado como evaluador de este curso. El dueño queda asignado al publicarlo; "
+        "a otros instructores los asigna un administrador en «Cursos e inscripciones»."
+    ),
     "HUMAN_GRADING_ALREADY_EXISTS": "Ya calificaste esta respuesta.",
     "CONSENT_REQUIRED": "El aprendiz no ha aceptado el tratamiento de datos.",
 }

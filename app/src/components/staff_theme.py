@@ -127,6 +127,8 @@ PILOT_ARM_BADGE: dict[PilotArm, BadgeStyle] = {
     "personalized": (PILOT_ARM_TEXT["personalized"], "blue"),
     "fixed": (PILOT_ARM_TEXT["fixed"], "violet"),
 }
+# Evaluador que además es el dueño del curso (B-036): lo asigna la API al publicar.
+EVALUATOR_OWNER_BADGE: BadgeStyle = ("Dueño del curso", "green")
 CONSENT_BADGE: dict[bool, BadgeStyle] = {
     True: ("Aceptado", "green"),
     False: ("Pendiente", "orange"),

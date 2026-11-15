@@ -342,3 +342,37 @@ def test_the_http_client_reads_the_real_metrics() -> None:
     assert client.get_evaluation_metrics().groups[0].metrics[0].code == "m7"
     client.get_evaluation_metrics(7)
     assert route.calls.last.request.url.params["learning_path_id"] == "7"
+
+
+# --- AD5 · Evaluadores de un curso (B-036) ----------------------------------------------------
+
+API_EVALUATOR: dict[str, Any] = {
+    "id": 5,
+    "course_id": 2,
+    "user_id": 12,
+    "assigned_by_user_id": 12,
+    "created_at": CREATED,
+}
+
+
+def test_the_evaluator_sample_is_a_valid_api_response() -> None:
+    assert _valid("EvaluatorResponse", API_EVALUATOR) == []
+
+
+@respx.mock
+def test_the_http_client_lists_assigns_and_removes_evaluators() -> None:
+    respx.get(f"{BASE}/api/v1/courses/2/evaluators").mock(
+        return_value=httpx.Response(200, json=[API_EVALUATOR])
+    )
+    assign = respx.post(f"{BASE}/api/v1/courses/2/evaluators").mock(
+        return_value=httpx.Response(201, json={**API_EVALUATOR, "id": 6, "user_id": 13})
+    )
+    remove = respx.patch(f"{BASE}/api/v1/course-evaluators/5/deactivate").mock(
+        return_value=httpx.Response(200, json=API_EVALUATOR)
+    )
+    client = _client()
+    assert [(e.id, e.user_id) for e in client.list_course_evaluators(2)] == [(5, 12)]
+    assert client.assign_course_evaluator(2, 13).user_id == 13
+    assert json.loads(assign.calls.last.request.content) == {"user_id": 13}
+    assert client.remove_course_evaluator(5).id == 5
+    assert remove.called

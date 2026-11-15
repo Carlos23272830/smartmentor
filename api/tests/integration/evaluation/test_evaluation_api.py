@@ -15,6 +15,7 @@ from tests.integration.world_content import (
     ingest_quiz_bank,
     insert_enrollment,
     insert_short_answer,
+    key,
     make_course,
     make_instructor,
     make_learner,
@@ -51,26 +52,44 @@ async def first_item(course: Course, ai: FakeAiService) -> dict[str, Any]:
 # --- evaluadores por curso --------------------------------------------------------------------
 
 
-async def test_only_the_admin_assigns_evaluators_and_the_owner_cannot_be_one(
+async def test_only_the_admin_assigns_evaluators_and_any_instructor_can_be_one(
     course: Course, client: httpx.AsyncClient, engine: AsyncEngine, client_for: ClientFactory
 ) -> None:
     _, other_id = await make_instructor(engine, client_for, "otro-doc")
     learner, learner_id = await make_learner(engine, client_for, "aprendiz")
     assert (await assign_evaluator(course.owner, course, other_id)).status_code == 403
-    assert (await assign_evaluator(client, course, course.owner_id)).status_code == 422
     assert (await assign_evaluator(client, course, learner_id)).status_code == 422
     assert (await assign_evaluator(client, course, 99999)).status_code in (404, 422)
     created = await assign_evaluator(client, course, other_id)
     assert created.status_code == 201
     assert (await assign_evaluator(client, course, other_id)).status_code == 409
+    # B-036: el dueño también puede ser evaluador de su curso (sin el trigger de v2.0.0).
+    owner = await assign_evaluator(client, course, course.owner_id)
+    assert owner.status_code == 201, owner.text
     listed = await client.get(f"{API}/courses/{course.id}/evaluators")
-    assert [e["user_id"] for e in listed.json()] == [other_id]
+    assert [e["user_id"] for e in listed.json()] == [other_id, course.owner_id]
     removed = await client.patch(f"{API}/course-evaluators/{created.json()['id']}/deactivate")
     assert removed.status_code == 200
-    assert (await client.get(f"{API}/courses/{course.id}/evaluators")).json() == []
+    remaining = (await client.get(f"{API}/courses/{course.id}/evaluators")).json()
+    assert [e["user_id"] for e in remaining] == [course.owner_id]
     again = await assign_evaluator(client, course, other_id)  # se reactiva
     assert again.status_code == 201
     _ = learner
+
+
+async def test_publishing_assigns_the_owner_as_evaluator_once(
+    course: Course, client: httpx.AsyncClient
+) -> None:
+    published = await course.owner.post(f"{API}/courses/{course.id}/publish", headers=key())
+    assert published.status_code == 202, published.text
+    listed = (await client.get(f"{API}/courses/{course.id}/evaluators")).json()
+    assert [(e["user_id"], e["assigned_by_user_id"]) for e in listed] == [
+        (course.owner_id, course.owner_id)
+    ]
+    # Ya es evaluador: su cola de calificación responde (vacía) en lugar de 403.
+    queue = await course.owner.get(f"{API}/evaluation/grading-queue")
+    assert queue.status_code == 200, queue.text
+    assert queue.json()["total"] == 0
 
 
 # --- anotación ciega --------------------------------------------------------------------------
@@ -158,7 +177,7 @@ async def test_annotation_conflicts_and_full_slots(
     assert (await first.post(path, json={"verdict": "maybe"})).status_code == 422
 
 
-async def test_only_assigned_evaluators_annotate_and_the_owner_does_not_evaluate_own_items(
+async def test_only_assigned_evaluators_annotate_and_an_unassigned_owner_does_not(
     course: Course,
     ai: FakeAiService,
     evaluators: tuple[httpx.AsyncClient, httpx.AsyncClient],
@@ -168,7 +187,7 @@ async def test_only_assigned_evaluators_annotate_and_the_owner_does_not_evaluate
 ) -> None:
     item = await first_item(course, ai)
     path = f"{API}/items/{item['id']}/annotations"
-    # El dueño: 403 EVALUATOR_NOT_ASSIGNED en la cola y al anotar.
+    # El dueño sin asignación (el curso aún no se publica): 403 EVALUATOR_NOT_ASSIGNED.
     for response in (
         await course.owner.get(f"{API}/evaluation/annotation-queue"),
         await course.owner.post(path, json=ANNOTATION),
@@ -307,7 +326,7 @@ async def test_grading_is_closed_to_those_who_are_not_evaluators_of_that_course(
     }
     path = f"{API}/attempt-answers/{answer}/human-gradings"
 
-    # El dueño del curso no califica las respuestas de su propio curso.
+    # El dueño sin asignación de evaluador no califica (se asigna al publicar, B-036).
     owner = await course.owner.post(path, json=body)
     assert owner.status_code == 403
     assert owner.json()["code"] == "EVALUATOR_NOT_ASSIGNED"

@@ -567,6 +567,14 @@ class MetricsEvaluation(ApiModel):
     groups: list[MetricGroup]
 
 
+class CourseEvaluator(ApiModel):
+    """`EvaluatorResponse` de la API (B-036): un instructor asignado como evaluador del curso."""
+
+    id: int
+    course_id: int
+    user_id: int
+
+
 class AdminEnrollment(ApiModel):
     id: int
     user: UserRef

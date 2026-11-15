@@ -17,6 +17,8 @@ from app.domains.courses.service import (
     SyllabusService,
     TopicService,
 )
+from app.domains.evaluation.repository_impl import SqlAlchemyEvaluatorRepository
+from app.domains.evaluation.service import OwnerEvaluatorAssigner
 from app.domains.identity.repository_impl import SqlAlchemyUserRepository
 
 
@@ -27,6 +29,7 @@ def get_course_service(session: SessionDep, ai: AiServiceDep) -> CourseService:
         SqlAlchemyUserRepository(session),
         ai,
         SqlAlchemyUnitOfWork(session),
+        owner_evaluators=OwnerEvaluatorAssigner(SqlAlchemyEvaluatorRepository(session)),
     )
 
 
@@ -60,4 +63,5 @@ def get_publication_service(session: SessionDep, ai: AiServiceDep) -> Publicatio
         SqlAlchemyPrerequisiteRepository(session),
         ai,
         SqlAlchemyUnitOfWork(session),
+        owner_evaluators=OwnerEvaluatorAssigner(SqlAlchemyEvaluatorRepository(session)),
     )

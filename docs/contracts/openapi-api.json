@@ -8400,7 +8400,7 @@
         ]
       },
       "post": {
-        "description": "Asigna un instructor (que no es el dueño) como evaluador del curso (DEF-24).",
+        "description": "Asigna un instructor activo como evaluador del curso (DEF-24); puede ser el dueño (B-036).",
         "operationId": "assign_evaluator_api_v1_courses__course_id__evaluators_post",
         "parameters": [
           {

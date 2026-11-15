@@ -32,4 +32,7 @@
     <!-- v2.0.1-003: valores por defecto de learning_paths alineados con la API. -->
     <include file="v2.0.1/003-learning-paths-defaults.xml" relativeToChangelogFile="true"/>
 
+    <!-- v2.0.1-004: el dueño del curso también es evaluador (B-036): sin trigger y con backfill. -->
+    <include file="v2.0.1/004-course-owner-evaluator.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

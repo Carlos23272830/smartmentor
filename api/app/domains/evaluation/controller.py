@@ -106,7 +106,7 @@ async def list_evaluators(
 async def assign_evaluator(
     course_id: int, payload: EvaluatorCreate, user: AdminUser, service: AdminServiceDep
 ) -> EvaluatorResponse:
-    """Asigna un instructor (que no es el dueño) como evaluador del curso (DEF-24)."""
+    """Asigna un instructor activo como evaluador del curso (DEF-24); puede ser el dueño (B-036)."""
     return _evaluator(await service.assign(user, course_id, payload.user_id))
 
 
