@@ -114,13 +114,24 @@ def test_d2_empty_course_returns_to_upload() -> None:
 def test_d2b_edit_panel_saves_and_reports_cycles() -> None:
     at = staff_app(page=SYLLABUS)
     at = click(at, "Editar tema")
-    texts = page_texts(at)
-    assert "Editar tema" in texts and "Resultados de aprendizaje" in texts
+    # La ventana modal (G-001) no sale en `page_texts`: se leen sus widgets.
+    assert "Resultados de aprendizaje" in [m.value.strip("*") for m in at.markdown]
     assert "Guardar cambios" in [b.label for b in at.button]
     at = click(at, "+ Agregar resultado de aprendizaje")
     at = click(at, "Guardar cambios")
     assert_no_exception(at)
-    assert not any(t == "Editar tema" for t in page_texts(at)[:3])
+    assert not any(b.label == "Guardar cambios" for b in at.button)  # la ventana se cerró
+    assert "sr-edit" not in at.session_state
+
+
+def test_d2b_cancel_closes_the_dialog_and_forgets_the_outcomes() -> None:
+    at = staff_app(page=SYLLABUS)
+    at = click(at, "Editar tema")
+    at = click(at, "Cancelar")
+    assert_no_exception(at)
+    assert not any(b.label == "Guardar cambios" for b in at.button)
+    assert f"sr-outcomes-{at.selectbox(key='sr-selected').value}" not in at.session_state
+    assert "sr-edit" not in at.session_state
 
 
 def test_d2b_removing_an_outcome_keeps_the_text_of_the_others() -> None:
@@ -142,11 +153,9 @@ def test_d2b_removing_an_outcome_keeps_the_text_of_the_others() -> None:
 def test_d2c_reextract_asks_for_confirmation() -> None:
     at = staff_app(scenario="loading", page=SYLLABUS)
     at = click(at, "Volver a extraer temas")
-    texts = page_texts(at)
-    assert "¿Volver a extraer los temas?" in texts
     assert any(
-        "se perderán tus correcciones: 1 corregido, 1 agregado por ti, 1 eliminado" in t
-        for t in texts
+        "se perderán tus correcciones: 1 corregido, 1 agregado por ti, 1 eliminado" in m.value
+        for m in at.markdown
     )
     at = click(at, "Sí, volver a extraer")
     assert_no_exception(at)
