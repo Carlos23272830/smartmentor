@@ -6,6 +6,7 @@ respuesta. Las ventanas de Figma (D2b, D2c) se dibujan como paneles bajo la tabl
 """
 
 from typing import Any
+from uuid import uuid4
 
 import streamlit as st
 
@@ -113,15 +114,20 @@ def _publish() -> None:
     st.switch_page(COURSES)
 
 
+def _outcome(outcome_id: int | None, statement: str, bloom: BloomLevel) -> dict[str, Any]:
+    """Resultado de aprendizaje en edición; `key` identifica sus campos mientras el panel vive."""
+    return {"id": outcome_id, "statement": statement, "bloom": bloom, "key": uuid4().hex[:8]}
+
+
 def _edit_panel(topic: CourseTopic | None) -> None:
     """D2b · Editar tema (o agregar uno nuevo)."""
     tid = topic.id if topic else NEW
     outcomes_key = f"sr-outcomes-{tid}"
     if outcomes_key not in st.session_state:
         st.session_state[outcomes_key] = [
-            {"id": o.id, "statement": o.statement, "bloom": o.bloom_level}
+            _outcome(o.id, o.statement, o.bloom_level)
             for o in (topic.learning_outcomes if topic else [])
-        ] or [{"id": None, "statement": "", "bloom": "apply"}]
+        ] or [_outcome(None, "", "apply")]
     outcomes: list[dict[str, Any]] = st.session_state[outcomes_key]
     with st.container(border=True, key=f"panel-edit-topic-{tid}"):
         st.subheader("Editar tema" if topic else "Agregar tema", anchor=False)
@@ -134,26 +140,29 @@ def _edit_panel(topic: CourseTopic | None) -> None:
         )
         st.markdown("**Resultados de aprendizaje**")
         for index, outcome in enumerate(outcomes):
+            # Clave propia de cada resultado, no su posición: al quitar uno, el que ocupa su lugar
+            # heredaba el estado del campo y Streamlit ignoraba su `value=`.
+            uid = outcome["key"]
             bloom_col, text_col, remove_col = st.columns([2, 6, 1], vertical_alignment="bottom")
             labels = list(BLOOM_LABEL.values())
             chosen = bloom_col.selectbox(
                 "Verbo de Bloom",
                 labels,
                 index=labels.index(BLOOM_LABEL[outcome["bloom"]]),
-                key=f"sr-ob-{tid}-{index}",
+                key=f"sr-ob-{tid}-{uid}",
             )
             outcome["bloom"] = BLOOM_BY_LABEL[chosen]
             outcome["statement"] = text_col.text_input(
                 "Resultado",
                 value=outcome["statement"],
-                key=f"sr-os-{tid}-{index}",
+                key=f"sr-os-{tid}-{uid}",
                 label_visibility="collapsed",
             )
-            if remove_col.button("Quitar", key=f"sr-orm-{tid}-{index}") and len(outcomes) > 1:
+            if remove_col.button("Quitar", key=f"sr-orm-{tid}-{uid}") and len(outcomes) > 1:
                 outcomes.pop(index)
                 st.rerun()
         if st.button("+ Agregar resultado de aprendizaje", key=f"sr-oadd-{tid}", type="tertiary"):
-            outcomes.append({"id": None, "statement": "", "bloom": "apply"})
+            outcomes.append(_outcome(None, "", "apply"))
             st.rerun()
         labels = list(BLOOM_LABEL.values())
         bloom = st.selectbox(

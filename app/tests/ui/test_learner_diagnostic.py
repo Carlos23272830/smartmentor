@@ -204,6 +204,20 @@ def test_e4b_cancel_returns_to_the_summary() -> None:
     assert "Confirmar y ver mi ruta" in page_texts(at)
 
 
+def test_e4b_cancel_discards_the_edit_when_reopening_the_editor() -> None:
+    """E4 termina en `st.stop()`: Streamlit 1.67 conserva el texto de los campos aunque no se
+    dibujen, así que sin limpiarlos lo cancelado volvía a aparecer al editar otra vez."""
+    at = learner_app("learner_objective", DIAGNOSTIC_RESULT)
+    button(at, "Editar el objetivo").click().run()
+    original = at.text_input(key="objective-criterion").value
+    at.text_input(key="objective-criterion").set_value("texto descartado").run()
+    button(at, "Cancelar").click().run()
+    button(at, "Editar el objetivo").click().run()
+    no_exception(at)
+    assert at.text_input(key="objective-criterion").value == original
+    assert original != "texto descartado"
+
+
 # --- E5 · E5b ----------------------------------------------------------------------------------
 
 
