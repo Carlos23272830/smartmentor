@@ -178,7 +178,7 @@ for c in "${HEALTH_SERVICES[@]}"; do wait_healthy "$c"; done
 [ "$MAIL" = 1 ] && wait_healthy smartmentor-mailpit
 
 # 5) Usuarios de desarrollo en Keycloak
-if [ -n "${SEED_INSTRUCTOR_EMAIL:-}${SEED_LEARNER_EMAIL:-}${SEED_ADMIN_EMAIL:-}" ]; then
+if [ -n "${SEED_INSTRUCTOR_EMAIL:-}${SEED_LEARNER_EMAIL:-}${SEED_EMPTY_LEARNER_EMAIL:-}${SEED_EMPTY_INSTRUCTOR_EMAIL:-}${SEED_ADMIN_EMAIL:-}" ]; then
   say "Creando los usuarios de desarrollo en Keycloak"
   SEED_ARGS=()
   [ "$ADMIN" = 1 ] && SEED_ARGS+=(--with-admin)

@@ -35,4 +35,10 @@
     <!-- v2.0.1-006: propuesta de objetivo guardada aparte del objetivo confirmado (B-033). -->
     <include file="v2.0.1/006-objective-proposal.xml" relativeToChangelogFile="true"/>
 
+    <!-- v2.0.1-004: SELECT de smartmentor_metrics sobre interaction_events para la métrica m27 (R-003). -->
+    <include file="v2.0.1/004-metrics-read-interaction-events.xml" relativeToChangelogFile="true"/>
+
+    <!-- v2.0.1-005: usuarios de desarrollo «vacío» (aprendiz sin inscripciones e instructor sin cursos; T-053). -->
+    <include file="v2.0.1/005-seed-empty-dev-users.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>
