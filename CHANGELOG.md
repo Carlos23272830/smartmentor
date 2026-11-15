@@ -4,7 +4,7 @@ Cambios por versión y cohorte.
 
 ## Sin publicar (cohorte 1)
 
-### Plan v3 (2026-11-07 a 2026-11-13)
+### Plan v3 (2026-11-07 a 2026-11-14)
 
 Lo que sigue reemplaza la base v1 que se describe más abajo. El detalle por tarea, con fecha y hora, está en [`proyecto/seguimiento/`](proyecto/seguimiento/README.md).
 
@@ -18,7 +18,9 @@ Lo que sigue reemplaza la base v1 que se describe más abajo. El detalle por tar
   - el bloqueo entre la API y `ai/` (B-001);
   - AD1, AD4 y AD5 con la API real (B-003 a B-008);
   - el nivel del diagnóstico en D4 (B-010);
-  - el reintento de la evaluación final, que ahora genera preguntas nuevas (B-011).
+  - el reintento de la evaluación final, que ahora genera preguntas nuevas (B-011);
+  - el flujo del aprendiz con la API real: catálogo, perfil, quiz y ruta (PR 5, B-015 a B-029);
+  - Streamlit 1.67 y `pillow` 13.0.0, que cierran las 42 vulnerabilidades del `audit` de `app` (B-009).
 - **Herramientas:** `scripts/simulate-learners.py` (aprendices simulados, solo para desarrollo) y la carpeta de seguimiento.
 
 **Base v1 (2026-10, antes del plan v3).** Lo que sigue describe la primera versión.
