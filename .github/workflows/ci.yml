@@ -83,7 +83,18 @@ jobs:
       - name: Construir la imagen de Liquibase
         # Imagen oficial liquibase/liquibase con el driver de PostgreSQL (ver su Dockerfile).
         working-directory: .
-        run: docker build -t smartmentor-liquibase:ci database/liquibase
+        run: |
+          # El driver se descarga de Maven Central y a veces llega cortado en el runner: el SHA-256
+          # del Dockerfile lo rechaza («digest mismatch» con un hash distinto cada vez). Se reintenta
+          # hasta 3 veces sin relajar el checksum; si los tres fallan, la CI falla.
+          for intento in 1 2 3; do
+            if docker build -t smartmentor-liquibase:ci database/liquibase; then
+              exit 0
+            fi
+            echo "::warning::Falló la imagen de Liquibase (intento ${intento} de 3); se reintenta."
+            sleep $((intento * 10))
+          done
+          exit 1
       - name: Migrar smartmentor_test con Liquibase
         working-directory: .
         run: |
@@ -149,7 +160,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       - name: Construir la imagen de Liquibase
-        run: docker build -t smartmentor-liquibase:ci database/liquibase
+        run: |
+          # El driver se descarga de Maven Central y a veces llega cortado en el runner: el SHA-256
+          # del Dockerfile lo rechaza («digest mismatch» con un hash distinto cada vez). Se reintenta
+          # hasta 3 veces sin relajar el checksum; si los tres fallan, la CI falla.
+          for intento in 1 2 3; do
+            if docker build -t smartmentor-liquibase:ci database/liquibase; then
+              exit 0
+            fi
+            echo "::warning::Falló la imagen de Liquibase (intento ${intento} de 3); se reintenta."
+            sleep $((intento * 10))
+          done
+          exit 1
       - name: liquibase validate
         run: |
           docker run --rm --network host \
@@ -213,7 +235,18 @@ jobs:
         run: uv run mypy
       - name: Construir la imagen de Liquibase
         working-directory: .
-        run: docker build -t smartmentor-liquibase:ci database/liquibase
+        run: |
+          # El driver se descarga de Maven Central y a veces llega cortado en el runner: el SHA-256
+          # del Dockerfile lo rechaza («digest mismatch» con un hash distinto cada vez). Se reintenta
+          # hasta 3 veces sin relajar el checksum; si los tres fallan, la CI falla.
+          for intento in 1 2 3; do
+            if docker build -t smartmentor-liquibase:ci database/liquibase; then
+              exit 0
+            fi
+            echo "::warning::Falló la imagen de Liquibase (intento ${intento} de 3); se reintenta."
+            sleep $((intento * 10))
+          done
+          exit 1
       - name: Migrar smartmentor_test con Liquibase
         working-directory: .
         run: |
