@@ -127,6 +127,8 @@ Cada entrada lista el `input` y el contrato de `result`. Las tareas que llaman a
 
 Reglas de las tareas con LLM (plan 5.4.4): esquema `…LLM` como salida estructurada → `model_validate_json` → `check_*` de `ai/app/domain/contracts/validation.py` → hasta 2 reintentos con los problemas en el prompt → `error.code = INVALID_OUTPUT`. Los ítems sin una sola respuesta correcta según `item_review` van en `discarded_item_ids` y la API los guarda como `auto_rejected` (L-03).
 
+En `grading.v1`, cada elemento de `rubric_detail` trae `reason` (desde `short_answer_grading` v2, B-038): una frase en español que dice por qué se cumple o no el criterio, sin revelar la respuesta esperada. `evidence` es una cita literal breve de la respuesta del aprendiz, vacía si no hay nada que citar. `reason` es opcional (`""`) para las calificaciones anteriores a la v2, así que la API debe aceptar el campo antes de que `ai/` lo envíe: se despliega primero la API y después `ai/`.
+
 ### 3.1 `diagnostic.finalize`
 
 ```json

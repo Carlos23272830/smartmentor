@@ -151,7 +151,7 @@ prompts:
       1: bc3a912e313000cd5ad2a0a20aff49d0898e77a5ea1bf4e327515792b1f4b189
 
   - id: short_answer_grading
-    current_version: 1
+    current_version: 2
     name_es: Calificación de respuesta corta
     task: grading.short_answer
     scope: por respuesta (sin caché entre aprendices)
@@ -162,6 +162,7 @@ prompts:
     screens: [E7, U1c, U1d, D5c]
     versions:
       1: dc65358318e761c5c451d91af7a3b0766dd4d879ae06191042434d01651acc47
+      2: a2ec66b372191929c90a6b3186e13b4f3b70380031d5a1ab4083357f66ccf5f1  # agrega reason (B-038)
 
   - id: final_assessment
     current_version: 1

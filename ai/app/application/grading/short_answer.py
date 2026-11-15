@@ -35,6 +35,7 @@ RUBRIC_TOLERANCE = 0.01
 EMPTY_ANSWER_FEEDBACK = (
     "No escribiste una respuesta. Intenta explicar con tus palabras lo que recuerdas del tema."
 )
+EMPTY_ANSWER_REASON = "No se cumple porque la respuesta está vacía."
 
 _SPACES = re.compile(r"\s+")
 
@@ -60,16 +61,24 @@ def _normal(text: str) -> str:
 
 
 def leaks(feedback: str, grading: ShortAnswerGradingLLM, model_answer: str) -> list[str]:
-    """Issues when the feedback copies the expected answer or an unmet criterion verbatim."""
+    """Issues when the feedback or a criterion reason copies the expected answer verbatim, or
+    the feedback copies an unmet criterion (the reason goes under its criterion, which the
+    learner already sees, so naming it there is not a leak)."""
     text = _normal(feedback)
     issues: list[str] = []
     answer = _normal(model_answer)
-    if len(answer) >= MIN_LEAK_CHARS and answer in text:
+    long_answer = len(answer) >= MIN_LEAK_CHARS
+    if long_answer and answer in text:
         issues.append("feedback repeats the expected answer; guide without giving it")
     for result in grading.criteria:
         criterion = _normal(result.criterion)
         if not result.met and len(criterion) >= MIN_LEAK_CHARS and criterion in text:
             issues.append("feedback copies an unmet criterion; guide without giving the answer")
+        if long_answer and answer in _normal(result.reason):
+            issues.append(
+                f"'{result.criterion}': reason repeats the expected answer; "
+                "explain the decision without giving it"
+            )
     return issues
 
 
@@ -81,6 +90,7 @@ def empty_answer_grading(data: GradeInput) -> AnswerGrading:
             met=False,
             points=c.points,
             points_awarded=0.0,
+            reason=EMPTY_ANSWER_REASON,
             evidence="",
         )
         for c in data.rubric

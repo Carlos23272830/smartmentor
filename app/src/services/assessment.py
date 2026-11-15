@@ -21,7 +21,8 @@ def rubric_view(grading: dict[str, Any]) -> RubricView | None:
         CriterionView(
             name=str(item.get("criterion", "")),
             met=bool(item.get("met", False)),
-            evidence=str(item.get("evidence", "")),
+            evidence=str(item.get("evidence") or ""),
+            reason=str(item.get("reason") or ""),
         )
         for item in grading.get("rubric_detail", [])
     )

@@ -7,6 +7,7 @@ salida contra `prompts/schemas/*.json`.
 
 import hashlib
 import json
+import re
 from datetime import UTC, datetime
 from typing import Any
 
@@ -15,11 +16,11 @@ FAKE_ALGORITHM_PATH = "topological_threshold v1"
 REINFORCE_CUTOFF = 50.0
 
 
-def _meta(prompt_id: str, payload: Any) -> dict[str, Any]:
+def _meta(prompt_id: str, payload: Any, version: str = "v1") -> dict[str, Any]:
     seed = json.dumps(payload, sort_keys=True, default=str)
     return {
         "prompt_id": prompt_id,
-        "prompt_version": "v1",
+        "prompt_version": version,
         "model": "fake-model",
         "generated_at": datetime(2026, 11, 7, 15, 0, tzinfo=UTC).isoformat().replace("+00:00", "Z"),
         "input_sha256": hashlib.sha256(seed.encode()).hexdigest(),
@@ -178,6 +179,17 @@ def fake_path_sequence(input_: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+_QUOTE_MAX_CHARS = 120
+
+
+def _quote(answer: str, keyword: str) -> str:
+    """Primera frase de la respuesta que contiene `keyword`, recortada (cita literal breve)."""
+    for sentence in re.split(r"(?<=[.!?])\s+", answer.strip()):
+        if keyword in sentence.casefold():
+            return sentence[:_QUOTE_MAX_CHARS]
+    return ""
+
+
 def fake_grade_short_answer(input_: dict[str, Any]) -> dict[str, Any]:
     """`grading.short_answer`: un criterio se cumple si su primera palabra está en la respuesta."""
     answer = str(input_.get("answer_text") or "").casefold()
@@ -195,7 +207,14 @@ def fake_grade_short_answer(input_: dict[str, Any]) -> dict[str, Any]:
                 "met": met,
                 "points": points,
                 "points_awarded": points if met else 0.0,
-                "evidence": "Aparece en la respuesta." if met else "No aparece en la respuesta.",
+                # Como `short_answer_grading` v2: la razón explica la decisión y `evidence` es
+                # una cita literal de la respuesta, vacía si no hay nada que citar.
+                "reason": (
+                    f"Se cumple: la respuesta menciona «{keyword}»."
+                    if met
+                    else "No se cumple: la respuesta no aborda lo que pide este criterio."
+                ),
+                "evidence": _quote(str(input_.get("answer_text") or ""), keyword) if met else "",
             }
         )
     met_count = sum(1 for d in detail if d["met"])
@@ -213,7 +232,7 @@ def fake_grade_short_answer(input_: dict[str, Any]) -> dict[str, Any]:
         "criteria_total": total,
         "rubric_detail": detail,
         "feedback": "Revisa los criterios que no se cumplieron.",
-        "meta": _meta("short_answer_grading", input_),
+        "meta": _meta("short_answer_grading", input_, "v2"),
     }
 
 

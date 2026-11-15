@@ -237,6 +237,15 @@ def test_grading_rules() -> None:
     _rejects("grading", data, "only for llm_judge")
 
 
+def test_grading_reason_is_optional_for_gradings_before_v2() -> None:
+    data = _example("grading")
+    assert all(c["reason"] for c in data["rubric_detail"])
+    for criterion in data["rubric_detail"]:
+        del criterion["reason"]
+    grading = CONTRACTS["grading"].model_validate(data)
+    assert [c.reason for c in grading.rubric_detail] == ["", "", ""]  # type: ignore[attr-defined]
+
+
 def test_multiple_choice_grading_by_rule() -> None:
     model = CONTRACTS["grading"]
     valid = {
