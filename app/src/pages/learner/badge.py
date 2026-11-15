@@ -12,13 +12,14 @@ import streamlit as st
 from clients.base import ApiError
 from clients.models import BadgeSummary
 from components.badge_card import render_badge_hero
-from components.formatting import duration, percent_points, short_date
+from components.formatting import percent_points, short_date
 from components.layout import eyebrow
 from components.stat_tiles import render_stat_tiles
 from core.container import get_client
 from core.errors import show_action_error
 from core.learner_flow import current_enrollment
 from core.session import get_session
+from services.learning import savings_label
 
 ACHIEVEMENTS_PAGE = "pages/learner/achievements.py"
 SURVEY_PAGE = "pages/learner/final_survey.py"
@@ -46,7 +47,7 @@ render_stat_tiles(
     [
         (score_text, "Evaluación final"),
         (f"{progress.steps_done} / {progress.steps_total}", "Temas dominados"),
-        (duration(path.savings.skipped_minutes), "Ahorrados"),
+        (savings_label(path), "Ahorrados"),
     ],
     key="badge",
 )

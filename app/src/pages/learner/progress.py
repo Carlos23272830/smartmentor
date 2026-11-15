@@ -10,7 +10,7 @@ import streamlit as st
 from clients.base import ApiError
 from clients.models import Enrollment, PathDetail
 from clients.models_learner import StudyGoals, StudyGoalsUpdate
-from components.formatting import decimal, duration, short_date
+from components.formatting import decimal, short_date
 from components.layout import render_notice, render_page_header
 from components.stat_tiles import render_stat_tiles
 from core.container import get_client
@@ -18,7 +18,7 @@ from core.errors import show_action_error
 from core.identity import current_me, label_for, refresh_me
 from core.learner_flow import current_enrollment, go_to_action
 from core.session import get_session
-from services.learning import step_name
+from services.learning import savings_label, step_name
 
 DATA_RIGHTS_PAGE = "pages/common/data_rights.py"
 RETENTION_PAGE = "pages/learner/retention_test.py"
@@ -72,7 +72,7 @@ render_stat_tiles(
     [
         (f"{progress.steps_done} de {progress.steps_total}", "Temas aprobados"),
         (decimal(sum(tried) / len(tried)) if tried else "—", "Intentos por tema"),
-        (duration(path.savings.skipped_minutes), "Ahorrados por diagnóstico"),
+        (savings_label(path), "Ahorrados por diagnóstico"),
     ],
     key="progress",
 )

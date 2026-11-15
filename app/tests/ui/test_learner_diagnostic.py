@@ -342,3 +342,38 @@ def test_e4b_keeps_a_proposed_verb_outside_the_list() -> None:
     no_exception(at)
     verb = next(s for s in at.selectbox if s.label == "Verbo de Bloom")
     assert verb.value == "Construir"
+
+
+# --- B-039 · E5 y E4b ----------------------------------------------------------------------------
+
+
+def test_e5_continue_says_final_assessment_when_it_comes_next_b039() -> None:
+    at = learner_app("learner_final_ready", PATH)
+    no_exception(at)
+    assert {b.key: b.label for b in at.button}["path-continue"] == "Presentar evaluación final"
+
+
+def test_e5_continue_says_survey_when_it_comes_next_b039() -> None:
+    at = learner_app("learner_completed", PATH)
+    no_exception(at)
+    assert {b.key: b.label for b in at.button}["path-continue"] == "Responder encuesta"
+
+
+def test_e5_does_not_show_zero_savings_with_skipped_topics_b039() -> None:
+    at = learner_app("learner_path", PATH, run=False)
+    client = client_of(at)
+    path = client.get_path(1)
+    savings = path.savings.model_copy(update={"skipped_minutes": 0})
+    client.get_path = lambda _e: path.model_copy(update={"savings": savings})  # type: ignore[method-assign]
+    at.run()
+    no_exception(at)
+    texts = page_texts(at)
+    assert not any("ahorro 0 min" in t for t in texts)
+    assert any("1 omitido por tu diagnóstico" in t for t in texts)
+
+
+def test_e4b_verb_selector_placeholder_is_in_spanish_b039() -> None:
+    at = learner_app("learner_objective", DIAGNOSTIC_RESULT)
+    button(at, "Editar el objetivo").click().run()
+    verb = next(s for s in at.selectbox if s.label == "Verbo de Bloom")
+    assert verb.placeholder == "Elige o escribe un verbo"
