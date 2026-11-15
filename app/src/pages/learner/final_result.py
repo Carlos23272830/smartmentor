@@ -141,5 +141,5 @@ if st.button("Reintentar evaluación final", type="primary", key="final-retry"):
 with st.container(key="card-survey"):
     st.markdown("**Encuesta final · opcional**")
     st.caption("Ayúdanos a mejorar SmartMentor en unos 3 minutos. No afecta tu badge.")
-    if st.button("Responder encuesta", key="final-survey"):
+    if st.button("Responder encuesta", type="primary", key="final-survey"):
         st.switch_page(SURVEY_PAGE)

@@ -4,3 +4,9 @@
   background: var(--learner-soft);
   border-color: var(--learner-accent);
 }
+
+/* Encuesta final: caja azul suave sin borde. */
+.st-key-card-survey {
+  background: var(--learner-soft);
+  border-color: transparent;
+}
