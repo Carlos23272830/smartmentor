@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Crea un segundo instructor de DESARROLLO y lo asigna como evaluador de un curso (DEF-24), para probar
-# la calificación humana de respuestas cortas y la anotación de preguntas en local.
+# Crea un segundo instructor de DESARROLLO y lo asigna como evaluador de un curso (DEF-24, B-036), para
+# probar en local que un instructor distinto del dueño anota preguntas y califica respuestas cortas.
 #
-# Por qué existe: solo califica un instructor asignado como evaluador del curso que NO sea su dueño, y
-# lo asigna un admin con POST /courses/{id}/evaluators (todavía no hay pantalla). El instructor de
-# prueba (SEED_INSTRUCTOR_EMAIL) suele ser el dueño de los cursos, así que hace falta otro.
+# Por qué existe: solo evalúa un instructor asignado en el curso. El dueño ya queda como evaluador de
+# sí mismo al publicar el curso (B-036), así que este script es opcional: sirve para probar la
+# asignación de OTRO instructor, que hace un admin con POST /courses/{id}/evaluators (todavía no hay
+# pantalla). Si das el correo del dueño no se rompe: la API lo reconoce y no cambia nada.
 #
 # Qué hace (idempotente: puedes repetirlo; lo que ya existe no se toca):
 #   1. Keycloak: crea el usuario con correo verificado, rol de realm instructor y la contraseña
@@ -14,7 +15,8 @@
 #      cuenta el rol de la base, no el del token. En el primer ingreso la API enlaza ambos por el correo.
 #   3. Pide un token del admin (SEED_ADMIN_EMAIL, cliente smartmentor-dev-tools, api/scripts/token.sh)
 #      y asigna al evaluador con POST /courses/{id}/evaluators. Así la API aplica sus reglas
-#      (no puede ser el dueño, debe ser instructor activo). Si ya era evaluador, lo deja igual.
+#      (debe ser instructor activo; el dueño también puede ser evaluador). Si ya era evaluador (por
+#      ejemplo el dueño de un curso publicado), la API responde 409 y el script lo deja igual.
 # No imprime contraseñas ni tokens.
 #
 # SOLO DESARROLLO. Necesita el stack encendido (scripts/local-up.sh --with-admin) y, para el token del
@@ -38,7 +40,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --course) COURSE_ID="${2:-}"; shift 2 ;;
     --email) EMAIL_ARG="${2:-}"; shift 2 ;;
-    -h|--help) sed -n '2,31p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,32p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Argumento desconocido: $1" >&2; exit 2 ;;
   esac
 done
@@ -84,7 +86,7 @@ if [ -z "$COURSE_ID" ]; then
   sql -F ' | ' -c "SELECT c.id, c.status, c.name, u.email FROM courses c JOIN users u ON u.id = c.owner_user_id ORDER BY c.id" \
     | sed 's/^/  /'
   echo
-  echo "Escoge uno publicado que NO sea del evaluador y ejecuta:"
+  echo "Escoge un curso y ejecuta:"
   echo "  scripts/dev-seed-evaluator.sh --course <id>"
   exit 0
 fi
@@ -94,8 +96,10 @@ fi
 COURSE_ROW="$(sql -F '|' -c "SELECT c.name, c.status, lower(u.email) FROM courses c JOIN users u ON u.id = c.owner_user_id WHERE c.id = $COURSE_ID")"
 [ -n "$COURSE_ROW" ] || die "No existe el curso $COURSE_ID. Ejecuta el script sin --course para ver la lista."
 IFS='|' read -r COURSE_NAME COURSE_STATUS OWNER_EMAIL <<< "$COURSE_ROW"
-[ "$OWNER_EMAIL" != "$EMAIL" ] || die "$EMAIL es el dueño del curso $COURSE_ID: el dueño no puede ser evaluador (DEF-24)."
 echo "Curso $COURSE_ID: $COURSE_NAME ($COURSE_STATUS), dueño $OWNER_EMAIL"
+if [ "$OWNER_EMAIL" = "$EMAIL" ]; then
+  echo "Aviso: $EMAIL es el dueño del curso. Desde B-036 el dueño ya es evaluador al publicar (en borrador aún no); para probar a otro instructor usa otro correo."
+fi
 
 # 1) Keycloak
 echo "1/3 Keycloak (realm $REALM):"

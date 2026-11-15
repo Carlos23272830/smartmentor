@@ -281,7 +281,7 @@ Los códigos de rol son **`learner`**, **`instructor`** y **`admin`** (sección 
 
 - Las etiquetas visibles salen de `src/core/labels.py` (un diccionario por perfil de contexto: `generic`, `academic`, `corporate`), no de cadenas escritas en las páginas. Solo `generic` es P0. Detalle en el [glosario](../design/01-flujo-y-casos-de-uso/glosario.md).
 - El «rol activo» es solo de presentación: la API autoriza por la unión de los roles del usuario. `GET /me` devuelve `roles`, `role_labels` y `default_role`; el menú del avatar permite cambiar de perfil (CU-35).
-- Un experto externo que anota o califica es un `instructor` asignado en `course_evaluators`; no existe un rol `evaluator`.
+- Un experto externo que anota o califica es un `instructor` asignado en `course_evaluators`; no existe un rol `evaluator`. El dueño del curso queda asignado al publicarlo y también puede anotar y calificar (B-036).
 
 ## 9. Datos y clientes
 

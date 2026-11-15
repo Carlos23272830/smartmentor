@@ -111,6 +111,7 @@ En servicios gestionados, `CREATE EXTENSION vector`, `ALTER DATABASE ... SET tim
 | `v2.0.1-002-seed-learner-user` | Usuario aprendiz de desarrollo | Nombre `Learner`, rol `learner` y correo de la propiedad `seed_learner_email` (variable `SEED_LEARNER_EMAIL`). Vacía = no se siembra |
 | `v2.0.1-005-seed-empty-learner-user` | Usuario «Aprendiz Vacío» (T-053) | Rol `learner`, sin inscripciones, con el correo de `seed_empty_learner_email` (variable `SEED_EMPTY_LEARNER_EMAIL`). Vacía = no se siembra |
 | `v2.0.1-005-seed-empty-instructor-user` | Usuario «Instructor Vacío» (T-053) | Rol `instructor`, sin cursos, con el correo de `seed_empty_instructor_email` (variable `SEED_EMPTY_INSTRUCTOR_EMAIL`). Vacía = no se siembra |
+| `v2.0.1-007-allow-owner-evaluator`, `v2.0.1-007-backfill-owner-evaluators` | Dueño como evaluador (B-036) | Retira el trigger que rechazaba al dueño en `course_evaluators` y asigna como evaluador al dueño de cada curso activo en `generating_content` o `published` que aún no tenga fila (idempotente, solo si el dueño sigue siendo instructor activo) |
 
 Los dos usuarios de desarrollo (changelog `v2.0.1/001-seed-dev-users.xml`) funcionan igual que el administrador: sin `identity_subject`, se enlazan con Keycloak en el primer ingreso por el correo verificado, usan `validCheckSum ANY` y su rollback necesita las mismas variables. **En producción deja `SEED_INSTRUCTOR_EMAIL` y `SEED_LEARNER_EMAIL` vacías.** Para iniciar sesión también deben existir en Keycloak: `keycloak/scripts/seed-dev-users.sh`.
 | `v2.0.1-003-short-answer-min-ratio` | Valor por defecto de `learning_paths.short_answer_min_ratio` | 0,667 (2 de 3 criterios, DEF-21) en lugar de 0,200, y descripción corregida: es la proporción mínima de criterios de la rúbrica, no de ítems |
@@ -233,7 +234,7 @@ database/scripts/remote-sync.sh push         # exporta las dos bases locales y l
 | `topics` | Temas (nodos del DAG) | `subtopics`, `position`, `is_mandatory`, `origin`, `review_status`, `extraction_key` único por curso; el vector vive en `ai_embeddings` |
 | `learning_outcomes` | Resultados de aprendizaje | Único `(topic_id, code)`; antes un `jsonb` en `topics` |
 | `topic_prerequisites` | Aristas del DAG | `origin`; sin autoaristas; la ausencia de ciclos la valida la API |
-| `course_evaluators` | Instructores asignados como evaluadores de un curso | Único `(course_id, user_id)`; un trigger rechaza al dueño del curso. Reemplaza al rol `evaluator` |
+| `course_evaluators` | Instructores asignados como evaluadores de un curso | Único `(course_id, user_id)`; el dueño puede ser evaluador y la API lo asigna al publicar el curso (B-036). Reemplaza al rol `evaluator` |
 | `ai_jobs` | Trabajos asíncronos de IA | Los escribe `ai/`; `public_id` es el `job_id` del contrato; `idempotency_key` único; `status`: `queued`, `running`, `succeeded`, `failed` |
 | `syllabus_extractions` | Salidas crudas de cada extracción | Una vigente por curso (`is_current`, índice parcial) |
 
@@ -426,7 +427,7 @@ erDiagram
     }
     course_evaluators {
         bigint course_id FK
-        bigint user_id FK "no es el dueño"
+        bigint user_id FK "instructor; puede ser el dueño"
     }
     syllabus_documents {
         bigint course_id FK
@@ -594,7 +595,7 @@ erDiagram
 
 - `users`: email único sobre `lower(email)` (índice `users_email_uq`). No hay columna de contraseña. Índice único parcial `users_identity_uq` sobre `(identity_provider, identity_subject)` y `CHECK` que exige que ambos estén o ninguno esté.
 - `consents`: índice único parcial `(user_id, consent_type) WHERE revoked_at IS NULL`.
-- `course_evaluators`: trigger `course_evaluators_not_owner_trg` rechaza (`check_violation`) al dueño del curso.
+- `course_evaluators`: único `(course_id, user_id)`. Desde `v2.0.1-007` el dueño del curso puede ser evaluador (se retiró el trigger `course_evaluators_not_owner_trg`).
 - `topic_prerequisites`: único `(topic_id, prerequisite_topic_id)` y `CHECK topic_id <> prerequisite_topic_id`. La ausencia de ciclos en el DAG la valida la API.
 - `enrollments`: único `(user_id, learning_path_id)`. `diagnostics` y `badges`: únicos por `enrollment_id`.
 - `path_steps`: único `(enrollment_id, topic_id)`.
