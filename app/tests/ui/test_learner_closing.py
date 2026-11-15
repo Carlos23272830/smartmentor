@@ -106,6 +106,17 @@ def test_e11_follows_figma() -> None:
     )
 
 
+def test_e11_shows_progress_bars_and_badges_v050() -> None:
+    """Barra del curso y de cada meta, y los estados de «Tus datos» como insignias."""
+    at = learner_app("learner_path", PROGRESS)
+    no_exception(at)
+    assert len(at.get("progress")) == 3  # curso, meta de hoy y meta del mes
+    badges = [e.value for e in at.markdown if "-badge[" in e.value]
+    assert any("Racha de 3 días" in text for text in badges)
+    assert any("Datos: autorizado el" in text for text in badges)
+    assert any("Piloto: " in text for text in badges)
+
+
 def test_e11_without_goals_they_can_be_chosen_b028() -> None:
     """La API responde 404 hasta que hay metas: la sección se muestra vacía y se pueden elegir."""
     at = learner_app("learner_path", PROGRESS, run=False)
