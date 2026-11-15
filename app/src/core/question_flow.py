@@ -249,8 +249,13 @@ def _sheet(
                 if leading_action is not None:
                     leading_action()
                 if allow_dont_know and item.item_type == "multiple_choice":
+                    # Enlace terciario, como en Figma (E3); el CSS lo pinta azul y subrayado.
                     dont_know_in_nav.append(
-                        st.button(DONT_KNOW_LABEL, key=f"{key}-dont-know-{item.item_id}")
+                        st.button(
+                            DONT_KNOW_LABEL,
+                            type="tertiary",
+                            key=f"{key}-dont-know-{item.item_id}",
+                        )
                     )
         with buttons:
             if exits is None and leading_action is not None:
