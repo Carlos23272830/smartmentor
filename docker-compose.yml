@@ -44,6 +44,10 @@ x-ai-environment: &ai-environment
   AI_COURSE_BUDGET_USD: ${AI_COURSE_BUDGET_USD:-}
   AI_ENROLLMENT_BUDGET_USD: ${AI_ENROLLMENT_BUDGET_USD:-}
   AI_EVAL_LIVE: ${AI_EVAL_LIVE:-0}
+  # Escala del prior del perfil (R-002, E4): minmax (actual) o absolute (variante (c)).
+  AI_LEVELING_PRIOR_SCALE: ${AI_LEVELING_PRIOR_SCALE:-minmax}
+  AI_LEVELING_SIMILARITY_FLOOR: ${AI_LEVELING_SIMILARITY_FLOOR:-0.5}
+  AI_LEVELING_SIMILARITY_CEILING: ${AI_LEVELING_SIMILARITY_CEILING:-0.8}
 
 x-ai-service: &ai-service
   # Contexto en la raíz: la imagen copia prompts/ (fuente de verdad de prompts y esquemas) además de ai/.
