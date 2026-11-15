@@ -114,6 +114,37 @@ def test_e6_exhausted_attempts_block_the_quiz() -> None:
     assert any("Usaste todos los intentos" in w.value for w in at.warning)
 
 
+def _topic_without(**fields: object) -> AppTest:
+    """E6 con el contenido que diría la API si faltaran la explicación o el video."""
+    at = learner_app("learner_path", TOPIC, run=False)
+    session_of(at).learner.step_id = 813
+    client = client_of(at)
+    original = client.get_step_content
+    client.get_step_content = lambda *a, **k: original(*a, **k).model_copy(update=fields)  # type: ignore[method-assign]
+    at.run()
+    no_exception(at)
+    return at
+
+
+def test_e6_without_explanation_says_so_b046() -> None:
+    texts = page_texts(_topic_without(explanation=None))
+    assert "Este tema todavía no tiene explicación en texto." in " ".join(texts)
+    assert "Explicación" not in texts
+    assert "Este tema todavía no tiene video." not in " ".join(texts)
+
+
+def test_e6_without_video_says_so_b046() -> None:
+    texts = page_texts(_topic_without(video=None))
+    assert "Este tema todavía no tiene video." in " ".join(texts)
+    assert "Explicación" in texts
+    assert "Este tema todavía no tiene explicación en texto." not in " ".join(texts)
+
+
+def test_e6_with_all_content_has_no_missing_notices_b046() -> None:
+    joined = " ".join(page_texts(_open_topic()))
+    assert "todavía no tiene" not in joined
+
+
 def test_e6_api_error_is_friendly() -> None:
     at = learner_app("learner_path", TOPIC, run=False)
     session_of(at).learner.step_id = 813

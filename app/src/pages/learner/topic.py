@@ -54,6 +54,9 @@ CLOSED_NOTES = {
     "passed": "Ya aprobaste este tema.",
     "skipped": "Este tema se omitió porque tu diagnóstico mostró que ya lo dominas.",
 }
+# B-046: si la API no trae explicación o video no se deja el hueco sin aviso ni se inventa nada.
+NO_EXPLANATION_NOTE = ":material/info: Este tema todavía no tiene explicación en texto."
+NO_VIDEO_NOTE = ":material/info: Este tema todavía no tiene video."
 
 try:
     path: PathDetail = client.get_path(enrollment.id)
@@ -170,12 +173,16 @@ with left:
                 else:
                     st.session_state[sent_key] = True
                     st.rerun()
+    else:
+        st.caption(NO_VIDEO_NOTE)
 
     if content.explanation is not None:
         render_explanation(
             explanation_text(content.explanation.content),
             source_note=source_note(content.explanation),
         )
+    else:
+        st.caption(NO_EXPLANATION_NOTE)
     if content.personal_example:
         st.markdown(f"**{content.personal_example.get('title', 'Ejemplo para ti')}**")
         st.markdown(str(content.personal_example.get("body", "")))
