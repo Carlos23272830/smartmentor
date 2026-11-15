@@ -42,6 +42,7 @@ from app.application.pricing import PriceTable
 from app.application.syllabus import SyllabusStructureHandler
 from app.core.config import Settings
 from app.core.security import ServiceTokenValidator
+from app.domain.leveling import PriorScale
 from app.ports.budget import BudgetGuard
 from app.ports.cache import GenerationCache
 from app.ports.call_logs import LlmCallLogRepository
@@ -277,7 +278,12 @@ def build_container(settings: Settings, overrides: Overrides | None = None) -> C
         budget=budget,
         clock=clock,
     )
-    estimator = LevelEstimator(embedding_runner, catalog)
+    prior_scale = PriorScale(
+        mode=settings.ai_leveling_prior_scale,
+        floor=settings.ai_leveling_similarity_floor,
+        ceiling=settings.ai_leveling_similarity_ceiling,
+    )
+    estimator = LevelEstimator(embedding_runner, catalog, prior_scale)
     content = build_content_for_container(
         runner=runner,
         embedding_runner=embedding_runner,

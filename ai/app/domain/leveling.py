@@ -4,8 +4,9 @@ Signals per topic (0-100):
 
 * ``test``: difficulty-weighted hits of the diagnostic items; «No lo sé», a missing answer or a
   short answer without grading count as a miss.
-* ``profile``: cosine between the learner description and the topic, min-max normalised over
-  the topics (as the notebook v2).
+* ``profile``: cosine between the learner description and the topic, turned into a prior with
+  :class:`PriorScale`: min-max over the topics (``minmax``, as the notebook v2, the default) or a
+  clipped linear map between two fixed similarity thresholds (``absolute``, variant (c) of E4).
 * ``resume``: the same with the resume text (DEF-10).
 
 The level is the weighted sum with the path weights (80/10/10 by default, C-02). A missing
@@ -18,6 +19,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import Literal
 
 from app.domain.contracts.assessment import LearnerAnswer
 from app.domain.contracts.common import ItemType
@@ -30,6 +32,11 @@ from app.domain.contracts.diagnostic import (
 
 ALGORITHM = "weighted_difficulty v1"
 SPREAD_EPSILON = 1e-6
+
+PriorScaleMode = Literal["minmax", "absolute"]
+# Umbrales por defecto de la escala absoluta (provisionales, ver PriorScale).
+DEFAULT_SIMILARITY_FLOOR = 0.5
+DEFAULT_SIMILARITY_CEILING = 0.8
 
 
 @dataclass(frozen=True)
@@ -75,6 +82,48 @@ def cosine(a: Sequence[float], b: Sequence[float]) -> float:
     return max(-1.0, min(1.0, dot / norm)) if norm > 0 else 0.0
 
 
+@dataclass(frozen=True)
+class PriorScale:
+    """How a cosine similarity becomes a prior of 0-100 (R-002, variants of E4).
+
+    * ``minmax`` (default, current behaviour): min-max over the topics of the same person. It
+      amplifies tiny differences: two topics at 0.611 and 0.622 get 0 and 100.
+    * ``absolute`` (variant (c)): ``100 * clip((s - floor) / (ceiling - floor), 0, 1)``, the same
+      map for every person and topic, without dividing by the person's own range. A difference
+      ``d`` in similarity moves the prior at most ``100 * d / (ceiling - floor)`` points (0.011 ->
+      3.7 points with the defaults), and a person close to every topic gets high priors in all.
+
+    Default thresholds (provisional, not yet measured on our data; calibrate them with the
+    distribution of profile similarities of E4): dense embedding models like the one of ADR 0012
+    (768 dimensions, L2-normalised, ``similarity`` task) give cosines with a high baseline, so
+    unrelated short texts usually stay around 0.5 and a description that names the topic itself
+    gets close to 0.8; the 0.611/0.622 values of the finding fall inside that band. Hence
+    ``floor = 0.5`` (no affinity, prior 0) and ``ceiling = 0.8`` (clear affinity, prior 100). A 0.3
+    wide band keeps the prior sensitive without saturating; the values depend on the model and
+    must change with it (ADR 0012, P-05).
+    """
+
+    mode: PriorScaleMode = "minmax"
+    floor: float = DEFAULT_SIMILARITY_FLOOR
+    ceiling: float = DEFAULT_SIMILARITY_CEILING
+
+    def __post_init__(self) -> None:
+        if not -1.0 <= self.floor < self.ceiling <= 1.0:
+            raise ValueError("PriorScale needs -1 <= floor < ceiling <= 1")
+
+    @property
+    def algorithm(self) -> str:
+        """``algorithm`` of the result; min-max keeps the historical name (no output change)."""
+        if self.mode == "absolute":
+            return f"{ALGORITHM} (absolute prior {self.floor:g}-{self.ceiling:g})"
+        return ALGORITHM
+
+    def priors(self, similarities: Sequence[float]) -> list[float]:
+        if self.mode == "absolute":
+            return absolute_priors(similarities, self.floor, self.ceiling)
+        return normalized_priors(similarities)
+
+
 def normalized_priors(similarities: Sequence[float]) -> list[float]:
     """Min-max to 0-100 over the topics; all zero when the spread is negligible (notebook)."""
     if not similarities:
@@ -84,6 +133,21 @@ def normalized_priors(similarities: Sequence[float]) -> list[float]:
     if spread <= SPREAD_EPSILON:
         return [0.0 for _ in similarities]
     return [min(100.0, max(0.0, 100 * (s - low) / spread)) for s in similarities]
+
+
+def absolute_priors(
+    similarities: Sequence[float],
+    floor: float = DEFAULT_SIMILARITY_FLOOR,
+    ceiling: float = DEFAULT_SIMILARITY_CEILING,
+) -> list[float]:
+    """Clipped linear map of each similarity to 0-100 between two fixed thresholds.
+
+    Independent of the other topics: the prior of a topic only depends on its own similarity.
+    """
+    if ceiling <= floor:
+        raise ValueError("ceiling must be greater than floor")
+    width = ceiling - floor
+    return [min(100.0, max(0.0, 100 * (s - floor) / width)) for s in similarities]
 
 
 def applied_weights(
@@ -144,13 +208,18 @@ def estimate_levels(
     thresholds: LevelThresholds,
     profile_similarity: Mapping[str, float] | None = None,
     resume_similarity: Mapping[str, float] | None = None,
+    prior_scale: PriorScale | None = None,
 ) -> DiagnosticResult:
-    """``diagnostic_result.v1`` for the given topics (order kept)."""
+    """``diagnostic_result.v1`` for the given topics (order kept).
+
+    ``prior_scale`` picks how similarities become priors; ``None`` keeps min-max (default).
+    """
     if len(set(topic_ids)) != len(topic_ids):
         raise ValueError("topic_ids has duplicates")
+    scale = prior_scale or PriorScale()
     scores, overall = test_scores(topic_ids, items, answers)
-    profile_priors = _priors(topic_ids, profile_similarity)
-    resume_priors = _priors(topic_ids, resume_similarity)
+    profile_priors = _priors(topic_ids, profile_similarity, scale)
+    resume_priors = _priors(topic_ids, resume_similarity, scale)
     levels: list[TopicLevel] = []
     for topic_id in topic_ids:
         prior = profile_priors.get(topic_id)
@@ -174,7 +243,7 @@ def estimate_levels(
             )
         )
     return DiagnosticResult(
-        algorithm=ALGORITHM,
+        algorithm=scale.algorithm,
         configured_weights=weights,
         thresholds=thresholds,
         level_by_topic=levels,
@@ -182,9 +251,11 @@ def estimate_levels(
     )
 
 
-def _priors(topic_ids: Sequence[str], similarity: Mapping[str, float] | None) -> dict[str, float]:
+def _priors(
+    topic_ids: Sequence[str], similarity: Mapping[str, float] | None, scale: PriorScale
+) -> dict[str, float]:
     if not similarity:
         return {}
     present = [t for t in topic_ids if t in similarity]
-    values = normalized_priors([similarity[t] for t in present])
+    values = scale.priors([similarity[t] for t in present])
     return dict(zip(present, values, strict=True))

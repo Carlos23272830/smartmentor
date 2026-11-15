@@ -8,10 +8,16 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from app.core.config import Settings
 from app.domain.contracts.assessment import LearnerAnswer
 from app.domain.contracts.diagnostic import LevelThresholds, LevelWeights
 from app.domain.leveling import (
+    ALGORITHM,
+    DEFAULT_SIMILARITY_CEILING,
+    DEFAULT_SIMILARITY_FLOOR,
+    PriorScale,
     ScoredItem,
+    absolute_priors,
     applied_weights,
     combine,
     estimate_levels,
@@ -80,6 +86,106 @@ def test_no_signal_at_all_counts_the_test_as_zero() -> None:
 def test_flat_similarities_give_zero_priors() -> None:
     assert normalized_priors([0.3, 0.3, 0.3]) == [0.0, 0.0, 0.0]
     assert normalized_priors([0.1, 0.3]) == [0.0, 100.0]
+
+
+# ---------- R-002: escala del prior (variante (c) de E4) ----------
+
+# Hallazgo 1 del primer corte: 0,011 de diferencia entre las similitudes de dos temas.
+FINDING = [0.611, 0.622]
+ABSOLUTE = PriorScale(mode="absolute")
+
+
+def test_finding_minmax_exaggerates_a_tiny_difference() -> None:
+    assert PriorScale().priors(FINDING) == [0.0, 100.0]
+    assert PriorScale(mode="minmax").priors(FINDING) == normalized_priors(FINDING)
+
+
+def test_finding_absolute_keeps_a_tiny_difference_tiny() -> None:
+    low, high = ABSOLUTE.priors(FINDING)
+    assert low == pytest.approx(100 * 0.111 / 0.3)
+    assert high == pytest.approx(100 * 0.122 / 0.3)
+    assert high - low == pytest.approx(100 * 0.011 / 0.3)  # 3,7 puntos, no 100
+    assert high - low < 4
+
+
+def test_absolute_limits() -> None:
+    assert absolute_priors([]) == []
+    assert ABSOLUTE.priors([0.3, 0.3, 0.3]) == [0.0, 0.0, 0.0]  # iguales y bajo el piso
+    assert ABSOLUTE.priors([0.65, 0.65]) == [pytest.approx(50.0)] * 2  # iguales, no se anulan
+    assert ABSOLUTE.priors([0.7]) == [pytest.approx(200 / 3)]  # una sola: no depende de otras
+    assert normalized_priors([0.7]) == [0.0]
+    # Fuera de la banda (y del rango del coseno) se recorta a 0..100.
+    assert ABSOLUTE.priors([-1.0, 0.2, 0.5, 0.8, 0.95, 1.5]) == [0.0, 0.0, 0.0, 100.0, 100.0, 100.0]
+    assert absolute_priors([0.0, 0.5, 1.0], floor=0.0, ceiling=1.0) == [0.0, 50.0, 100.0]
+
+
+def test_absolute_rejects_an_empty_band() -> None:
+    with pytest.raises(ValueError, match="ceiling must be greater"):
+        absolute_priors([0.5], floor=0.8, ceiling=0.8)
+    with pytest.raises(ValueError, match="floor < ceiling"):
+        PriorScale(mode="absolute", floor=0.8, ceiling=0.5)
+    with pytest.raises(ValueError, match="floor < ceiling"):
+        PriorScale(mode="absolute", floor=-2.0, ceiling=0.5)
+
+
+@settings(max_examples=200, deadline=None)
+@given(a=st.floats(-1, 1), b=st.floats(-1, 1))
+def test_absolute_moves_the_prior_in_proportion_to_the_similarity(a: float, b: float) -> None:
+    pa, pb = ABSOLUTE.priors([a, b])
+    width = DEFAULT_SIMILARITY_CEILING - DEFAULT_SIMILARITY_FLOOR
+    assert abs(pa - pb) <= 100 * abs(a - b) / width + 1e-9
+    assert 0 <= pa <= 100 and 0 <= pb <= 100
+    assert (pa <= pb) == (a <= b) or pa == pb
+
+
+def _levels_with_profile(scale: PriorScale | None) -> dict[str, object]:
+    result = estimate_levels(
+        topic_ids=["a", "b", "c"],
+        items=_items("a"),
+        answers=[LearnerAnswer(item_id="a_2", selected_option=1)],
+        weights=WEIGHTS,
+        thresholds=THRESHOLDS,
+        profile_similarity={"a": 0.611, "b": 0.622, "c": 0.4},
+        resume_similarity={"a": 0.7, "b": 0.55, "c": 0.62},
+        prior_scale=scale,
+    )
+    return result.model_dump()
+
+
+def test_default_scale_does_not_change_the_current_output() -> None:
+    current = _levels_with_profile(None)
+    assert current == _levels_with_profile(PriorScale())
+    assert current == _levels_with_profile(PriorScale(mode="minmax", floor=0.1, ceiling=0.2))
+    assert current["algorithm"] == ALGORITHM == "weighted_difficulty v1"
+    # Valores de la implementación anterior a R-002 (misma entrada, salida idéntica).
+    by_topic = {t["topic_id"]: t for t in current["level_by_topic"]}  # type: ignore[attr-defined]
+    assert [
+        (t["profile_prior"], t["resume_prior"], t["level"], t["classification"])
+        for t in by_topic.values()
+    ] == [
+        (95.0, 100.0, 46.1, "to_learn"),
+        (100.0, 0.0, 50.0, "to_reinforce"),
+        (0.0, 46.7, 23.4, "to_learn"),
+    ]
+
+
+def test_absolute_scale_in_the_levels() -> None:
+    result = _levels_with_profile(ABSOLUTE)
+    assert result["algorithm"] == "weighted_difficulty v1 (absolute prior 0.5-0.8)"
+    by_topic = {t["topic_id"]: t for t in result["level_by_topic"]}  # type: ignore[attr-defined]
+    assert by_topic["a"]["profile_prior"] == 37.0
+    assert by_topic["b"]["profile_prior"] == 40.7
+    assert by_topic["c"]["profile_prior"] == 0.0
+    assert by_topic["a"]["resume_prior"] == pytest.approx(66.7)
+
+
+def test_settings_default_to_minmax_with_the_domain_thresholds() -> None:
+    configured = Settings()
+    assert configured.ai_leveling_prior_scale == "minmax"
+    assert configured.ai_leveling_similarity_floor == DEFAULT_SIMILARITY_FLOOR
+    assert configured.ai_leveling_similarity_ceiling == DEFAULT_SIMILARITY_CEILING
+    with pytest.raises(ValueError, match="AI_LEVELING_SIMILARITY_FLOOR"):
+        Settings(ai_leveling_similarity_floor=0.8, ai_leveling_similarity_ceiling=0.5)
 
 
 def test_all_weights_missing_returns_none() -> None:

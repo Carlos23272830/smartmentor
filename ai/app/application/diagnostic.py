@@ -33,7 +33,7 @@ from app.domain.contracts.validation import (
     check_objective,
 )
 from app.domain.errors import InputReferenceNotFoundError, TaskError
-from app.domain.leveling import ScoredItem, cosine, estimate_levels
+from app.domain.leveling import PriorScale, ScoredItem, cosine, estimate_levels
 from app.domain.pseudonymize import pseudonymize
 from app.ports.catalog import CatalogReader, TopicRecord
 
@@ -143,9 +143,15 @@ class LevelsEstimateInput(ContractModel):
 class LevelEstimator:
     """Deterministic levels plus the profile and resume signals (embeddings)."""
 
-    def __init__(self, embeddings: EmbeddingRunner, catalog: CatalogReader) -> None:
+    def __init__(
+        self,
+        embeddings: EmbeddingRunner,
+        catalog: CatalogReader,
+        prior_scale: PriorScale | None = None,
+    ) -> None:
         self._embeddings = embeddings
         self._catalog = catalog
+        self._prior_scale = prior_scale or PriorScale()
 
     async def _similarities(
         self, payload: LevelsEstimateInput, ctx: CallContext
@@ -193,6 +199,7 @@ class LevelEstimator:
             thresholds=payload.thresholds,
             profile_similarity=profile,
             resume_similarity=resume,
+            prior_scale=self._prior_scale,
         )
 
 

@@ -14,10 +14,10 @@ from __future__ import annotations
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Self
 from urllib.parse import quote_plus
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 AI_ROOT = Path(__file__).resolve().parents[2]
@@ -93,6 +93,14 @@ class Settings(BaseSettings):
     # 1 = the evaluation harness may call the real LLM (never in CI).
     ai_eval_live: bool = False
 
+    # --- Nivel del diagnóstico (R-002, experimento E4) ---
+    # Cómo la similitud perfil↔tema se vuelve prior: minmax (actual, por defecto) o absolute
+    # (variante (c), lineal recortado entre los dos umbrales). Los umbrales por defecto son los de
+    # app.domain.leveling.PriorScale, donde está su justificación; una prueba los mantiene iguales.
+    ai_leveling_prior_scale: Literal["minmax", "absolute"] = "minmax"
+    ai_leveling_similarity_floor: float = Field(default=0.5, ge=-1, le=1)
+    ai_leveling_similarity_ceiling: float = Field(default=0.8, ge=-1, le=1)
+
     @field_validator(
         "ai_database_user",
         "ai_database_password",
@@ -115,6 +123,14 @@ class Settings(BaseSettings):
     @classmethod
     def _blank_is_missing(cls, value: object) -> object:
         return _empty_to_none(value)
+
+    @model_validator(mode="after")
+    def _check_similarity_band(self) -> Self:
+        if self.ai_leveling_similarity_floor >= self.ai_leveling_similarity_ceiling:
+            raise ValueError(
+                "AI_LEVELING_SIMILARITY_FLOOR must be lower than AI_LEVELING_SIMILARITY_CEILING"
+            )
+        return self
 
     @property
     def database_configured(self) -> bool:
