@@ -247,3 +247,154 @@ def test_a_freshly_issued_expired_token_shows_a7_without_parking(
     at = new_app().run()
     assert "Tu sesión expiró" in page_texts(at, skip_header=False)
     assert len(store) == 0
+
+
+# --- B-040 · La renovación del token no descarta el clic que la provoca ------------------------
+
+RESUME = "pages/learner/onboarding_resume.py"
+SAVED_TEXT = "Listo: tu perfil quedó guardado."
+
+
+def _empty_profile() -> dict[str, object]:
+    profile: dict[str, object] = json.loads(
+        (FIXTURES_DIR / "profile.json").read_text(encoding="utf-8")
+    )
+    profile.update(education_level=None, qualification_title=None, job_title=None)
+    return profile
+
+
+def _learner_api(monkeypatch: pytest.MonkeyPatch, token: dict[str, str]) -> list[str]:
+    """Aprendiz con la API simulada; devuelve los logins que se pidieron a Keycloak."""
+    from core import auth
+
+    logins: list[str] = []
+    monkeypatch.setattr(auth, "is_logged_in", lambda: True)
+    monkeypatch.setattr(auth, "user_key", lambda: "sub-ana")
+    monkeypatch.setattr(auth, "_exposed_token", lambda name: token.get(name))
+    monkeypatch.setattr(st, "login", lambda provider: logins.append(provider))
+    respx.get(f"{API}/api/v1/me").mock(return_value=httpx.Response(200, json=fixture("me_learner")))
+    respx.get(f"{API}/api/v1/learning-paths").mock(
+        return_value=httpx.Response(200, json=fixture("learning_paths"))
+    )
+    respx.get(f"{API}/api/v1/me/profile").mock(
+        return_value=httpx.Response(200, json=_empty_profile())
+    )
+    return logins
+
+
+def _fill_resume(at: AppTest) -> None:
+    at.selectbox(key="resume-education").select("undergraduate")
+    at.text_input(key="resume-title").input("Ingeniería de sistemas")
+
+
+def _open_resume(monkeypatch: pytest.MonkeyPatch) -> tuple[AppTest, dict[str, str], list[str]]:
+    from core import renewal
+
+    monkeypatch.setattr(renewal, "STORE", renewal.RenewalStore())
+    token = {"access": jwt_issued(timedelta(minutes=1), timedelta(minutes=4))}
+    logins = _learner_api(monkeypatch, token)
+    at = new_app().run()
+    at.switch_page(RESUME).run()
+    assert [e.value for e in at.exception] == []
+    return at, token, logins
+
+
+@respx.mock
+@pytest.mark.usefixtures("api_mode")
+def test_a_click_when_the_token_expires_keeps_the_form_and_is_repeated_b040(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """E2b: el clic en «Guardar y continuar» llega con el token vencido. Antes, el formulario
+    volvía vacío y no se guardaba nada; ahora se aparcan los valores y el clic, y al volver de
+    Keycloak (otra `AppTest`, la sesión nueva) el formulario los conserva y el clic se repite."""
+    from core import renewal
+
+    saved = respx.put(f"{API}/api/v1/me/profile").mock(
+        return_value=httpx.Response(200, json=fixture("profile"))
+    )
+    at, token, logins = _open_resume(monkeypatch)
+
+    # La persona llena el formulario y pulsa justo cuando el token vence.
+    token["access"] = jwt_issued(timedelta(minutes=6), timedelta(seconds=-1))
+    _fill_resume(at)
+    at.button(key="resume-save").click().run()
+    assert [e.value for e in at.exception] == []
+    assert logins == ["keycloak"]
+    assert "Renovando tu sesión…" in page_texts(at, skip_header=False)
+    assert not saved.called  # nada se hizo con el token vencido
+    assert len(renewal.STORE) == 1
+
+    # Vuelta de Keycloak: sesión nueva en la raíz con un token nuevo.
+    token["access"] = jwt(timedelta(minutes=5))
+    back = new_app().run()
+    assert [e.value for e in back.exception] == []
+    assert session_of(back).current_page == RESUME
+    assert back.selectbox(key="resume-education").value == "undergraduate"
+    assert back.text_input(key="resume-title").value == "Ingeniería de sistemas"
+    # El clic se repitió una sola vez y con los valores del formulario.
+    assert saved.call_count == 1
+    body = json.loads(saved.calls.last.request.content)
+    assert body["education_level"] == "undergraduate"
+    assert body["qualification_title"] == "Ingeniería de sistemas"
+    assert SAVED_TEXT in [s.value for s in back.success]
+
+    back.run()  # otra ejecución no repite el clic
+    assert saved.call_count == 1
+    assert len(renewal.STORE) == 0
+
+
+@respx.mock
+@pytest.mark.usefixtures("api_mode")
+def test_no_renewal_in_the_middle_of_an_action_while_the_token_still_works_b040(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Con 60 s por delante, el clic se atiende con el token actual; la renovación queda para la
+    siguiente ejecución sin acción (aquí, una recarga), sin interrumpir nada."""
+    from core import renewal
+
+    saved = respx.put(f"{API}/api/v1/me/profile").mock(
+        return_value=httpx.Response(200, json=fixture("profile"))
+    )
+    at, token, logins = _open_resume(monkeypatch)
+
+    token["access"] = jwt_issued(timedelta(minutes=4), timedelta(seconds=60))
+    _fill_resume(at)
+    at.button(key="resume-save").click().run()
+    assert [e.value for e in at.exception] == []
+    assert logins == []
+    assert saved.call_count == 1
+    assert SAVED_TEXT in [s.value for s in at.success]
+
+    # Ejecución sin acción y con el token a punto de vencer: se renueva ya, sin clic pendiente.
+    at.run()
+    assert logins == ["keycloak"]
+    assert "Renovando tu sesión…" in page_texts(at, skip_header=False)
+    parked = renewal.STORE.claim("sub-ana")
+    assert parked is not None
+    assert parked.click is None
+    assert parked.page == RESUME
+    assert parked.drafts["resume-title"] == "Ingeniería de sistemas"
+
+
+@respx.mock
+@pytest.mark.usefixtures("api_mode")
+def test_a_changed_widget_with_an_expired_token_is_restored_without_a_click_b040(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Un widget cambiado (sin botón) que llega con el token vencido: su valor se conserva y no
+    hay clic que repetir."""
+    saved = respx.put(f"{API}/api/v1/me/profile").mock(
+        return_value=httpx.Response(200, json=fixture("profile"))
+    )
+    at, token, logins = _open_resume(monkeypatch)
+
+    token["access"] = jwt_issued(timedelta(minutes=6), timedelta(seconds=-1))
+    at.text_input(key="resume-job").input("Analista").run()
+    assert logins == ["keycloak"]
+
+    token["access"] = jwt(timedelta(minutes=5))
+    back = new_app().run()
+    assert [e.value for e in back.exception] == []
+    assert back.text_input(key="resume-job").value == "Analista"
+    assert session_of(back).resume_click is None
+    assert not saved.called

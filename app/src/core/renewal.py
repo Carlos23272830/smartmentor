@@ -20,17 +20,25 @@ Límites:
   inicio.
 - Solo la recupera una sesión **nueva** (sin `GET /me` cargado): una pestaña ya abierta de la misma
   persona no se la lleva.
-- Los widgets que no guardan su valor en `AppSession` (un texto a medio escribir sin guardar) se
-  pierden: viven en `st.session_state` con el `key` del widget y la sesión vieja ya no existe.
+- Un texto que la persona escribía y que el navegador aún no había enviado (sin salir del campo)
+  se pierde: el servidor nunca lo recibió.
+
+B-040: también se aparcan los valores de los widgets con `key` de la página (`drafts`, que se ponen
+de nuevo al volver para que el formulario no quede vacío) y, si la renovación interrumpió un clic
+antes de que la página corriera, ese botón (`click`), que `main.py` repite al volver. Repetirlo no
+duplica nada: la página no llegó a ejecutarse con el token vencido, el clic se aparca una sola vez
+y las entregas llevan la clave de idempotencia de la sesión aparcada.
 """
 
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 from urllib.parse import urlparse
 
 from core.navigation import page_for_url_path
-from core.session import AppSession
+from core.session import AppSession, PendingClick
+from core.widget_state import PressedButton
 
 PARK_TTL_SECONDS = 600
 
@@ -42,6 +50,8 @@ class Parked:
     page: str | None
     session: AppSession
     expires_at: float
+    drafts: dict[str, Any] = field(default_factory=dict)
+    click: PressedButton | None = None
 
 
 class RenewalStore:
@@ -53,12 +63,21 @@ class RenewalStore:
         self._lock = threading.Lock()
 
     def park(
-        self, user_key: str, *, page: str | None, session: AppSession, now: float | None = None
+        self,
+        user_key: str,
+        *,
+        page: str | None,
+        session: AppSession,
+        drafts: dict[str, Any] | None = None,
+        click: PressedButton | None = None,
+        now: float | None = None,
     ) -> None:
         current = time.monotonic() if now is None else now
         with self._lock:
             self._purge(current)
-            self._items[user_key] = Parked(page, session, current + self._ttl)
+            self._items[user_key] = Parked(
+                page, session, current + self._ttl, dict(drafts or {}), click
+            )
 
     def claim(self, user_key: str, *, now: float | None = None) -> Parked | None:
         """La sesión aparcada de la persona, si sigue vigente; se borra al leerla."""
@@ -88,16 +107,28 @@ def page_from_url(url: str | None) -> str | None:
     return page_for_url_path(segments[-1]) if segments else None
 
 
-def park(store: RenewalStore, user_key: str | None, page: str | None, session: AppSession) -> bool:
-    """Aparca la sesión antes de redirigir; sin identidad no se aparca (no habría cómo volver)."""
+def park(
+    store: RenewalStore,
+    user_key: str | None,
+    page: str | None,
+    session: AppSession,
+    *,
+    drafts: dict[str, Any] | None = None,
+    click: PressedButton | None = None,
+) -> bool:
+    """Aparca la sesión antes de redirigir; sin identidad no se aparca (no habría cómo volver).
+
+    `click` solo se pasa si la página no llegó a correr en esta ejecución (B-040).
+    """
     if not user_key:
         return False
-    store.park(user_key, page=page, session=session)
+    store.park(user_key, page=page, session=session, drafts=drafts, click=click)
     return True
 
 
 def restore(store: RenewalStore, user_key: str | None, current: AppSession) -> AppSession | None:
-    """La sesión aparcada para una sesión nueva de la misma persona, con la página a la que vuelve.
+    """La sesión aparcada para una sesión nueva de la misma persona, con la página a la que vuelve,
+    el borrador de sus widgets y el clic que hay que repetir (B-040).
 
     Devuelve `None` si no hay nada aparcado o si `current` ya tiene a la persona cargada (es una
     pestaña que siguió abierta, no la que volvió de Keycloak).
@@ -107,5 +138,12 @@ def restore(store: RenewalStore, user_key: str | None, current: AppSession) -> A
     parked = store.claim(user_key)
     if parked is None:
         return None
-    parked.session.resume_page = parked.page
-    return parked.session
+    session = parked.session
+    session.resume_page = parked.page
+    session.resume_drafts = dict(parked.drafts)
+    session.resume_click = (
+        PendingClick(page=parked.page, widget_id=parked.click.widget_id, key=parked.click.key)
+        if parked.click is not None and parked.page is not None
+        else None
+    )
+    return session
