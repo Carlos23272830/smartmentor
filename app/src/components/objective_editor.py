@@ -12,6 +12,8 @@ import streamlit as st
 from components.layout import render_notice
 from components.theme import BLOOM_VERBS
 
+VERB_PLACEHOLDER = "Elige o escribe un verbo"
+
 
 @dataclass(frozen=True)
 class ObjectiveDraft:
@@ -60,6 +62,8 @@ def render_objective_editor(
         verbs,
         index=verbs.index(draft.bloom_verb) if draft.bloom_verb in verbs else None,
         accept_new_options=True,
+        # Sin `placeholder`, Streamlit muestra «Choose or add an option» en inglés (B-039).
+        placeholder=VERB_PLACEHOLDER,
         key=f"{key}-verb",
     )
     st.caption("Recordar · Comprender · Aplicar · Analizar · Evaluar · Crear")

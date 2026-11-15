@@ -6,13 +6,22 @@ API. Aquí se redactan las líneas que muestra la pantalla.
 
 from typing import Literal
 
-from clients.models import AssessmentItem, BloomLevel, Enrollment, PathDetail, PathStep
+from clients.models import (
+    AssessmentItem,
+    BloomLevel,
+    Enrollment,
+    NextAction,
+    NextActionType,
+    PathDetail,
+    PathStep,
+)
 from components.formatting import approx_duration, duration, percent_points
 from components.path_rows import PathRow
 
 # Pasos que no se abren: la API no entrega su contenido (`409 STEP_NOT_AVAILABLE`). Un tema
-# aprobado u omitido no se repasa desde la ruta (decisión del 11-nov-2026: seguir a la API).
-CLOSED_STEPS = frozenset({"blocked", "on_hold", "passed", "skipped"})
+# aprobado u omitido sí se abre: la API lo entrega en modo repaso (B-025, 2026-11-15).
+CLOSED_STEPS = frozenset({"blocked", "on_hold"})
+SKIPPED_DETAIL = "Puedes repasarlo cuando quieras"
 
 
 def reason_line(step: PathStep) -> str:
@@ -43,7 +52,7 @@ def detail_line(step: PathStep) -> str | None:
     best = percent_points(step.best_score) if step.best_score is not None else None
     match step.status:
         case "skipped":
-            return None  # el motivo ya dice «Omitido por tu diagnóstico»
+            return SKIPPED_DETAIL  # el motivo ya dice «Omitido por tu diagnóstico»
         case "passed":
             if best is None:
                 return "Aprobado"
@@ -96,17 +105,53 @@ def path_rows(path: PathDetail, *, fixed: bool) -> list[PathRow]:
     ]
 
 
+def savings_label(path: PathDetail) -> str:
+    """Tiempo ahorrado por los temas omitidos, o «—» si la API no lo conoce.
+
+    La API suma `estimated_minutes` de los temas omitidos; el syllabus extraído con IA suele dejar
+    ese dato en `null`, y entonces la suma da 0 aunque haya temas omitidos. «0 min» parecería que
+    omitir no ahorró nada (B-039).
+    """
+    savings = path.savings
+    if savings.skipped_topics and not savings.skipped_minutes:
+        return "—"
+    return duration(savings.skipped_minutes)
+
+
 def progress_line(enrollment: Enrollment, path: PathDetail) -> str:
     progress = enrollment.progress
     line = f"Progreso: {progress.steps_done} de {progress.steps_total} temas"
     skipped = path.savings.skipped_topics
     if skipped:
         word = "omitido" if skipped == 1 else "omitidos"
-        line += (
-            f" · {skipped} {word} por tu diagnóstico "
-            f"(ahorro {duration(path.savings.skipped_minutes)})"
-        )
+        line += f" · {skipped} {word} por tu diagnóstico"
+        if path.savings.skipped_minutes:
+            line += f" (ahorro {duration(path.savings.skipped_minutes)})"
     return line
+
+
+CONTINUE_TOPIC = "Continuar tema"
+# Texto del botón principal de E5 según el `next_action` (B-039). Lo que no está aquí sigue un
+# tema y dice «Continuar tema». Se reusan los textos de E9, E10 y E13a.
+CONTINUE_LABELS: dict[NextActionType, str] = {
+    "take_final": "Presentar evaluación final",
+    "review_final": "Ver resultado de la evaluación final",
+    "answer_survey": "Responder encuesta",
+    "view_badge": "Ver badge",
+}
+
+
+def continue_label(action: NextAction, path: PathDetail, *, fixed: bool) -> str:
+    """Texto de «Continuar» de E5 y E5b: dice a dónde lleva el `next_action`."""
+    if action.type == "take_final" and path.final.attempts_used > 0:
+        return "Reintentar evaluación final"
+    if action.type == "continue_attempt" and action.step_id is None:
+        return "Continuar evaluación final"  # intento abierto de la final
+    label = CONTINUE_LABELS.get(action.type)
+    if label is not None:
+        return label
+    next_step = step_name(path, action.step_id)
+    return f"Continuar con {next_step}" if fixed and next_step else CONTINUE_TOPIC
 
 
 def step_name(path: PathDetail, step_id: int | None) -> str | None:

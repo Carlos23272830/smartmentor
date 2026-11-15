@@ -182,7 +182,22 @@ async def test_the_whole_learner_flow_from_enrollment_to_badge(
     )
     assert content.status_code == 200, content.text
     assert content.json()["status"] == "in_progress"
+    assert content.json()["mode"] == "study"
     assert content.json()["attempts"] == {"used": 0, "max": 3, "extra_granted": 0, "remaining": 3}
+
+    # Un tema omitido se repasa (B-025): llega el contenido en modo repaso, sin abrir intentos
+    linear = int(steps[path.linear]["step_id"])
+    review = await learner.get(f"{API}/me/enrollments/{enrollment_id}/steps/{linear}/content")
+    assert review.status_code == 200, review.text
+    assert review.json()["mode"] == "review"
+    assert review.json()["status"] == "skipped"
+    no_quiz = await learner.post(
+        f"{API}/me/enrollments/{enrollment_id}/steps/{linear}/attempts",
+        json={"assessment_type": "topic"},
+        headers=key(),
+    )
+    assert no_quiz.status_code == 409
+    assert no_quiz.json()["code"] == "STEP_NOT_AVAILABLE"
 
     # Quiz de fundamentos: 4 de opción múltiple + 1 respuesta corta con 2 de 3 criterios
     no_key = await learner.post(
@@ -210,6 +225,12 @@ async def test_the_whole_learner_flow_from_enrollment_to_badge(
     assert first["attempts"] == {"used": 1, "max": 3, "remaining": 2}
     assert first["next_action"]["type"] == "study_topic"
     assert first["next_action"]["step_id"] == logistic
+    passed_review = await learner.get(
+        f"{API}/me/enrollments/{enrollment_id}/steps/{fundamentals}/content"
+    )
+    assert passed_review.status_code == 200, passed_review.text
+    assert passed_review.json()["mode"] == "review"
+    assert passed_review.json()["status"] == "passed"
 
     # Revisión humana: solo respuestas cortas calificadas por el LLM
     review = await learner.post(

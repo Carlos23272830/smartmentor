@@ -178,7 +178,7 @@ Campos sin valor van en `null`. `screen` es una ayuda para la app (código de Fi
 | `GET /me/enrollments/{id}/diagnostic/result` | learner | — | `200 DiagnosticResult` | `409 DIAGNOSTIC_NOT_READY` | E4 |
 | `PUT /me/enrollments/{id}/objective` | learner | `Objective` (tres partes) | `200 Enrollment` con `path`; llama a `path.sequence` y crea los pasos | `422 OBJECTIVE_NOT_MEASURABLE`, `409 INVALID_STATE_TRANSITION` | E4, E4b |
 | `GET /me/enrollments/{id}/path` | learner | — | `200 Path` | `404` | E5, E5b |
-| `GET /me/enrollments/{id}/steps/{step_id}/content` | learner | — | `200 StepContent` | `404 STEP_NOT_FOUND`, `409 STEP_NOT_AVAILABLE` | E6 |
+| `GET /me/enrollments/{id}/steps/{step_id}/content` | learner | — | `200 StepContent`; un tema aprobado u omitido llega con `mode: "review"` (repaso) | `404 STEP_NOT_FOUND`, `409 STEP_NOT_AVAILABLE` (paso bloqueado o en espera) | E6, E9 |
 | `POST /me/enrollments/{id}/steps/{step_id}/attempts` | learner | `{"assessment_type": "topic"}` o `"retention"` | `201 Attempt` con ítems no vistos; `202 JobAccepted` si hay que generar más (`items.generate_quiz_bank`) | `422 MAX_ATTEMPTS_EXCEEDED`, `409 STEP_NOT_AVAILABLE`, `ATTEMPT_IN_PROGRESS` | E6, U1b, E14 |
 | `GET /me/attempts/{attempt_id}` | learner | — | `200 Attempt` (sin respuestas correctas) | `404 ATTEMPT_NOT_FOUND` | E6b, E6c, E8 |
 | `PUT /me/attempts/{attempt_id}/answers` | learner | `{"answers": [LearnerAnswer]}` | `200 {saved: n}` | `409 ATTEMPT_ALREADY_SUBMITTED` | E6b, E8 |
@@ -254,6 +254,8 @@ Campos sin valor van en `null`. `screen` es una ayuda para la app (código de Fi
 ```json
 {
   "step_id": 812,
+  "status": "in_progress",
+  "mode": "study",
   "topic": {"id": 11, "name": "Regresión lineal", "learning_outcomes": [{"id": 31, "statement": "…", "bloom_level": "understand"}]},
   "explanation": {"resource_id": 120, "version": "1.0", "prompt_version": "topic_explanation v1", "content": "<topic_explanation.v1 sin meta>"},
   "personal_example": null,
@@ -262,6 +264,15 @@ Campos sin valor van en `null`. `screen` es una ayuda para la app (código de Fi
   "attempts": {"used": 0, "max": 3, "extra_granted": 0, "remaining": 3}
 }
 ```
+
+`mode` dice cómo se abre el tema (B-025):
+
+| `mode` | Estado del paso | Qué hace la API |
+| --- | --- | --- |
+| `study` | `pending`, `in_progress`, `attempts_exhausted` | Lo de siempre: abrir un paso `pending` lo pasa a `in_progress` |
+| `review` | `passed`, `skipped` | Entrega la explicación y el video sin cambiar el paso. No hay quiz: `POST …/steps/{step_id}/attempts` sigue respondiendo `409 STEP_NOT_AVAILABLE`. `quiz_rules` y `attempts` vienen como referencia |
+
+Un paso `blocked` u `on_hold` sigue respondiendo `409 STEP_NOT_AVAILABLE`. El campo es nuevo; un cliente que no lo lea ve igual que antes los pasos en curso.
 
 `Attempt`: `{"id", "assessment_type": "topic"|"final"|"retention", "status", "step_id", "items": [ítems sin solución], "answers": [LearnerAnswer], "uses_extra_grant": false, "created_at"}`.
 

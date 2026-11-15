@@ -7,10 +7,19 @@ from support import FIXTURES_DIR
 
 from clients.base import ApiError
 from clients.fixtures import FixturesClient
-from clients.models import CourseSummary, Enrollment, LearningPathCard, Page
+from clients.models import (
+    CourseSummary,
+    Enrollment,
+    LearningPathCard,
+    NextAction,
+    Page,
+    PathDetail,
+    PathSavings,
+)
 from components.formatting import approx_duration, duration, initials, percent, percent_points
 from services.assessment import rubric_view
 from services.catalog import card_view, load_catalog, open_path
+from services.learning import continue_label, progress_line, savings_label
 from services.profile import resume_values, save_description, save_resume
 from services.staff_content import (
     video_link_markdown,
@@ -241,3 +250,54 @@ def test_save_resume_accepts_languages_from_a_reloaded_models_module() -> None:
     )
     saved = save_resume(FixturesClient("learner"), profile, values)
     assert [(lang.code, lang.cefr_level) for lang in saved.languages] == [("en", "B1")]
+
+
+# --- E5: ahorro y botón «Continuar» (B-039) -----------------------------------------------------
+
+
+def _path_doc() -> PathDetail:
+    raw = (FIXTURES_DIR / "learner" / "path.json").read_text(encoding="utf-8")
+    return PathDetail.model_validate(json.loads(raw))
+
+
+def test_savings_without_minutes_is_not_shown_as_zero() -> None:
+    """El syllabus suele dejar `estimated_minutes` en null: la API suma 0 aunque haya omitidos."""
+    path = _path_doc()
+    unknown = path.model_copy(update={"savings": PathSavings(skipped_topics=1, skipped_minutes=0)})
+    enrollment = FixturesClient("learner_path").list_enrollments().items[0]
+    assert savings_label(unknown) == "—"
+    assert "ahorro" not in progress_line(enrollment, unknown)
+    assert "1 omitido por tu diagnóstico" in progress_line(enrollment, unknown)
+    assert savings_label(path) == "1 h 20 min"
+    assert "(ahorro 1 h 20 min)" in progress_line(enrollment, path)
+    none = path.model_copy(update={"savings": PathSavings(skipped_topics=0, skipped_minutes=0)})
+    assert savings_label(none) == "0 min"
+
+
+@pytest.mark.parametrize(
+    ("action", "attempts_used", "expected"),
+    [
+        (NextAction(type="study_topic", step_id=813), 0, "Continuar tema"),
+        (NextAction(type="continue_attempt", step_id=813, attempt_id=9), 0, "Continuar tema"),
+        (NextAction(type="take_final"), 0, "Presentar evaluación final"),
+        (NextAction(type="take_final"), 1, "Reintentar evaluación final"),
+        (NextAction(type="continue_attempt", attempt_id=9), 0, "Continuar evaluación final"),
+        (NextAction(type="review_final", attempt_id=9), 1, "Ver resultado de la evaluación final"),
+        (NextAction(type="answer_survey"), 1, "Responder encuesta"),
+        (NextAction(type="view_badge"), 1, "Ver badge"),
+    ],
+)
+def test_continue_label_follows_the_next_action(
+    action: NextAction, attempts_used: int, expected: str
+) -> None:
+    path = _path_doc()
+    final = path.final.model_copy(update={"attempts_used": attempts_used})
+    assert continue_label(action, path.model_copy(update={"final": final}), fixed=False) == expected
+
+
+def test_fixed_path_names_the_next_topic() -> None:
+    path = _path_doc()
+    label = continue_label(NextAction(type="study_topic", step_id=813), path, fixed=True)
+    assert label == "Continuar con Regresión logística"
+    final = continue_label(NextAction(type="take_final"), path, fixed=True)
+    assert final == "Presentar evaluación final"

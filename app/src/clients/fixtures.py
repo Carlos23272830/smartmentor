@@ -60,7 +60,9 @@ from clients.ops_staff import StaffFixturesOps
 
 DEFAULT_FIXTURES_DIR = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
 # Pasos cuyo contenido la API no entrega (`409 STEP_NOT_AVAILABLE`).
-UNAVAILABLE_STEPS = frozenset({"blocked", "skipped", "on_hold", "passed"})
+UNAVAILABLE_STEPS = frozenset({"blocked", "on_hold"})
+# Pasos que la API entrega en modo repaso (`mode: "review"`, B-025).
+REVIEW_STEPS = frozenset({"passed", "skipped"})
 
 
 @dataclass(frozen=True)
@@ -318,11 +320,23 @@ class FixturesClient(LearnerFixtureOps, StaffFixturesOps):
 
     def get_step_content(self, enrollment_id: int, step_id: int) -> StepContent:
         del enrollment_id
-        # Como la API: un tema aprobado, omitido, bloqueado o en espera no entrega su contenido.
+        # Como la API: un tema bloqueado o en espera no entrega su contenido; uno aprobado u
+        # omitido llega en modo repaso, con su propio id y estado.
         step = next((s for s in self.doc("path", PathDetail).steps if s.step_id == step_id), None)
         if step is not None and step.status in UNAVAILABLE_STEPS:
             raise ApiError(409, "STEP_NOT_AVAILABLE", f"The step is {step.status}.")
-        return self.doc("step_content", StepContent)
+        content = self.doc("step_content", StepContent)
+        if step is not None and step.status in REVIEW_STEPS:
+            topic = content.topic.model_copy(update={"id": step.topic_id, "name": step.name})
+            return content.model_copy(
+                update={
+                    "step_id": step.step_id,
+                    "status": step.status,
+                    "mode": "review",
+                    "topic": topic,
+                }
+            )
+        return content
 
     def create_attempt(
         self,
