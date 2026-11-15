@@ -56,6 +56,9 @@ if session.consent_step == "informed":
         st.rerun()
     st.stop()
 
+# Si se vino de A3c por URL, Streamlit descartó las casillas: se restauran desde la sesión.
+st.session_state.setdefault("consent-terms-data", session.accept_data)
+st.session_state.setdefault("consent-terms-pilot", session.accept_pilot)
 form = render_consent_form(
     key="consent-terms",
 )
