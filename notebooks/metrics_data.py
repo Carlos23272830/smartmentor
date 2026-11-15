@@ -10,11 +10,16 @@ Las consultas se contrastaron con el esquema ``v2.0.0`` (rama ``feature/database
 columnas son ``jsonb`` libres que fija la API, no el esquema, y quedan marcadas ``SUPUESTO``:
 ``diagnostics.level_by_topic`` y ``survey_responses.likert``. ``check_shapes`` falla con un mensaje
 claro si la forma real es otra.
+
+``interaction_events`` (tiempo en tarea, m27) va en ``OPTIONAL_QUERIES``: el changeset
+``v2.0.0-049`` todavía no da ``SELECT`` sobre esa tabla al rol de métricas. Si falta el permiso, el
+cuaderno sigue con un marco vacío y un aviso en lugar de fallar.
 """
 
 from __future__ import annotations
 
 import os
+import warnings
 from typing import Any
 
 import pandas as pd
@@ -158,6 +163,26 @@ QUERIES: dict[str, str] = {
     """,
 }
 
+# Consultas que pueden fallar por permisos sin invalidar el resto: cada una corre en un SAVEPOINT.
+OPTIONAL_QUERIES: dict[str, tuple[str, tuple[str, ...]]] = {
+    # Solo los tipos que abren o cierran un tramo (docs/contracts/api-v2.md, 4.2). payload es
+    # jsonb (llega como dict); topic_id en texto, igual que en path_steps.
+    "interaction_events": (
+        """
+        SELECT ie.enrollment_id, ie.event_type, ie.topic_id::text AS topic_id, ie.payload,
+               ie.occurred_at
+        FROM interaction_events ie
+        JOIN enrollments en ON en.id = ie.enrollment_id
+        WHERE en.analysis_included AND ie.active
+          AND ie.event_type IN ('path.view', 'path.close', 'topic.open', 'topic.close',
+                                'quiz.start', 'quiz.pause', 'quiz.submit',
+                                'final.start', 'final.pause', 'final.submit')
+        ORDER BY ie.enrollment_id, ie.occurred_at
+        """,
+        ("enrollment_id", "event_type", "topic_id", "payload", "occurred_at"),
+    ),
+}
+
 # Comprobaciones de forma de los jsonb libres: cada una devuelve (filas malas, filas totales).
 SHAPE_CHECKS: dict[str, tuple[str, str]] = {
     "diagnostics.level_by_topic": (
@@ -216,6 +241,7 @@ def load_from_database(url: str | None = None) -> dict[str, pd.DataFrame]:
         UnexpectedShapeError: si un ``jsonb`` libre no tiene la forma esperada.
     """
     from sqlalchemy import create_engine, text
+    from sqlalchemy.exc import ProgrammingError
 
     resolved = url or os.environ.get(ENV_VAR)
     if not resolved:
@@ -227,6 +253,17 @@ def load_from_database(url: str | None = None) -> dict[str, pd.DataFrame]:
         check_shapes(connection)
         for name, sql in QUERIES.items():
             frames[name] = pd.read_sql_query(text(sql), connection)
+        for name, (sql, columns) in OPTIONAL_QUERIES.items():
+            try:
+                with connection.begin_nested():
+                    frames[name] = pd.read_sql_query(text(sql), connection)
+            except ProgrammingError as error:
+                warnings.warn(
+                    f"{name}: no se pudo leer ({type(error.orig).__name__}); se sigue sin esos "
+                    "datos. Revise el SELECT del rol de métricas.",
+                    stacklevel=2,
+                )
+                frames[name] = pd.DataFrame(columns=list(columns))
     engine.dispose()
     return frames
 

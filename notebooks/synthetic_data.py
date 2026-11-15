@@ -9,6 +9,8 @@ de punta a punta y que los gráficos funcionan.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 import numpy as np
 import pandas as pd
 
@@ -267,6 +269,138 @@ def _resources(rng: np.random.Generator, n_resources: int) -> pd.DataFrame:
     )
 
 
+EVENTS_START = datetime(2026, 9, 1, 13, 0, tzinfo=UTC)
+SEGMENT_CAP_SECONDS = 3600  # igual que la app (app/src/core/usage_events.py)
+
+
+class _EventLog:
+    """Eventos de una inscripción en orden, con el reloj y el formato de la app."""
+
+    def __init__(self, enrollment_id: int, start: datetime) -> None:
+        self.enrollment_id = enrollment_id
+        self.now = start
+        self.rows: list[dict[str, object]] = []
+
+    def emit(self, event_type: str, topic_id: str | None, payload: dict[str, object]) -> None:
+        self.rows.append(
+            {
+                "enrollment_id": self.enrollment_id,
+                "event_type": event_type,
+                "topic_id": topic_id,
+                "payload": payload,
+                "occurred_at": self.now,
+            }
+        )
+
+    def visit(
+        self,
+        open_type: str | None,
+        close_type: str | None,
+        topic_id: str | None,
+        payload: dict[str, object],
+        seconds: float,
+        shown: dict[str, object] | None = None,
+    ) -> None:
+        """Abre una visita y, si ``close_type`` no es nulo, la cierra tras ``seconds``.
+
+        ``shown`` es el ``resource.view`` que sale con la misma hora que la apertura.
+        """
+        started = self.now
+        if open_type is not None:
+            self.emit(open_type, topic_id, dict(payload))
+        if shown is not None:
+            self.emit("resource.view", topic_id, {**payload, **shown})
+        self.now = started + timedelta(seconds=float(seconds))
+        if close_type is None:  # pestaña cerrada: tramo abierto
+            return
+        elapsed = round(seconds)
+        body: dict[str, object] = {
+            **payload,
+            "seconds": min(elapsed, SEGMENT_CAP_SECONDS),
+            "started_at": started.isoformat(),
+        }
+        if elapsed > SEGMENT_CAP_SECONDS:
+            body["capped"] = True
+        self.emit(close_type, topic_id, body)
+
+    def wait(self, seconds: float) -> None:
+        self.now += timedelta(seconds=float(seconds))
+
+
+def _interaction_events(
+    rng: np.random.Generator, enrollments: pd.DataFrame, path_steps: pd.DataFrame
+) -> pd.DataFrame:
+    """Eventos de uso (``POST /me/events``) coherentes con los pasos y los intentos sintéticos.
+
+    Incluye los casos que trata la regla de m27: tramos recortados (``capped``), tramos abiertos
+    (pestaña cerrada sin cierre) y un cierre duplicado (el endpoint no es idempotente).
+    """
+    rows: list[dict[str, object]] = []
+    attempt_id = 0
+    for _, enrollment in enrollments.iterrows():
+        enrollment_id = int(enrollment["enrollment_id"])
+        log = _EventLog(enrollment_id, EVENTS_START + timedelta(hours=int(rng.integers(0, 72))))
+        steps = path_steps[path_steps["enrollment_id"] == enrollment_id].sort_values("position")
+        path_payload: dict[str, object] = {"screen": "E5", "steps_total": len(steps)}
+        for _, step in steps.iterrows():
+            log.visit("path.view", "path.close", None, path_payload, rng.uniform(20, 150))
+            attempts = int(step["attempts_used"])
+            if attempts == 0:
+                continue
+            topic_id = str(step["topic_id"])
+            step_id = 100 * enrollment_id + int(step["position"])
+            for attempt_number in range(1, attempts + 1):
+                topic_payload: dict[str, object] = {
+                    "screen": "E6",
+                    "step_id": step_id,
+                    "step_status": "in_progress",
+                }
+                minutes = float(step["estimated_minutes"]) * rng.lognormal(-0.4, 0.5)
+                if attempt_number > 1:
+                    minutes *= 0.4  # repaso antes de otro intento
+                closes = rng.random() > 0.06
+                log.visit(
+                    "topic.open",
+                    "topic.close" if closes else None,
+                    topic_id,
+                    topic_payload,
+                    minutes * 60,
+                    shown={"resource": "explanation", "resource_id": step_id},
+                )
+                if not closes:
+                    log.wait(rng.uniform(3600, 86400))  # vuelve otro día
+                attempt_id += 1
+                quiz_payload: dict[str, object] = {
+                    "screen": "E6b",
+                    "attempt_id": attempt_id,
+                    "step_id": step_id,
+                    "attempt_number": attempt_number,
+                }
+                log.emit("quiz.start", topic_id, dict(quiz_payload))
+                if rng.random() < 0.2:  # sale a mitad del quiz y vuelve
+                    log.visit(None, "quiz.pause", topic_id, quiz_payload, rng.uniform(60, 300))
+                    log.wait(rng.uniform(300, 7200))
+                submit = {**quiz_payload, "items": 5, "grading": "done"}
+                log.visit(None, "quiz.submit", topic_id, submit, rng.uniform(240, 900))
+                log.wait(rng.uniform(30, 600))
+        if enrollment["status"] == "completed":
+            attempt_id += 1
+            final_payload: dict[str, object] = {
+                "screen": "E8",
+                "attempt_id": attempt_id,
+                "attempt_number": 1,
+            }
+            log.emit("final.start", None, dict(final_payload))
+            final_body = {**final_payload, "items": 10, "grading": "done"}
+            log.visit(None, "final.submit", None, final_body, rng.uniform(900, 2400))
+        rows.extend(log.rows)
+    closes = [i for i, r in enumerate(rows) if r["event_type"] == "topic.close"]
+    if closes:
+        rows.append(dict(rows[closes[0]]))  # reintento tras un 503 que sí había llegado
+    columns = ["enrollment_id", "event_type", "topic_id", "payload", "occurred_at"]
+    return pd.DataFrame(rows, columns=columns)
+
+
 def generate(seed: int = DEFAULT_SEED, n_learners: int = 24) -> dict[str, pd.DataFrame]:
     """Genera todos los marcos de datos que consume el cuaderno, de forma determinista."""
     rng = np.random.default_rng(seed)
@@ -284,4 +418,8 @@ def generate(seed: int = DEFAULT_SEED, n_learners: int = 24) -> dict[str, pd.Dat
         "surveys": _surveys(rng, enrollments),
         "llm_calls": _llm_calls(rng, 400, n_learners),
         "resources": _resources(rng, 40),
+        # Generador aparte para no cambiar los demás marcos de la misma semilla.
+        "interaction_events": _interaction_events(
+            np.random.default_rng(seed + 27), enrollments, path_steps
+        ),
     }

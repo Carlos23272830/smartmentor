@@ -12,16 +12,21 @@ Convenciones comunes:
 
 from __future__ import annotations
 
+import json
 import math
 import random
+import statistics
 from collections import Counter
-from collections.abc import Collection, Hashable, Sequence
+from collections.abc import Collection, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
 
 __all__ = [
     "EffectSize",
     "LatencyPercentiles",
     "SetScores",
+    "TimeOnTask",
     "auc_roc",
     "cohen_kappa",
     "cohens_d",
@@ -38,6 +43,7 @@ __all__ = [
     "quadratic_weighted_kappa",
     "set_f1",
     "sus_score",
+    "time_on_task",
     "valid_question_rate",
 ]
 
@@ -482,3 +488,199 @@ def latency_percentiles(latencies: Sequence[float]) -> LatencyPercentiles:
     p50 = percentile(latencies, 50.0)
     p95 = percentile(latencies, 95.0)
     return LatencyPercentiles(p50, p95, len(latencies))
+
+
+# ---------------------------------------------------------------------------------------------
+# Tiempo en tarea (m27)
+# ---------------------------------------------------------------------------------------------
+
+SEGMENT_CAP_SECONDS = 3600
+"""Tope de un tramo, igual al de la app (``app/src/core/usage_events.py``)."""
+
+# Evento que abre cada tipo de visita y eventos que la cierran con ``payload.seconds``.
+_OPENING_EVENTS = {
+    "path.view": "path",
+    "topic.open": "topic",
+    "quiz.start": "quiz",
+    "final.start": "final",
+}
+_CLOSING_EVENTS = {
+    "path.close": "path",
+    "topic.close": "topic",
+    "quiz.pause": "quiz",
+    "quiz.submit": "quiz",
+    "final.pause": "final",
+    "final.submit": "final",
+}
+# En el quiz y la final el inicio se empareja por intento: ``quiz.start`` sale una vez por intento
+# y su hora no coincide con ``payload.started_at`` del cierre.
+_PAIRED_BY_ATTEMPT = frozenset({"quiz", "final"})
+
+
+@dataclass(frozen=True)
+class TimeOnTask:
+    """Tiempo en tarea (m27) por tema y por inscripción, en minutos.
+
+    ``minutes_by_topic`` usa la clave ``(enrollment_id, topic_id)``, con el ``topic_id`` tal como
+    llega (entero o texto); ``minutes_by_enrollment`` suma todos los tramos de la inscripción
+    (ruta, temas, quizzes y final). Los contadores dicen cuánto del total es medido, imputado o
+    recortado, para reportarlo junto al valor.
+    """
+
+    minutes_by_topic: dict[tuple[int, Hashable], float]
+    minutes_by_enrollment: dict[int, float]
+    closed_segments: int
+    imputed_segments: int
+    capped_segments: int
+    duplicate_closes: int
+    imputed_minutes: float
+    reference_seconds: dict[str, float]
+
+
+@dataclass(frozen=True)
+class _Event:
+    event_type: str
+    enrollment_id: int
+    topic_id: Hashable | None
+    payload: Mapping[str, Any]
+    occurred_at: datetime
+
+
+def _as_datetime(value: object) -> datetime:
+    if isinstance(value, datetime):
+        moment = value
+    elif isinstance(value, str):
+        moment = datetime.fromisoformat(value)
+    else:
+        raise ValueError(f"fecha no reconocida: {value!r}")
+    if moment.tzinfo is None:
+        raise ValueError("las fechas de los eventos deben tener zona horaria (UTC)")
+    return moment
+
+
+def _as_event(row: Mapping[str, Any]) -> _Event:
+    payload = row.get("payload")
+    if isinstance(payload, str):
+        payload = json.loads(payload)
+    if payload is not None and not isinstance(payload, Mapping):
+        raise ValueError("payload debe ser un objeto JSON")
+    topic: Any = row.get("topic_id")
+    if isinstance(topic, float):  # pandas convierte a float una columna entera con nulos
+        topic = None if math.isnan(topic) else int(topic)
+    return _Event(
+        event_type=str(row["event_type"]),
+        enrollment_id=int(row["enrollment_id"]),
+        topic_id=topic,
+        payload=payload or {},
+        occurred_at=_as_datetime(row["occurred_at"]),
+    )
+
+
+def time_on_task(
+    events: Iterable[Mapping[str, Any]], *, cap_seconds: int = SEGMENT_CAP_SECONDS
+) -> TimeOnTask:
+    """Minutos por tema y por inscripción a partir de filas de ``interaction_events``.
+
+    Cada fila trae ``event_type``, ``enrollment_id``, ``topic_id``, ``payload`` (objeto o texto
+    JSON) y ``occurred_at`` (``datetime`` con zona u ISO 8601). Regla de m27
+    (``docs/evaluation/metrics.md``):
+
+    1. **Tramo cerrado**: cada evento de cierre (``path.close``, ``topic.close``, ``quiz.pause``,
+       ``quiz.submit``, ``final.pause``, ``final.submit``) aporta ``payload.seconds``, recortado a
+       ``cap_seconds``. Los repetidos (misma inscripción, tipo de visita y ``payload.started_at``)
+       cuentan una vez: el endpoint no es idempotente. ``capped: true`` cuenta con el tope.
+    2. **Tramo abierto**: un inicio sin cierre (``path.view`` o ``topic.open`` sin un cierre con
+       ``started_at`` igual a su ``occurred_at``; ``quiz.start`` o ``final.start`` sin ningún
+       cierre de su ``attempt_id``) se imputa con la mediana de los tramos cerrados y no
+       recortados del mismo tipo de visita, sin pasar del tiempo hasta el siguiente evento de
+       tramo de la inscripción ni de ``cap_seconds``. Sin referencia se imputa 0.
+    3. Los demás tipos (``resource.view``) no son tramos y se ignoran.
+
+    El tema suma los tramos con ``topic_id`` (tema y quiz); la inscripción suma todos.
+
+    Raises:
+        ValueError: si una fecha no tiene zona horaria o un ``payload`` no es un objeto.
+    """
+    parsed = [_as_event(row) for row in events]
+    parsed.sort(key=lambda e: (e.enrollment_id, e.occurred_at))
+
+    segments: list[tuple[int, Hashable | None, float]] = []
+    seen_closes: set[tuple[int, str, str]] = set()
+    closed_starts: set[tuple[int, str, datetime]] = set()
+    closed_attempts: set[tuple[int, str, object]] = set()
+    reference_pool: dict[str, list[float]] = {}
+    duplicates = 0
+    capped = 0
+    for event in parsed:
+        kind = _CLOSING_EVENTS.get(event.event_type)
+        if kind is None:
+            continue
+        started_at = event.payload.get("started_at")
+        marker = str(started_at) if started_at is not None else event.occurred_at.isoformat()
+        key = (event.enrollment_id, kind, marker)
+        if key in seen_closes:
+            duplicates += 1
+            continue
+        seen_closes.add(key)
+        if started_at is not None:
+            closed_starts.add((event.enrollment_id, kind, _as_datetime(started_at)))
+        if event.payload.get("attempt_id") is not None:
+            closed_attempts.add((event.enrollment_id, kind, event.payload["attempt_id"]))
+        raw = max(float(event.payload.get("seconds") or 0.0), 0.0)
+        seconds = min(raw, float(cap_seconds))
+        is_capped = event.payload.get("capped") is True or raw > cap_seconds
+        capped += int(is_capped)
+        if not is_capped:
+            reference_pool.setdefault(kind, []).append(seconds)
+        segments.append((event.enrollment_id, event.topic_id, seconds))
+    closed = len(segments)
+
+    reference = {kind: statistics.median(pool) for kind, pool in reference_pool.items()}
+    boundaries: dict[int, list[datetime]] = {}
+    for event in parsed:
+        if event.event_type in _OPENING_EVENTS or event.event_type in _CLOSING_EVENTS:
+            boundaries.setdefault(event.enrollment_id, []).append(event.occurred_at)
+
+    imputed = 0
+    imputed_seconds = 0.0
+    seen_openings: set[tuple[int, str, datetime]] = set()
+    for event in parsed:
+        kind = _OPENING_EVENTS.get(event.event_type)
+        if kind is None:
+            continue
+        opening_key = (event.enrollment_id, event.event_type, event.occurred_at)
+        if opening_key in seen_openings:
+            continue
+        seen_openings.add(opening_key)
+        if kind in _PAIRED_BY_ATTEMPT:
+            attempt = event.payload.get("attempt_id")
+            if (event.enrollment_id, kind, attempt) in closed_attempts:
+                continue
+        elif (event.enrollment_id, kind, event.occurred_at) in closed_starts:
+            continue
+        later = [t for t in boundaries[event.enrollment_id] if t > event.occurred_at]
+        limit = float(cap_seconds)
+        if later:
+            limit = min(limit, (min(later) - event.occurred_at).total_seconds())
+        seconds = min(reference.get(kind, 0.0), limit)
+        imputed += 1
+        imputed_seconds += seconds
+        segments.append((event.enrollment_id, event.topic_id, seconds))
+
+    by_topic: dict[tuple[int, Hashable], float] = {}
+    by_enrollment: dict[int, float] = {}
+    for enrollment_id, topic_id, seconds in segments:
+        by_enrollment[enrollment_id] = by_enrollment.get(enrollment_id, 0.0) + seconds / 60.0
+        if topic_id is not None:
+            key_topic = (enrollment_id, topic_id)
+            by_topic[key_topic] = by_topic.get(key_topic, 0.0) + seconds / 60.0
+    return TimeOnTask(
+        minutes_by_topic=by_topic,
+        minutes_by_enrollment=by_enrollment,
+        closed_segments=closed,
+        imputed_segments=imputed,
+        capped_segments=capped,
+        duplicate_closes=duplicates,
+        imputed_minutes=imputed_seconds / 60.0,
+        reference_seconds=reference,
+    )
