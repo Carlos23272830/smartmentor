@@ -284,8 +284,8 @@ def test_e5_follows_figma() -> None:
         at,
         "E5",
         accepted=(
-            # Un tema omitido no se repasa desde la ruta: la API no entrega su contenido (409).
-            "Puedes repasarlo cuando quieras",
+            # Con la ruta confirmada el objetivo no se edita (B-032): va una nota en su lugar.
+            "Editar objetivo",
             # El API no dice de qué tema es prerrequisito, ni el último puntaje (solo el mejor).
             "Incluido como prerrequisito débil de Regresión logística (64 % en el diagnóstico)",
             "Intento 2 de 3 · último puntaje 60 %",
@@ -295,13 +295,23 @@ def test_e5_follows_figma() -> None:
     )
 
 
-def test_e5_passed_and_skipped_topics_do_not_open() -> None:
-    """La API responde `409 STEP_NOT_AVAILABLE` al contenido de un tema aprobado u omitido."""
+def test_e5_passed_and_skipped_topics_open_for_review_b025() -> None:
+    """La API entrega un tema aprobado u omitido en modo repaso: E5 los deja abrir."""
     at = learner_app("learner_path", PATH)
     keys = {b.key for b in at.button}
-    assert "open-step-811" not in keys  # omitido
-    assert "open-step-812" not in keys  # aprobado
+    assert "open-step-811" in keys  # omitido
+    assert "open-step-812" in keys  # aprobado
     assert "open-step-813" in keys  # en curso
+
+
+def test_e5_skipped_topic_opens_in_review_mode_b025() -> None:
+    at = learner_app("learner_path", PATH)
+    at.button(key="open-step-811").click().run()
+    no_exception(at)
+    assert session_of(at).learner.step_id == 811
+    texts = page_texts(at)
+    assert "Repaso" in texts
+    assert "Empezar quiz" not in texts
 
 
 def test_e5_open_step_goes_to_the_topic() -> None:
@@ -320,8 +330,20 @@ def test_e5_continue_follows_next_action() -> None:
     assert "Regresión logística" in page_texts(at)
 
 
-def test_e5_edit_objective_opens_the_editor() -> None:
+def test_e5_confirmed_path_does_not_offer_to_edit_the_objective() -> None:
+    """Con la ruta confirmada la API rechaza el objetivo (409): E5 no ofrece editarlo (B-032)."""
     at = learner_app("learner_path", PATH)
+    no_exception(at)
+    assert "path-edit-objective" not in {b.key for b in at.button}
+    assert "El objetivo se fija al confirmar la ruta" in page_texts(at)
+
+
+def test_e5_pending_objective_still_opens_the_editor() -> None:
+    at = learner_app("learner_path", PATH, run=False)
+    for enrollment in client_of(at)._enrollments:
+        enrollment.status = "objective_pending"
+    at.run()
+    assert "El objetivo se fija al confirmar la ruta" not in page_texts(at)
     button(at, "Editar objetivo").click().run()
     no_exception(at)
     assert button(at, "Guardar objetivo")
@@ -360,3 +382,38 @@ def test_e4b_keeps_a_proposed_verb_outside_the_list() -> None:
     no_exception(at)
     verb = next(s for s in at.selectbox if s.label == "Verbo de Bloom")
     assert verb.value == "Construir"
+
+
+# --- B-039 · E5 y E4b ----------------------------------------------------------------------------
+
+
+def test_e5_continue_says_final_assessment_when_it_comes_next_b039() -> None:
+    at = learner_app("learner_final_ready", PATH)
+    no_exception(at)
+    assert {b.key: b.label for b in at.button}["path-continue"] == "Presentar evaluación final"
+
+
+def test_e5_continue_says_survey_when_it_comes_next_b039() -> None:
+    at = learner_app("learner_completed", PATH)
+    no_exception(at)
+    assert {b.key: b.label for b in at.button}["path-continue"] == "Responder encuesta"
+
+
+def test_e5_does_not_show_zero_savings_with_skipped_topics_b039() -> None:
+    at = learner_app("learner_path", PATH, run=False)
+    client = client_of(at)
+    path = client.get_path(1)
+    savings = path.savings.model_copy(update={"skipped_minutes": 0})
+    client.get_path = lambda _e: path.model_copy(update={"savings": savings})  # type: ignore[method-assign]
+    at.run()
+    no_exception(at)
+    texts = page_texts(at)
+    assert not any("ahorro 0 min" in t for t in texts)
+    assert any("1 omitido por tu diagnóstico" in t for t in texts)
+
+
+def test_e4b_verb_selector_placeholder_is_in_spanish_b039() -> None:
+    at = learner_app("learner_objective", DIAGNOSTIC_RESULT)
+    button(at, "Editar el objetivo").click().run()
+    verb = next(s for s in at.selectbox if s.label == "Verbo de Bloom")
+    assert verb.placeholder == "Elige un verbo"

@@ -15,7 +15,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ValidationError
@@ -123,6 +123,21 @@ FINAL_ON_DEMAND_SHORT_ANSWERS = 1
 DIAGNOSTIC_ITEMS_PER_TOPIC = 3
 REINFORCE_CUTOFF = 50.0
 OPEN_DIAGNOSTIC = ("created", "in_progress", "scoring_failed")
+
+# Modo del contenido de un paso (E6). Un tema aprobado u omitido se repasa: la API entrega la
+# explicación y el video, sin abrir intentos ni cambiar el estado del paso (B-025).
+ContentMode = Literal["study", "review"]
+STUDY_MODE: ContentMode = "study"
+REVIEW_MODE: ContentMode = "review"
+REVIEW_STEPS = frozenset({StepStatus.PASSED, StepStatus.SKIPPED})
+UNAVAILABLE_CONTENT_STEPS = frozenset({StepStatus.BLOCKED, StepStatus.ON_HOLD})
+
+
+def content_mode(status: str) -> ContentMode:
+    """`review` para un tema aprobado u omitido, `study` para el resto; 409 si no se abre."""
+    if status in UNAVAILABLE_CONTENT_STEPS:
+        raise path_errors.step_not_available(status)
+    return REVIEW_MODE if status in REVIEW_STEPS else STUDY_MODE
 
 
 @dataclass
@@ -838,6 +853,7 @@ class StepContentView:
     pass_threshold: float
     short_answer_ratio: float
     max_attempts: int
+    mode: ContentMode = STUDY_MODE
 
 
 @dataclass(frozen=True)
@@ -887,15 +903,13 @@ class AttemptService(_Base):
     async def step_content(
         self, user: CurrentUser, enrollment_id: int, step_id: int
     ) -> StepContentView:
-        """Explicación aprobada, video en uso (o respaldo), reglas del quiz e intentos (E6)."""
+        """Explicación aprobada, video en uso (o respaldo), reglas del quiz e intentos (E6).
+
+        Un tema aprobado u omitido se entrega en modo repaso (`review`): mismo contenido, sin
+        cambiar el paso; los intentos los sigue rechazando `start_topic` (409).
+        """
         enrollment, step = await self._own_step(user, enrollment_id, step_id, for_update=True)
-        if step.status in (
-            StepStatus.BLOCKED,
-            StepStatus.SKIPPED,
-            StepStatus.ON_HOLD,
-            StepStatus.PASSED,
-        ):
-            raise path_errors.step_not_available(step.status)
+        mode = content_mode(step.status)
         if step.status == StepStatus.PENDING and enrollment.status == EnrollmentStatus.IN_PATH:
             # Abrir el tema no consume intentos.
             step = await self._progress.set_step_status(step, StepStatus.IN_PROGRESS)
@@ -926,6 +940,7 @@ class AttemptService(_Base):
             pass_threshold=path.topic_pass_threshold,
             short_answer_ratio=_short_answer_ratio(path),
             max_attempts=path.max_attempts,
+            mode=mode,
         )
 
     @staticmethod

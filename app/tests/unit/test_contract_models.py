@@ -27,6 +27,7 @@ CONTRACT_EXAMPLES: dict[tuple[str, ...], type[BaseModel]] = {
     ("id", "status", "items"): models.Diagnostic,
     ("enrollment_id", "steps"): models.PathDetail,
     ("step_id", "topic"): models.StepContent,
+    ("step_id", "status", "mode"): models.StepContent,
     ("attempt_id", "status"): models.AttemptResult,
     ("job_id", "job_type"): models.Job,
 }

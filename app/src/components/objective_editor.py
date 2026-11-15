@@ -12,6 +12,8 @@ import streamlit as st
 from components.layout import render_notice
 from components.theme import BLOOM_ACTION_VERBS
 
+VERB_PLACEHOLDER = "Elige un verbo"
+
 
 @dataclass(frozen=True)
 class ObjectiveDraft:
@@ -60,7 +62,9 @@ def render_objective_editor(
         "Verbo de Bloom",
         verbs,
         index=verbs.index(draft.bloom_verb) if draft.bloom_verb in verbs else None,
-        placeholder="Elegir",
+        # Solo los verbos de la lista: la API rechaza los demás con 422 (B-033). Sin `placeholder`,
+        # Streamlit muestra el texto de ayuda en inglés (B-039).
+        placeholder=VERB_PLACEHOLDER,
         key=f"{key}-verb",
     )
     st.caption("Niveles: Recordar · Comprender · Aplicar · Analizar · Evaluar · Crear")

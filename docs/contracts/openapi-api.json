@@ -6071,6 +6071,15 @@
             ],
             "title": "Explanation"
           },
+          "mode": {
+            "default": "study",
+            "enum": [
+              "study",
+              "review"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
           "personal_example": {
             "anyOf": [
               {
@@ -11845,7 +11854,7 @@
     },
     "/api/v1/me/enrollments/{enrollment_id}/steps/{step_id}/content": {
       "get": {
-        "description": "Explicación aprobada, video en uso (o respaldo), reglas del quiz e intentos (E6).",
+        "description": "Explicación aprobada, video en uso (o respaldo), reglas del quiz e intentos (E6).\n\nUn tema aprobado u omitido llega con `mode: \"review\"` (repaso, sin quiz).",
         "operationId": "step_content_api_v1_me_enrollments__enrollment_id__steps__step_id__content_get",
         "parameters": [
           {
