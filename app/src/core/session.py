@@ -21,6 +21,15 @@ _KEY = "app_session"
 ConsentStep = Literal["terms", "informed"]
 
 
+@dataclass(frozen=True)
+class PendingClick:
+    """Clic que interrumpió la renovación del token: se repite en su página al volver (B-040)."""
+
+    page: str
+    widget_id: str
+    key: str
+
+
 @dataclass
 class AppSession:
     # Identidad: `me` sale de GET /me (o del escenario en modo fixtures).
@@ -50,6 +59,10 @@ class AppSession:
     # Keycloak con la sesión recuperada, la página a la que hay que regresar.
     current_page: str | None = None
     resume_page: str | None = None
+    # B-040: valores de los widgets de la página (con su `key`) y el clic que la renovación
+    # interrumpió, para ponerlos de nuevo y repetirlo al volver.
+    resume_drafts: dict[str, object] = field(default_factory=dict)
+    resume_click: PendingClick | None = None
 
     @property
     def is_authenticated(self) -> bool:

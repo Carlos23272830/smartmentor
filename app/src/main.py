@@ -5,6 +5,9 @@
 - Una persona sin la autorización de datos solo ve las pantallas de consentimiento (A3, A3b, A3c).
 - Un 401 muestra A7 «Tu sesión expiró»; un 403, A6. Si el token venció y la sesión de Keycloak
   sigue viva, se renueva y se vuelve a la misma página con la misma sesión (`core/renewal.py`).
+- B-040: la renovación no se hace en medio de una acción si el token aún alcanza; sin acción, se
+  adelanta. Si no hay más remedio que renovar con un clic pendiente, se aparcan los valores del
+  formulario y el clic, y al volver se ponen de nuevo y se repite el clic.
 """
 
 import logging
@@ -13,10 +16,10 @@ import streamlit as st
 
 from clients.base import ApiError
 from components.layout import HeaderAction, render_header, render_status_screen
-from core import auth, renewal
+from core import auth, renewal, widget_state
 from core.config import get_settings
 from core.container import get_client
-from core.errors import describe_error, pop_deferred_error
+from core.errors import describe_error, pop_deferred_click, pop_deferred_error
 from core.identity import active_role, current_me, label_for, load_me
 from core.navigation import (
     active_menu_path,
@@ -42,10 +45,16 @@ if settings.app_data_source == "api" and auth.is_logged_in():
     restored = renewal.restore(renewal.STORE, auth.user_key(), get_session())
     if restored is not None:
         replace_session(restored)
+        # El borrador va a `st.session_state` antes de cambiar de página: los widgets lo toman
+        # al dibujarse (B-040).
+        widget_state.apply_form_values(restored.resume_drafts)
+        restored.resume_drafts = {}
 session = get_session()
 # Error global que dejó un fragmento (B-031). Se lee antes de revisar el token: si el token venció,
 # lo atiende esa revisión (renovación o A7) y este error ya no se muestra.
 deferred_error = pop_deferred_error()
+# El clic que ese fragmento no pudo atender porque el token venció (B-040).
+deferred_click = pop_deferred_click()
 
 
 def _logout() -> None:
@@ -83,10 +92,37 @@ def _browser_url() -> str | None:
         return None
 
 
+def _page_in_browser() -> str | None:
+    return renewal.page_from_url(_browser_url()) or session.current_page
+
+
 def _park_session() -> None:
-    """Aparca la página y la sesión justo antes de `st.login` (B-030)."""
-    page = renewal.page_from_url(_browser_url()) or session.current_page
-    renewal.park(renewal.STORE, auth.user_key(), page, session)
+    """Aparca la página, la sesión y el borrador justo antes de `st.login` (B-030, B-040).
+
+    Se usa cuando la página ya corrió (un 401 a mitad de página): el clic no se repite.
+    """
+    renewal.park(
+        renewal.STORE,
+        auth.user_key(),
+        _page_in_browser(),
+        session,
+        drafts=widget_state.form_values(),
+    )
+
+
+def _renew(page: str | None, click: widget_state.PressedButton | None) -> None:
+    """Aparca y redirige a Keycloak antes de correr la página (B-040); detiene la ejecución."""
+    renewal.park(
+        renewal.STORE,
+        auth.user_key(),
+        page,
+        session,
+        drafts=widget_state.form_values(),
+        click=click,
+    )
+    auth.login()
+    st.caption("Renovando tu sesión…")
+    st.stop()
 
 
 def _error_screen(error: ApiError, *, page_title: str) -> None:
@@ -145,9 +181,16 @@ def _handle_header(action: HeaderAction | None) -> None:
 
 # --- 1. Identidad ------------------------------------------------------------------------------
 
+renewal_plan: auth.RenewalPlan = "none"
 if settings.app_data_source == "api":
     if not auth.is_logged_in():
         _login_screen()
+    # B-040: con una acción pendiente (un botón, un widget cambiado) no se renueva mientras el
+    # token alcance para la petición; si ya no alcanza, se renueva y el clic se repite al volver.
+    interaction = widget_state.current_interaction()
+    renewal_plan = auth.renewal_plan(has_action=interaction.pending)
+    if renewal_plan == "now":
+        _renew(_page_in_browser(), interaction.pressed or deferred_click)
     try:
         auth.access_token()  # revisa `exp` antes de cada ejecución
         load_me()
@@ -176,6 +219,13 @@ if (
 ):
     st.switch_page(resume_page)
 session.current_page = current_page
+# Sin acción pendiente y con el token a punto de vencer: es el momento seguro para renovar (B-040).
+if renewal_plan == "safe_point":
+    _renew(current_page, None)
+# El clic que interrumpió la renovación se repite en su página, una sola vez (B-040).
+click, session.resume_click = session.resume_click, None
+if click is not None and click.page == current_page and not me.requires_consent:
+    widget_state.press(click.widget_id)
 # Tiempo en tarea (m27): al pasar a otra página se cierran las visitas abiertas (tema, quiz…).
 close_views_outside(page.url_path, get_client)
 

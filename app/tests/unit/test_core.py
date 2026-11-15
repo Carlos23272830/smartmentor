@@ -83,9 +83,9 @@ def test_token_without_readable_exp_is_treated_as_expired(token: str) -> None:
 
 
 def test_token_expiry_with_leeway() -> None:
-    soon = make_jwt({"exp": int((NOW + timedelta(seconds=20)).timestamp())})
+    soon = make_jwt({"exp": int((NOW + timedelta(seconds=10)).timestamp())})
     later = make_jwt({"exp": int((NOW + timedelta(minutes=4)).timestamp())})
-    assert auth.is_token_expired(soon, now=NOW)  # vence dentro del margen de 30 s
+    assert auth.is_token_expired(soon, now=NOW)  # vence dentro del margen de 15 s (B-040)
     assert not auth.is_token_expired(later, now=NOW)
     assert auth.is_token_expired(later, now=NOW + timedelta(minutes=4))
 

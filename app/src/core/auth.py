@@ -15,6 +15,11 @@
   `RENEW_MIN_AGE_SECONDS` (`should_renew_silently`); si no, la app muestra A7 «Tu sesión expiró».
   Al volver de Keycloak, Streamlit abre una sesión nueva en la raíz: `core/renewal.py` aparca
   antes la página y la sesión de la app para regresar a ellas (B-030).
+- **Cuándo se renueva (B-040).** `plan_renewal` decide al inicio de cada ejecución. Si la trae una
+  acción de la persona (un botón, un widget cambiado) y el token aún sirve para la petición (más de
+  `EXPIRY_LEEWAY_SECONDS`), la acción sigue y la renovación se aplaza. Sin acción, se renueva antes
+  de que venza (`PROACTIVE_RENEW_SECONDS`), en un momento en que no se interrumpe nada. Si el token
+  ya no sirve, se renueva aparcando el borrador del formulario y el clic, que se repite al volver.
 - `st.logout()` no cierra la sesión de Keycloak: `end_session_url` arma la redirección al
   `end_session_endpoint` del realm.
 
@@ -28,7 +33,7 @@ import json
 import logging
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlencode
 
 import httpx
@@ -40,7 +45,11 @@ from core.config import get_settings
 logger = logging.getLogger(__name__)
 
 PROVIDER = "keycloak"
-EXPIRY_LEEWAY_SECONDS = 30
+# Margen para que el token llegue vigente a la API: una petición tarda mucho menos (B-040). Con más
+# margen, un clic poco antes del vencimiento se perdía aunque el token aún servía.
+EXPIRY_LEEWAY_SECONDS = 15
+# Sin acción de la persona, se renueva cuando faltan menos de 90 s (el token dura 5 min).
+PROACTIVE_RENEW_SECONDS = 90
 RENEW_MIN_AGE_SECONDS = 120
 TOKEN_EXPIRED_CODE = "TOKEN_EXPIRED"  # noqa: S105 (código de error de la API, no un secreto)
 _END_SESSION_KEY = "end_session_url"
@@ -80,6 +89,47 @@ def should_renew_silently(
         return False
     current = now or datetime.now(UTC)
     return (current - issued).total_seconds() > min_age
+
+
+RenewalPlan = Literal["none", "now", "safe_point"]
+"""`none`: no se renueva (el token sirve, o no se puede renovar y la página mostrará A7).
+`now`: el token ya no sirve; se renueva antes de correr la página.
+`safe_point`: el token sirve, pero vence pronto y no hay acción pendiente; se renueva ya."""
+
+
+def plan_renewal(
+    token: str | None,
+    *,
+    has_action: bool,
+    now: datetime | None = None,
+    leeway: int = EXPIRY_LEEWAY_SECONDS,
+    margin: int = PROACTIVE_RENEW_SECONDS,
+    min_age: int = RENEW_MIN_AGE_SECONDS,
+) -> RenewalPlan:
+    """Cuándo renovar el token en esta ejecución (B-040).
+
+    - Con más de `margin` segundos por delante, no se renueva.
+    - Con una acción pendiente y más de `leeway` segundos, se aplaza: la acción se hace con este
+      token y la renovación queda para una ejecución sin acción.
+    - Sin acción y con menos de `margin` segundos, se renueva ya (`safe_point`).
+    - Con menos de `leeway` segundos, el token no sirve: se renueva (`now`).
+
+    Como en `should_renew_silently`, solo se renueva un token emitido hace más de `min_age`
+    segundos, para no entrar en un ciclo de redirecciones.
+    """
+    if token is None:
+        return "none"
+    expiry = token_expiry(token)
+    issued = _claim_time(token, "iat")
+    if expiry is None or issued is None:
+        return "none"
+    current = now or datetime.now(UTC)
+    remaining = (expiry - current).total_seconds()
+    if remaining > margin or (has_action and remaining > leeway):
+        return "none"
+    if (current - issued).total_seconds() <= min_age:
+        return "none"
+    return "safe_point" if remaining > leeway else "now"
 
 
 def is_token_expired(
@@ -132,6 +182,11 @@ def access_token() -> str:
     if token is None or is_token_expired(token):
         raise ApiError(401, TOKEN_EXPIRED_CODE, "access token missing or expired")
     return token
+
+
+def renewal_plan(*, has_action: bool) -> RenewalPlan:
+    """`plan_renewal` con el access token de la sesión."""
+    return plan_renewal(_exposed_token("access"), has_action=has_action)
 
 
 def user_key() -> str | None:

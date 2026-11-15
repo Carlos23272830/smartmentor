@@ -11,6 +11,8 @@ from typing import Literal, NoReturn
 import streamlit as st
 
 from clients.base import ApiError
+from core.auth import TOKEN_EXPIRED_CODE
+from core.widget_state import PressedButton, current_interaction
 
 # Los textos del contrato: código de error -> mensaje para la persona.
 MESSAGES: dict[str, str] = {
@@ -49,6 +51,8 @@ ErrorKind = Literal[
 # Error global que ocurrió dentro de un `st.fragment` y que `main.py` atiende en la siguiente
 # ejecución completa (B-031).
 _DEFERRED_KEY = "deferred_global_error"
+# Clic del fragmento que encontró el token vencido antes de enviar su petición (B-040).
+_DEFERRED_CLICK_KEY = "deferred_click"
 
 _BLOCKED_CODES = frozenset({"EMAIL_NOT_VERIFIED", "ACCOUNT_DEACTIVATED"})
 # Errores que no se resuelven dentro de una pantalla: los atiende main.py (A6, A7, bloqueo).
@@ -125,8 +129,13 @@ def defer_to_main(error: ApiError) -> NoReturn:
     mostraba el traceback de Streamlit y dejaba la hoja de preguntas sin responder (B-031). Lo que
     la persona respondió sigue en `st.session_state`; en la ejecución completa `main.py` revisa el
     token (renovación o A7) y, si el token sigue vigente, muestra este error con su pantalla.
+
+    B-040: si el token venció antes de enviar la petición (`TOKEN_EXPIRED` lo lanza la app, no la
+    API), se guarda también el botón pulsado, para que `main.py` lo repita después de renovar.
     """
     st.session_state[_DEFERRED_KEY] = error
+    if error.code == TOKEN_EXPIRED_CODE:
+        st.session_state[_DEFERRED_CLICK_KEY] = current_interaction().pressed
     st.rerun(scope="app")
 
 
@@ -134,3 +143,9 @@ def pop_deferred_error() -> ApiError | None:
     """El error global que dejó un fragmento, si lo hay; se borra al leerlo."""
     error = st.session_state.pop(_DEFERRED_KEY, None)
     return error if isinstance(error, ApiError) else None
+
+
+def pop_deferred_click() -> PressedButton | None:
+    """El clic que un fragmento no pudo atender por el token vencido (B-040); se borra al leerlo."""
+    click = st.session_state.pop(_DEFERRED_CLICK_KEY, None)
+    return click if isinstance(click, PressedButton) else None
