@@ -68,7 +68,14 @@ enrollment = current_enrollment(client)
 allowed: set[NextActionType] = {"take_final", "continue_attempt", "wait_job"}
 if state.quiz_job_id and state.quiz_job_kind == "final-prepare":
     allowed.add("review_final")  # el reintento desde E9 espera preguntas nuevas (B-011)
+if state.pending_final_attempt_id is not None:
+    # B-041: E9 acaba de abrir un intento y la inscripción leída puede seguir en `review_final`;
+    # sin esto E8 volvía a E9, que pedía el resultado de un intento abierto (409) y quedaba sin
+    # salida. Que el intento siga abierto lo confirma `get_attempt` más abajo.
+    allowed.add("review_final")
 action = redirect_unless(enrollment, allowed, PAGE)
+if action.type == "continue_attempt":
+    state.pending_final_attempt_id = None  # la API ya refleja el intento abierto
 if action.type == "wait_job" and action.job_id:
     state.quiz_job_id, state.quiz_job_kind = action.job_id, "final-grade"
 
@@ -109,7 +116,7 @@ if state.quiz_job_id and state.quiz_job_kind == "final-grade":
     job = wait_for_job(client, state.quiz_job_id, GRADING, on_retry=_regrade)
     if job is None:
         st.stop()
-    state.quiz_job_id = None
+    state.quiz_job_id = state.pending_final_attempt_id = None
     if job.next_action and job.next_action.attempt_id:
         state.final_attempt_id = job.next_action.attempt_id
     st.switch_page(RESULT_PAGE)
@@ -120,6 +127,8 @@ try:
     # El intento abierto que dice la API manda sobre el recordado, que puede ser uno ya calificado.
     if action.type == "continue_attempt" and action.attempt_id is not None:
         attempt: Attempt = client.get_attempt(action.attempt_id)
+    elif state.pending_final_attempt_id is not None:
+        attempt = client.get_attempt(state.pending_final_attempt_id)
     elif action.type != "take_final" and state.final_attempt_id is not None:
         attempt = client.get_attempt(state.final_attempt_id)
     else:
@@ -137,6 +146,7 @@ except ApiError as error:
 
 state.final_attempt_id = attempt.id
 if attempt.status not in ("created", "in_progress"):
+    state.pending_final_attempt_id = None
     st.switch_page(RESULT_PAGE)  # ya enviado: no se vuelve a responder (B-026)
 state.sheet.load(f"attempt-{attempt.id}", attempt.answers, len(attempt.items))
 number = min(state.sheet.index, max(len(attempt.items) - 1, 0)) + 1
@@ -195,6 +205,7 @@ def _submit(_answers: list[LearnerAnswer]) -> None:
         payload={"items": len(attempt.items), "grading": "done" if graded else "job"},
     )
     if isinstance(sent, AttemptResult):
+        state.pending_final_attempt_id = None
         st.switch_page(RESULT_PAGE)
     state.quiz_job_id, state.quiz_job_kind = sent.job_id, "final-grade"
 

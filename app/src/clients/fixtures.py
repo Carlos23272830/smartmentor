@@ -180,6 +180,8 @@ class FixturesClient(LearnerFixtureOps, StaffFixturesOps):
         ]
         self._enrollments = self._load(self.scenario.enrollments, Page[Enrollment]).items
         self._job_polls: dict[str, int] = {}
+        # Intentos de la final creados en esta sesión y todavía sin entregar (eco de la API).
+        self._open_final_attempts: dict[int, Attempt] = {}
         self.recorded_events = []  # eventos de uso recibidos (`POST /me/events`), en memoria
 
     def _load[M: BaseModel](self, name: str, model: type[M]) -> M:
@@ -356,7 +358,10 @@ class FixturesClient(LearnerFixtureOps, StaffFixturesOps):
         return self.doc("create_attempt", Attempt)
 
     def get_attempt(self, attempt_id: int) -> Attempt:
-        del attempt_id
+        opened = self._open_final_attempts.get(attempt_id)
+        if opened is not None:
+            self.check_online()
+            return opened.model_copy(deep=True)
         return self.doc("attempt", Attempt)
 
     def save_attempt_answers(self, attempt_id: int, answers: Sequence[LearnerAnswer]) -> int:
@@ -367,13 +372,17 @@ class FixturesClient(LearnerFixtureOps, StaffFixturesOps):
     def submit_attempt(
         self, attempt_id: int, *, idempotency_key: str
     ) -> AttemptResult | JobAccepted:
-        del attempt_id, idempotency_key
+        del idempotency_key
+        self._open_final_attempts.pop(attempt_id, None)
         if "poll_url" in self.doc_raw("submit_attempt"):
             return self.accepted("submit_attempt")
         return self.doc("submit_attempt", AttemptResult)
 
     def get_attempt_result(self, attempt_id: int) -> AttemptResult:
-        del attempt_id
+        self.check_online()
+        if attempt_id in self._open_final_attempts:
+            # Como la API: un intento abierto todavía no tiene resultado (B-041).
+            raise ApiError(409, "ATTEMPT_NOT_GRADED", "The attempt is not graded yet.")
         return self.doc("attempt_result", AttemptResult)
 
     def request_answer_review(self, attempt_answer_id: int, comment: str) -> int:
@@ -387,7 +396,10 @@ class FixturesClient(LearnerFixtureOps, StaffFixturesOps):
         del enrollment_id, idempotency_key
         if "poll_url" in self.doc_raw("final_attempt"):
             return self.accepted("final_attempt")
-        return self.doc("final_attempt", Attempt)
+        created = self.doc("final_attempt", Attempt)
+        if created.status in ("created", "in_progress"):
+            self._open_final_attempts[created.id] = created.model_copy(deep=True)
+        return created
 
     def get_review_plan(self, enrollment_id: int) -> ReviewPlan:
         del enrollment_id

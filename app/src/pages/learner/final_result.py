@@ -3,7 +3,12 @@
 Si la final se aprobó, la API manda al badge o a la encuesta (`next_action`). Si no, esta página
 lista los temas débiles (`review-plan`) y ofrece reintentar con preguntas nuevas; sin intentos
 (`attempts.remaining = 0`) muestra el historial y avisa que el instructor ya recibió una alerta.
+
+Si el intento pedido sigue abierto o calificándose (`409 ATTEMPT_NOT_GRADED`), ofrece «Continuar
+evaluación final» en lugar de quedarse sin salida (B-041).
 """
+
+from typing import NoReturn
 
 import streamlit as st
 
@@ -13,7 +18,7 @@ from components.attempt_history import AttemptRow, render_attempt_history
 from components.formatting import percent_points
 from components.layout import render_page_header
 from core.container import get_client
-from core.errors import show_action_error
+from core.errors import action_message, show_action_error
 from core.learner_flow import current_enrollment, go_to_action, idempotency_key
 from core.session import get_session
 
@@ -21,6 +26,7 @@ PATH_PAGE = "pages/learner/path.py"
 TOPIC_PAGE = "pages/learner/topic.py"
 FINAL_PAGE = "pages/learner/final_assessment.py"
 SURVEY_PAGE = "pages/learner/final_survey.py"
+OPEN_ATTEMPT = "Tu evaluación final sigue abierta: retómala donde la dejaste y entrégala."
 
 client = get_client()
 state = get_session().learner
@@ -34,8 +40,31 @@ if attempt_id is None:
     st.switch_page(PATH_PAGE)
     st.stop()
 
+
+def _continue_open_attempt(open_attempt_id: int, error: ApiError) -> NoReturn:
+    """E9 con un intento sin calificar: lleva a E8 (preguntas o U1d) y se detiene."""
+    job_id = error.extra.get("job_id")
+    render_page_header("Evaluación final", breadcrumb=enrollment.learning_path.name)
+    st.info(action_message(error) if job_id else OPEN_ATTEMPT)
+    with st.container(horizontal=True):
+        if st.button("Volver a mi ruta", key="final-open-back"):
+            st.switch_page(PATH_PAGE)
+        if st.button("Continuar evaluación final", type="primary", key="final-continue"):
+            state.final_attempt_id = state.pending_final_attempt_id = open_attempt_id
+            if isinstance(job_id, str):  # ya se entregó: E8 muestra la calificación en curso
+                state.quiz_job_id, state.quiz_job_kind = job_id, "final-grade"
+            st.switch_page(FINAL_PAGE)
+    st.stop()
+
+
 try:
     result: AttemptResult = client.get_attempt_result(attempt_id)
+except ApiError as error:
+    if error.code != "ATTEMPT_NOT_GRADED":
+        show_action_error(error)
+        st.stop()
+    _continue_open_attempt(attempt_id, error)
+try:
     path: PathDetail = client.get_path(enrollment.id)
     plan: ReviewPlan = client.get_review_plan(enrollment.id)
 except ApiError as error:
@@ -133,7 +162,8 @@ if st.button("Reintentar evaluación final", type="primary", key="final-retry"):
         show_action_error(error)
     else:
         if isinstance(created, Attempt):
-            state.final_attempt_id = created.id
+            # E8 abre este intento aunque la inscripción aún diga `review_final` (B-041).
+            state.final_attempt_id = state.pending_final_attempt_id = created.id
         else:  # no quedan preguntas sin ver: E8 muestra la carga mientras se generan (B-011)
             state.final_attempt_id = None
             state.quiz_job_id, state.quiz_job_kind = created.job_id, "final-prepare"
