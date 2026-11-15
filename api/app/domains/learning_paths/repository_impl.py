@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.common.constants import CourseStatus
 from app.common.repository_impl import SqlAlchemyCrudRepository
 from app.domains.courses.entities import Course, Topic
-from app.domains.courses.models import CourseModel, TopicPrerequisiteModel
+from app.domains.courses.models import CourseModel, TopicModel, TopicPrerequisiteModel
 from app.domains.courses.repository_impl import (
     SqlAlchemyCourseRepository,
     SqlAlchemyLearningPathRepository,
@@ -287,6 +287,15 @@ class SqlAlchemyPlatformReader:
             for t in topics
             if t.id is not None
         ]
+
+    async def topic_names_for_enrollment(self, enrollment_id: int) -> dict[int, str]:
+        rows = await self._session.execute(
+            select(TopicModel.id, TopicModel.name)
+            .join(LearningPathModel, LearningPathModel.course_id == TopicModel.course_id)
+            .join(EnrollmentModel, EnrollmentModel.learning_path_id == LearningPathModel.id)
+            .where(EnrollmentModel.id == enrollment_id, TopicModel.active.is_(True))
+        )
+        return {int(topic_id): name for topic_id, name in rows.all()}
 
     async def user(self, user_id: int) -> User | None:
         return await self._users.get(user_id)

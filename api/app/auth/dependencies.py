@@ -79,14 +79,18 @@ async def get_current_user(
     validator: TokenValidator = request.app.state.token_validator
     claims = await validator.validate(token)
 
-    # Mientras se resuelve (y quizá se crea) el usuario, la auditoría registra la identidad.
-    await apply_audit_user(session, f"identity:{claims.subject}")
+    async def audit_as_identity() -> None:
+        # Si hay que enlazar o crear al usuario, la auditoría registra la identidad. Leer al
+        # usuario no escribe nada, así que el caso común no paga ese viaje a la base (R-008).
+        await apply_audit_user(session, f"identity:{claims.subject}")
+
     service = AuthenticationService(
         SqlAlchemyUserRepository(session),
         SqlAlchemyRoleRepository(session),
         SqlAlchemyUserRoleRepository(session),
         SqlAlchemyUnitOfWork(session),
         provider=get_settings().oidc_identity_provider,
+        before_write=audit_as_identity,
     )
     user = await service.resolve(
         ExternalIdentity(

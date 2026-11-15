@@ -54,6 +54,8 @@ async def apply_audit_user(session: AsyncSession, user_id: str) -> None:
     la transacción en curso, si la hay, para no auditar con un valor anterior.
     """
     session.sync_session.info[AUDIT_USER_KEY] = user_id
+    if not session.in_transaction():
+        return  # la aplicará after_begin al empezar la transacción: no hace falta otro viaje
     await session.execute(
         text("SELECT set_config('smartmentor.current_user_id', :user_id, true)"),
         {"user_id": user_id},

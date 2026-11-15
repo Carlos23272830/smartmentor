@@ -4,7 +4,7 @@ from dataclasses import asdict
 from datetime import UTC, datetime
 from typing import ClassVar
 
-from sqlalchemy import func, select, text, update
+from sqlalchemy import and_, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.common.entities import require_id
@@ -77,6 +77,30 @@ class SqlAlchemyUserRepository(SqlAlchemyCrudRepository[UserModel, User]):
             )
         ).scalar_one_or_none()
         return None if row is None else self._to_entity(row)
+
+    async def get_with_roles_by_identity(
+        self, provider: str, subject: str
+    ) -> tuple[User, frozenset[str]] | None:
+        # Una fila por rol asignado (o una sola con código NULL si no tiene roles activos).
+        rows = (
+            await self._session.execute(
+                select(UserModel, RoleModel.code)
+                .outerjoin(
+                    UserRoleModel,
+                    and_(UserRoleModel.user_id == UserModel.id, UserRoleModel.active.is_(True)),
+                )
+                .outerjoin(
+                    RoleModel,
+                    and_(RoleModel.id == UserRoleModel.role_id, RoleModel.active.is_(True)),
+                )
+                .where(
+                    UserModel.identity_provider == provider, UserModel.identity_subject == subject
+                )
+            )
+        ).all()
+        if not rows:
+            return None
+        return self._to_entity(rows[0][0]), frozenset(code for _, code in rows if code is not None)
 
     async def get_by_email(self, email: str) -> User | None:
         row = (
@@ -249,6 +273,28 @@ class SqlAlchemyConsentRepository(SqlAlchemyCrudRepository[ConsentModel, Consent
             .first()
         )
         return None if row is None else self._to_entity(row)
+
+    async def latest_by_type(self, user_id: int, consent_types: list[str]) -> dict[str, Consent]:
+        if not consent_types:
+            return {}
+        rows = (
+            (
+                await self._session.execute(
+                    select(ConsentModel)
+                    .where(
+                        ConsentModel.user_id == user_id,
+                        ConsentModel.consent_type.in_(consent_types),
+                    )
+                    .order_by(ConsentModel.id.desc())
+                )
+            )
+            .scalars()
+            .all()
+        )
+        latest: dict[str, Consent] = {}
+        for row in rows:  # de la más reciente a la más antigua: gana la primera de cada tipo
+            latest.setdefault(row.consent_type, self._to_entity(row))
+        return latest
 
     async def revoke(self, consent_id: int) -> Consent | None:
         return await self.update(consent_id, {"revoked_at": datetime.now(UTC)})

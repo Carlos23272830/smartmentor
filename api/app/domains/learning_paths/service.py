@@ -67,8 +67,13 @@ PATH_SEQUENCE_TASK = "path.sequence"
 
 
 class ProgressReader(Protocol):
-    async def facts(self, enrollment: Enrollment, steps: list[PathStep]) -> ProgressFacts:
-        """Diagnóstico, intentos abiertos o calificándose, final y encuesta de la inscripción."""
+    async def facts(
+        self, enrollment: Enrollment, steps: list[PathStep], path: LearningPath | None = None
+    ) -> ProgressFacts:
+        """Diagnóstico, intentos abiertos o calificándose, final y encuesta de la inscripción.
+
+        `path` es la ruta de la inscripción si quien llama ya la leyó (evita leerla otra vez).
+        """
         ...
 
 
@@ -132,8 +137,6 @@ class PathView:
     enrollment: Enrollment
     path: LearningPath
     steps: list[StepView]
-    final_attempts_used: int
-    final_attempts_max: int
 
     @property
     def final_locked(self) -> bool:
@@ -442,9 +445,7 @@ class EnrollmentService:
         items, total = await self._enrollments.list_for_user(user.id, limit=limit, offset=offset)
         return [await self._view(e) for e in items], total
 
-    async def path_view(
-        self, user: CurrentUser, enrollment_id: int, final_used: int, final_max: int
-    ) -> PathView:
+    async def path_view(self, user: CurrentUser, enrollment_id: int) -> PathView:
         enrollment = await self.get_own(user, enrollment_id)
         path = await self._path_of(enrollment)
         nodes = {n.id: n for n in await self._reader.topic_nodes(path.course_id)}
@@ -453,8 +454,6 @@ class EnrollmentService:
             enrollment=enrollment,
             path=path,
             steps=[StepView(s, nodes.get(s.topic_id)) for s in steps],
-            final_attempts_used=final_used,
-            final_attempts_max=final_max,
         )
 
     async def _path_of(self, enrollment: Enrollment) -> LearningPath:
@@ -468,7 +467,7 @@ class EnrollmentService:
     ) -> EnrollmentView:
         path = path or await self._path_of(enrollment)
         steps = await self._steps.list_for_enrollment(require_id(enrollment))
-        facts = await self._progress.facts(enrollment, steps)
+        facts = await self._progress.facts(enrollment, steps, path)
         return EnrollmentView(enrollment, path, steps, next_action(facts))
 
     async def view_of(self, enrollment: Enrollment) -> EnrollmentView:

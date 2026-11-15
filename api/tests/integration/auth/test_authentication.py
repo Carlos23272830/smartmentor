@@ -180,6 +180,48 @@ async def test_first_login_is_audited_as_the_identity(
     assert creation == "identity:audit-sub"
 
 
+async def test_linking_by_email_is_audited_as_the_identity(
+    client_for: ClientFactory, engine: AsyncEngine
+) -> None:
+    # R-008: la identidad ya no se fija antes de leer al usuario, sino justo antes de escribir.
+    await insert_user(engine, email="link@example.com", role="instructor", sub=None)
+    assert (await client_for(sub="link-sub", email="link@example.com").get(ME)).status_code == 200
+    async with engine.connect() as conn:
+        linked = (
+            await conn.execute(
+                text(
+                    "SELECT app_user_id FROM users_audit WHERE operation = 'UPDATE' "
+                    "AND new_data ->> 'identity_subject' = 'link-sub'"
+                )
+            )
+        ).scalar_one()
+    assert linked == "identity:link-sub"
+
+
+async def test_writes_of_a_linked_user_are_audited_with_its_id(
+    client_for: ClientFactory, engine: AsyncEngine
+) -> None:
+    user_id = await insert_user(engine, email="known@example.com", role="learner", sub="known")
+    http = client_for(sub="known", email="known@example.com")
+    saved = await http.put(f"{ME}/profile", json={"description": "Analista de datos"})
+    assert saved.status_code == 200, saved.text
+    async with engine.connect() as conn:
+        actors = (
+            (
+                await conn.execute(
+                    text(
+                        "SELECT DISTINCT app_user_id FROM user_profiles_audit "
+                        "WHERE new_data ->> 'user_id' = :user_id"
+                    ),
+                    {"user_id": str(user_id)},
+                )
+            )
+            .scalars()
+            .all()
+        )
+    assert actors == [str(user_id)]
+
+
 async def test_unverified_email_is_not_provisioned(
     client_for: ClientFactory, client: httpx.AsyncClient
 ) -> None:
