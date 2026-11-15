@@ -55,8 +55,9 @@ render_page_header(
     breadcrumb=f"{course} › Prueba de retención",
     caption="Esta prueba mide cuánto recuerdas. Es opcional y no cambia tu badge.",
 )
-st.markdown(f"**Pregunta {number} de {len(attempt.items)}**")
-st.caption("Sin ayuda de IA ni apuntes")
+with st.container(horizontal=True, key="retention-chips"):
+    st.badge(f"Pregunta {number} de {len(attempt.items)}", color="blue")
+    st.badge("Sin ayuda de IA ni apuntes", color="orange")
 
 
 def _save(answers: list[LearnerAnswer]) -> None:
@@ -76,6 +77,11 @@ def _context(item: AssessmentItem) -> str | None:
     return item_context(item)
 
 
+def _skip() -> None:
+    if st.button("Ahora no", key="retention-skip"):
+        st.switch_page(PROGRESS_PAGE)
+
+
 render_question_sheet(
     attempt.items,
     state.sheet,
@@ -85,6 +91,8 @@ render_question_sheet(
     submit_label="Enviar prueba",
     notes=(NOTE,),
     context=_context,
+    card=True,
+    notes_style="notice",
+    progress=False,
+    leading_action=_skip,
 )
-if st.button("Ahora no", key="retention-skip"):
-    st.switch_page(PROGRESS_PAGE)
