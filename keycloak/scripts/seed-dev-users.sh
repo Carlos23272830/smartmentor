@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Crea en Keycloak los usuarios de DESARROLLO que Liquibase siembra en la base de la aplicación
-# (SEED_INSTRUCTOR_EMAIL y SEED_LEARNER_EMAIL; con --with-admin también SEED_ADMIN_EMAIL).
+# (SEED_INSTRUCTOR_EMAIL, SEED_LEARNER_EMAIL y los dos usuarios «vacío» SEED_EMPTY_LEARNER_EMAIL y
+# SEED_EMPTY_INSTRUCTOR_EMAIL; con --with-admin también SEED_ADMIN_EMAIL).
 #
 # Por qué existe: Liquibase solo crea la fila de la aplicación (tabla users y su rol). Para iniciar sesión
 # la persona también debe existir en Keycloak, con el MISMO correo y verificado: la API enlaza ambos
@@ -31,7 +32,7 @@ for arg in "$@"; do
   case "$arg" in
     --with-admin) WITH_ADMIN=1 ;;
     --reset-passwords) RESET_PASSWORDS=1 ;;
-    -h|--help) sed -n '2,23p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Argumento desconocido: $arg" >&2; exit 2 ;;
   esac
 done
@@ -60,6 +61,7 @@ fi
 
 "${KC_EXEC_CMD[@]}" env "TARGET_REALM=$REALM" "WITH_ADMIN=$WITH_ADMIN" "RESET_PASSWORDS=$RESET_PASSWORDS" \
   "SEED_INSTRUCTOR_EMAIL=${SEED_INSTRUCTOR_EMAIL:-}" "SEED_LEARNER_EMAIL=${SEED_LEARNER_EMAIL:-}" \
+  "SEED_EMPTY_LEARNER_EMAIL=${SEED_EMPTY_LEARNER_EMAIL:-}" "SEED_EMPTY_INSTRUCTOR_EMAIL=${SEED_EMPTY_INSTRUCTOR_EMAIL:-}" \
   "SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-}" "SEED_USERS_PASSWORD=$SEED_USERS_PASSWORD" \
   ${KCADM_USER:+"KCADM_USER=$KCADM_USER"} ${KCADM_PASSWORD:+"KCADM_PASSWORD=$KCADM_PASSWORD"} \
   bash -s <<'INNER'
@@ -73,8 +75,8 @@ kc config credentials --server http://localhost:8080 --realm master \
   --user "${KCADM_USER:-$KC_BOOTSTRAP_ADMIN_USERNAME}" \
   --password "${KCADM_PASSWORD:-$KC_BOOTSTRAP_ADMIN_PASSWORD}" >/dev/null
 
-seed_user() {  # seed_user CORREO ROL NOMBRE
-  local email="$1" role="$2" first="$3"
+seed_user() {  # seed_user CORREO ROL NOMBRE [APELLIDO]
+  local email="$1" role="$2" first="$3" last="${4:-Desarrollo}"
   if [ -z "$email" ]; then
     echo "  (omitido) rol $role: la variable de correo está vacía"
     return 0
@@ -96,7 +98,7 @@ seed_user() {  # seed_user CORREO ROL NOMBRE
   fi
   kc create users -r "$TARGET_REALM" \
     -s "username=$email" -s "email=$email" -s emailVerified=true -s enabled=true \
-    -s "firstName=$first" -s "lastName=Desarrollo" >/dev/null
+    -s "firstName=$first" -s "lastName=$last" >/dev/null
   if ! kc set-password -r "$TARGET_REALM" --username "$email" --new-password "$SEED_USERS_PASSWORD" 2>/dev/null; then
     echo "  ERROR: Keycloak rechazó la contraseña de SEED_USERS_PASSWORD (política del realm). Se dejó el usuario sin contraseña: $email" >&2
     return 1
@@ -108,6 +110,8 @@ seed_user() {  # seed_user CORREO ROL NOMBRE
 echo "Realm $TARGET_REALM:"
 seed_user "$SEED_INSTRUCTOR_EMAIL" instructor Instructor
 seed_user "$SEED_LEARNER_EMAIL" learner Aprendiz
+seed_user "$SEED_EMPTY_LEARNER_EMAIL" learner Aprendiz Vacío
+seed_user "$SEED_EMPTY_INSTRUCTOR_EMAIL" instructor Instructor Vacío
 if [ "$WITH_ADMIN" = "1" ]; then
   seed_user "$SEED_ADMIN_EMAIL" admin Administrador
 fi

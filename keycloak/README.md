@@ -129,6 +129,17 @@ keycloak/scripts/seed-dev-users.sh --with-admin   # además el administrador (SE
 
 El script es idempotente (no toca los usuarios que ya existen), asigna el rol de realm correspondiente y usa la contraseña `SEED_USERS_PASSWORD` del `.env` (la genera `scripts/gen-secrets.sh`; debe cumplir la política del realm). El instructor y el administrador configuran su OTP en el primer ingreso. **Solo desarrollo:** en producción deja esas variables vacías y no ejecutes el script.
 
+### Usuarios «vacío» (estados vacíos)
+
+Para ver cómo se comporta la aplicación sin datos hay dos usuarios de desarrollo más, con «Vacío» en el nombre. Liquibase los siembra en la base (changelog `v2.0.1/005`) solo con su rol, sin cursos ni inscripciones, y el mismo script los crea en Keycloak con la contraseña `SEED_USERS_PASSWORD`:
+
+| Nombre visible | Rol | Variable de correo (valor de `.env.example`) | Para qué sirve |
+| --- | --- | --- | --- |
+| Aprendiz Vacío | `learner` | `SEED_EMPTY_LEARNER_EMAIL` (`learner.vacio.smartmentor@yopmail.com`) | Ver el estado vacío del aprendiz: sin inscripciones, ni rutas ni progreso. |
+| Instructor Vacío | `instructor` | `SEED_EMPTY_INSTRUCTOR_EMAIL` (`instructor.vacio.smartmentor@yopmail.com`) | Ver el estado vacío del instructor: sin cursos. Configura su OTP en el primer ingreso. |
+
+Si la variable está vacía, el usuario se omite sin error. Como con los demás, en producción déjalas vacías.
+
 ### Segundo instructor como evaluador (DEF-24)
 
 Para probar la calificación de respuestas cortas o la anotación de preguntas hace falta un instructor asignado como evaluador del curso que **no** sea su dueño. `scripts/dev-seed-evaluator.sh` lo crea en Keycloak y en la base (con rol `instructor`, contraseña `SEED_USERS_PASSWORD`) y lo asigna con `POST /courses/{id}/evaluators` usando el token del administrador sembrado:
