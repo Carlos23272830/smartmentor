@@ -11,6 +11,7 @@ from support import FIXTURES_DIR
 
 from clients.api import ApiClient
 from clients.base import ApiError
+from clients.evaluation_adapter import grading_result_from_api
 from clients.fixtures import FixturesClient
 from clients.models import Job, JobAccepted, Page
 from clients.models_staff import (
@@ -25,7 +26,6 @@ from clients.models_staff import (
     Dashboard,
     ExtractionMetrics,
     GradingQueue,
-    HumanGradingResult,
     LearnerDetail,
     LlmCallLog,
     LlmSummary,
@@ -59,7 +59,6 @@ MODELS: dict[str, Any] = {
     "video_quality": VideoQuality,
     "annotation_queue": AnnotationQueue,
     "grading_queue": GradingQueue,
-    "human_grading_result": HumanGradingResult,
     "items": Page[ReviewItem],
     "users": Page[AdminUser],
     "user_new": AdminUser,
@@ -94,6 +93,11 @@ def test_every_staff_fixture_validates_against_the_models(path: Any) -> None:
         assert isinstance(data, list)
         for item in data:
             _strict(list_models[name]).model_validate(item)
+        return
+    if name == "human_grading_result":
+        # Tiene la forma de la API (`HumanGradingResponse`); la prueba del adaptador la valida
+        # contra el OpenAPI y aquí solo se comprueba que el adaptador la entiende.
+        assert grading_result_from_api(data)["llm_criteria_total"] == 3
         return
     model = MODELS[name]
     strict = _strict(model)

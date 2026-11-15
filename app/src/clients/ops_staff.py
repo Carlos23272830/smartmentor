@@ -720,9 +720,16 @@ class StaffFixturesOps:
         return queue
 
     def grade_answer(self, attempt_answer_id: int, body: HumanGradingBody) -> HumanGradingResult:
-        del body
         self._graded_answer_ids().add(attempt_answer_id)
-        return self._model(HumanGradingResult, "human_grading_result")
+        # La API responde con la forma de `HumanGradingResponse`: eco de lo que calificó el
+        # evaluador más la nota del LLM; el adaptador la convierte como con la API real.
+        doc = {
+            **self._doc("human_grading_result"),
+            "attempt_answer_id": attempt_answer_id,
+            "criteria": [c.model_dump() for c in body.criteria],
+            "score": body.score,
+        }
+        return _parse(HumanGradingResult, grading_result_from_api(doc))
 
     def _graded_answer_ids(self) -> set[int]:
         """Eco mínimo de «Guardar»: las respuestas calificadas en esta sesión de fixtures."""
