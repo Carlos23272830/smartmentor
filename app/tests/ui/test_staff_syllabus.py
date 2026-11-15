@@ -123,6 +123,22 @@ def test_d2b_edit_panel_saves_and_reports_cycles() -> None:
     assert not any(t == "Editar tema" for t in page_texts(at)[:3])
 
 
+def test_d2b_removing_an_outcome_keeps_the_text_of_the_others() -> None:
+    """Con la clave por posición, al quitar el primer resultado el campo seguía mostrando su
+    texto (Streamlit ignora `value=` si la clave ya tiene estado) y lo copiaba al siguiente."""
+    at = staff_app(page=SYLLABUS)
+    at = click(at, "Editar tema")
+    at = click(at, "+ Agregar resultado de aprendizaje")
+    statements = [t for t in at.text_input if t.key and t.key.startswith("sr-os-")]
+    assert len(statements) == 2
+    statements[1].set_value("aplicar la regresión lineal a un caso real").run()
+    remove = [b for b in at.button if b.label == "Quitar"]
+    remove[0].click().run()
+    assert_no_exception(at)
+    statements = [t for t in at.text_input if t.key and t.key.startswith("sr-os-")]
+    assert [t.value for t in statements] == ["aplicar la regresión lineal a un caso real"]
+
+
 def test_d2c_reextract_asks_for_confirmation() -> None:
     at = staff_app(scenario="loading", page=SYLLABUS)
     at = click(at, "Volver a extraer temas")
