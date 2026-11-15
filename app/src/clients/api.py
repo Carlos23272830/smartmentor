@@ -10,6 +10,7 @@
 import logging
 import uuid
 from collections.abc import Callable, Sequence
+from contextlib import nullcontext
 from typing import Any
 
 import httpx
@@ -44,6 +45,7 @@ from clients.models import (
 )
 from clients.ops_learner import LearnerApiOps
 from clients.ops_staff import StaffApiOps
+from components.loading import loading_indicator
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +115,7 @@ class ApiClient(LearnerApiOps, StaffApiOps):
         params: dict[str, Any] | None = None,
         idempotency_key: str | None = None,
         timeout: httpx.Timeout | None = None,
+        show_loading: bool = True,
     ) -> httpx.Response:
         headers = {
             "Authorization": f"Bearer {self._token_provider()}",
@@ -122,14 +125,16 @@ class ApiClient(LearnerApiOps, StaffApiOps):
         if idempotency_key is not None:
             headers["Idempotency-Key"] = idempotency_key
         try:
-            response = self._http.request(
-                method,
-                f"{API_PREFIX}{path}",
-                json=json,
-                params=params,
-                headers=headers,
-                timeout=timeout or httpx.USE_CLIENT_DEFAULT,
-            )
+            # Sin spinner en el sondeo de trabajos: ya hay una pantalla de espera (U1x, D1c)
+            with loading_indicator() if show_loading else nullcontext():
+                response = self._http.request(
+                    method,
+                    f"{API_PREFIX}{path}",
+                    json=json,
+                    params=params,
+                    headers=headers,
+                    timeout=timeout or httpx.USE_CLIENT_DEFAULT,
+                )
         except httpx.HTTPError as error:
             logger.warning("API sin conexión: %s %s (%s)", method, path, type(error).__name__)
             raise ApiError(503, "SERVICE_UNAVAILABLE", "API unreachable") from error
@@ -164,6 +169,8 @@ class ApiClient(LearnerApiOps, StaffApiOps):
             response = self._http.post(
                 f"{API_PREFIX}{path}", files=files, data=data, headers=headers
             )
+            with loading_indicator():
+                response = self._http.post(f"{API_PREFIX}{path}", files=files, headers=headers)
         except httpx.HTTPError as error:
             raise ApiError(503, "SERVICE_UNAVAILABLE", "API unreachable") from error
         if response.is_error:
@@ -396,4 +403,4 @@ class ApiClient(LearnerApiOps, StaffApiOps):
     # --- Trabajos de IA ---
 
     def get_job(self, job_id: str) -> Job:
-        return self._model(Job, self._request("GET", f"/jobs/{job_id}"))
+        return self._model(Job, self._request("GET", f"/jobs/{job_id}", show_loading=False))
