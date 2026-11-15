@@ -54,6 +54,12 @@ from app.domains.assessments.grading import (
     round_robin,
     short_answer_is_correct,
 )
+from app.domains.assessments.objective import (
+    ALLOWED_BLOOM_VERBS,
+    canonical_bloom_verb,
+    normalize_proposal,
+    objective_proposal,
+)
 from app.domains.assessments.repository import (
     AnswerRepository,
     AttemptRepository,
@@ -587,6 +593,18 @@ class DiagnosticService(_Base):
         enrollment = await self._own_enrollment(user, enrollment_id, for_update=True)
         if enrollment.status != EnrollmentStatus.OBJECTIVE_PENDING:
             raise InvalidStateTransitionError("The enrollment is not waiting for an objective.")
+        chosen = {k: str(parts[k]).strip() for k in ("bloom_verb", "content", "criterion")}
+        proposal = objective_proposal(enrollment)
+        verb = canonical_bloom_verb(chosen["bloom_verb"])
+        if verb is not None:
+            chosen["bloom_verb"] = verb
+        elif proposal is None or chosen["bloom_verb"] != proposal["bloom_verb"]:
+            # Solo se acepta un verbo fuera de la lista si es el de la propuesta guardada.
+            raise BusinessRuleError(
+                "The Bloom verb is not in the allowed list.",
+                code="INVALID_BLOOM_VERB",
+                extra={"allowed": list(ALLOWED_BLOOM_VERBS)},
+            )
         diagnostic = await self._r.diagnostics.by_enrollment(enrollment_id)
         data = (diagnostic.level_by_topic or {}) if diagnostic is not None else {}
         levels = {
@@ -595,17 +613,10 @@ class DiagnosticService(_Base):
             if str(t.get("topic_id", "")).isdigit()
         }
         focus = [int(t) for t in data.get("focus_topic_ids", []) if str(t).isdigit()]
-        chosen = {k: str(parts[k]).strip() for k in ("bloom_verb", "content", "criterion")}
-        proposed = {
-            "bloom_verb": enrollment.objective_bloom_verb,
-            "content": enrollment.objective_content,
-            "criterion": enrollment.objective_criterion,
-        }
-        origin = (
-            enrollment.objective_origin or "llm_proposed"
-            if chosen == proposed
-            else "learner_edited"
+        unchanged = proposal is not None and all(
+            chosen[k] == proposal[k] for k in ("bloom_verb", "content", "criterion")
         )
+        origin = (proposal or {}).get("origin") or "llm_proposed" if unchanged else "learner_edited"
         path = await self._path(enrollment)
         sequenced = await self._progress.sequence(enrollment, path, levels, focus)
         enrollment = await self._progress.set_enrollment_status(
@@ -654,13 +665,20 @@ class DiagnosticService(_Base):
             require_id(diagnostic),
             {"status": "scored", "scored_at": _now(), "level_by_topic": stored},
         )
+        verb, content = normalize_proposal(objective.bloom_verb, objective.content)
+        proposed_origin = "path_default" if objective.origin == "path_default" else "llm_proposed"
         await self._progress.set_enrollment_status(
             enrollment,
             EnrollmentStatus.OBJECTIVE_PENDING,
-            objective_bloom_verb=objective.bloom_verb[:60],
-            objective_content=objective.content,
+            objective_bloom_verb=verb[:60],
+            objective_content=content,
             objective_criterion=objective.criterion,
-            objective_origin=objective.origin,
+            objective_origin=proposed_origin,
+            # La propuesta se guarda aparte: confirmar o editar no la sobrescribe (B-033).
+            objective_proposal_bloom_verb=verb[:60],
+            objective_proposal_content=content,
+            objective_proposal_criterion=objective.criterion,
+            objective_proposal_origin=proposed_origin,
         )
         await self._uow.commit()
         return True

@@ -28,7 +28,7 @@ Toda respuesta de error usa `Content-Type: application/problem+json`, igual que 
 | `code` | Identificador estable de esta tabla (`UPPER_SNAKE_CASE`) |
 | `request_id` | El `X-Request-ID` que viaja de la app a la API y a `ai/` (sección 18.2) |
 
-Extensiones permitidas (solo las de la columna «Extensiones»): `errors` (lista `{loc, msg, type}` de validación; nunca el valor recibido), `retryable` (booleano), `job_id`, `cycle` (lista de ids que cierran el ciclo), `missing` (lista de lo que falta), `attempts_used`, `max_attempts`.
+Extensiones permitidas (solo las de la columna «Extensiones»): `errors` (lista `{loc, msg, type}` de validación; nunca el valor recibido), `retryable` (booleano), `job_id`, `cycle` (lista de ids que cierran el ciclo), `missing` (lista de lo que falta), `allowed` (lista de valores aceptados), `attempts_used`, `max_attempts`.
 
 **Recursos ajenos.** Pedir un objeto que existe pero no pertenece al usuario responde `404 NOT_FOUND`, igual que si no existiera (sección 18.2, ids secuenciales): nunca `403`.
 
@@ -111,6 +111,7 @@ Extensiones permitidas (solo las de la columna «Extensiones»): `errors` (lista
 | `DIAGNOSTIC_ALREADY_SUBMITTED` | 409 | El diagnóstico ya se entregó | API | E3 |
 | `DIAGNOSTIC_NOT_READY` | 409 | El resultado todavía se está calculando; trae `job_id` | API | U1a, E4 |
 | `OBJECTIVE_NOT_MEASURABLE` | 422 | El objetivo no tiene las tres partes; `missing` trae `bloom_verb`, `content` o `criterion` | API | E4b |
+| `INVALID_BLOOM_VERB` | 422 | El verbo del objetivo no está en la lista de verbos de Bloom (ni es el de la propuesta guardada); `allowed` trae la lista | API | E4b |
 | `STEP_NOT_FOUND` | 404 | El paso no existe o no es de la inscripción | API | E5 |
 | `STEP_NOT_AVAILABLE` | 409 | El paso está `blocked`, `skipped`, `on_hold` o `passed` | API | E5, E6 |
 | `MAX_ATTEMPTS_EXCEEDED` | 422 | No quedan intentos (incluye los extra); trae `attempts_used` y `max_attempts` | API | E7c, E9c |

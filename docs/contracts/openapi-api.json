@@ -4017,7 +4017,7 @@
       },
       "ObjectiveUpdate": {
         "additionalProperties": false,
-        "description": "Objetivo en tres partes (E4b). Si falta una: `422 OBJECTIVE_NOT_MEASURABLE`.",
+        "description": "Objetivo en tres partes (E4b).\n\nSi falta una: `422 OBJECTIVE_NOT_MEASURABLE`. Si el verbo no está en la lista de Bloom (y no es\nel de la propuesta guardada): `422 INVALID_BLOOM_VERB`.",
         "properties": {
           "bloom_verb": {
             "anyOf": [

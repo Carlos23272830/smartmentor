@@ -13,6 +13,7 @@ from learner_support import (
 )
 
 from clients.base import ApiError
+from clients.models import Enrollment
 from clients.ops_learner import LearnerScript
 
 
@@ -212,6 +213,45 @@ def test_e4b_not_measurable_objective_shows_the_api_message() -> None:
     button(at, "Guardar objetivo").click().run()
     no_exception(at)
     assert at.error[0].value == "Agrega cómo sabrás que lo lograste."
+
+
+def test_e4b_invalid_bloom_verb_shows_a_friendly_message() -> None:
+    at = learner_app("learner_objective", DIAGNOSTIC_RESULT)
+    fail(at, "set_objective", ApiError(422, "INVALID_BLOOM_VERB"))
+    button(at, "Editar el objetivo").click().run()
+    button(at, "Guardar objetivo").click().run()
+    no_exception(at)
+    assert "verbo de la lista" in at.error[0].value
+
+
+def test_e4b_offers_the_bloom_verbs_of_the_api_and_drops_the_false_note() -> None:
+    at = learner_app("learner_objective", DIAGNOSTIC_RESULT)
+    button(at, "Editar el objetivo").click().run()
+    options = at.selectbox(key="objective-verb").options
+    assert {"Aplicar", "Construir", "Implementar", "Diseñar"} <= set(options)
+    assert not any("Guardar se desactiva" in t for t in page_texts(at))
+
+
+def test_e4b_back_to_the_proposal_brings_the_stored_proposal_not_the_edit() -> None:
+    """B-033: el objetivo editado ya no sobrescribe la propuesta de la IA."""
+    at = learner_app("learner_objective", DIAGNOSTIC_RESULT)
+    client = client_of(at)
+    proposal = client.get_diagnostic_result(1).proposed_objective
+    assert proposal is not None
+    edited = proposal.model_copy(
+        update={"criterion": "con al menos 95 % en la evaluación final", "origin": "learner_edited"}
+    )
+    original = client.get_enrollment
+
+    def with_edited_objective(enrollment_id: int) -> Enrollment:
+        return original(enrollment_id).model_copy(update={"objective": edited})
+
+    client.get_enrollment = with_edited_objective  # type: ignore[method-assign]
+    button(at, "Editar el objetivo").click().run()
+    assert at.text_input(key="objective-criterion").value == edited.criterion
+    button(at, "Volver a la propuesta de la IA").click().run()
+    no_exception(at)
+    assert at.text_input(key="objective-criterion").value == proposal.criterion
 
 
 def test_e4b_cancel_returns_to_the_summary() -> None:

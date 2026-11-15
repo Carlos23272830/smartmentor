@@ -17,7 +17,16 @@ PROBLEM_JSON = "application/problem+json"
 
 # Extensiones que el catálogo (docs/contracts/error-codes.md) permite en el cuerpo del error.
 ALLOWED_EXTENSIONS = frozenset(
-    {"errors", "retryable", "job_id", "cycle", "missing", "attempts_used", "max_attempts"}
+    {
+        "errors",
+        "retryable",
+        "job_id",
+        "cycle",
+        "missing",
+        "allowed",
+        "attempts_used",
+        "max_attempts",
+    }
 )
 
 
