@@ -19,7 +19,8 @@ session = get_session()
 labels = glossary()
 
 render_brand()
-st.title("¿Cómo quieres entrar?", anchor=False, width="content")
+with st.container(horizontal=True, horizontal_alignment="center"):
+    st.title("¿Cómo quieres entrar?", anchor=False, width="content")
 
 _CARDS: tuple[tuple[Role, str, str, str, str], ...] = (
     (
