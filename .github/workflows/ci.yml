@@ -159,6 +159,16 @@ jobs:
           --health-retries 12
     steps:
       - uses: actions/checkout@v7.0.1
+      - name: Diagnóstico temporal de la descarga del driver (PR 31)
+        run: |
+          url=https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.13/postgresql-42.7.13.jar
+          for intento in 1 2 3; do
+            curl -sS -o /tmp/pg.jar -D /tmp/pg.headers -w 'HTTP %{http_code} · %{size_download} bytes · %{remote_ip}\n' "$url" || true
+            grep -i -E '^(HTTP|content-type|content-length|x-cache|x-served-by|age|retry-after|server)' /tmp/pg.headers || true
+            sha256sum /tmp/pg.jar
+            head -c 200 /tmp/pg.jar | tr -c '[:print:]\n' '.'
+            echo
+          done
       - name: Construir la imagen de Liquibase
         run: |
           # El driver se descarga de Maven Central y a veces llega cortado en el runner: el SHA-256
