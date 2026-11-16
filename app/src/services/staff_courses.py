@@ -98,9 +98,25 @@ def extraction_steps(job: Job) -> list[LoadingStep]:
 
 
 def first_path_id(client: SmartMentorClient) -> int | None:
-    """Ruta del primer curso publicado del instructor (entrada por el menú «Rutas y avance»)."""
-    courses = client.list_courses(mine=True).items
-    return next((c.learning_path.id for c in courses if c.learning_path), None)
+    """Ruta activa más reciente del instructor (entrada por el menú «Rutas y avance», B-058).
+
+    La API lista los cursos por id, así que antes se abría la ruta del primero aunque estuviera
+    archivado y vacío. Ahora se prefiere un curso publicado y, si no hay, uno en preparación; entre
+    ellos, el de la ruta más reciente. Los cursos archivados nunca se abren por defecto.
+    """
+    courses = [
+        c
+        for c in client.list_courses(mine=True).items
+        if c.learning_path and c.status != "archived"
+    ]
+    if not courses:
+        return None
+    best = max(courses, key=lambda c: (c.status == "published", _path_id(c)))
+    return _path_id(best)
+
+
+def _path_id(course: Course) -> int:
+    return course.learning_path.id if course.learning_path else 0
 
 
 def course_for(client: SmartMentorClient, course_id: int | None) -> Course | None:
