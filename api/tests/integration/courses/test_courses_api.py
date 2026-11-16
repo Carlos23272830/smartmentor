@@ -92,6 +92,12 @@ async def test_courses_report_their_active_topics(instructor: httpx.AsyncClient)
     assert topics
     fetched = (await instructor.get(f"{API}/courses/{course_id}")).json()
     assert (fetched["topics_count"], fetched["enrolled_count"]) == (len(topics), 0)
+    # B-065: el detalle trae el syllabus vigente (texto pegado: sin archivo); la lista no.
+    assert fetched["syllabus"]["filename"] is None
+    assert fetched["syllabus"]["characters"] > 0
+    assert draft["syllabus"] is None
+    listed_all = (await instructor.get(f"{API}/courses")).json()["items"]
+    assert all(c["syllabus"] is None for c in listed_all)
 
     removed = await instructor.patch(f"{API}/topics/{topics[0]['id']}/deactivate")
     assert removed.status_code == 200, removed.text

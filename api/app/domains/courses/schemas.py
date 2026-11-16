@@ -33,6 +33,16 @@ class LearningPathSummary(BaseModel):
     status: str
 
 
+class SyllabusSummary(BaseModel):
+    """Syllabus vigente (el más reciente) del curso; sin el texto extraído."""
+
+    filename: str | None = Field(
+        description="Nombre original del archivo, sin ruta; `null` si se pegó texto"
+    )
+    pages: int | None = Field(description="Páginas del PDF; `null` si no aplica")
+    characters: int | None = Field(description="Caracteres de texto extraídos")
+
+
 class CourseResponse(BaseModel):
     id: int
     name: str
@@ -44,6 +54,11 @@ class CourseResponse(BaseModel):
     learning_path: LearningPathSummary | None
     topics_count: int = Field(description="Temas activos del curso")
     enrolled_count: int = Field(description="Aprendices inscritos, sin los retirados")
+    syllabus: SyllabusSummary | None = Field(
+        default=None,
+        description="Syllabus vigente. Solo en `GET /courses/{id}`; `null` en la lista "
+        "y si el curso no tiene syllabus",
+    )
     created_at: UtcDatetime | None
     updated_at: UtcDatetime | None
 

@@ -32,6 +32,7 @@ def get_course_service(session: SessionDep, ai: AiServiceDep) -> CourseService:
         ai,
         SqlAlchemyUnitOfWork(session),
         owner_evaluators=OwnerEvaluatorAssigner(SqlAlchemyEvaluatorRepository(session)),
+        syllabus=SqlAlchemySyllabusRepository(session),
     )
 
 

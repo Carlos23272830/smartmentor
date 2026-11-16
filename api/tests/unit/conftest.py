@@ -118,7 +118,7 @@ def world() -> World:
         outcomes=outcomes,
         prerequisites=prerequisites,
         users=users,
-        course_service=CourseService(courses, paths, users, ai, uow),
+        course_service=CourseService(courses, paths, users, ai, uow, syllabus=syllabus),
         syllabus_service=SyllabusService(courses, syllabus, topics, prerequisites, ai, uow),
         topic_service=TopicService(courses, topics, outcomes, prerequisites, uow),
         publication_service=PublicationService(
