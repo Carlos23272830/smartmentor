@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from app.common.exceptions import ConflictError, InvalidStateTransitionError, NotFoundError
+from app.common.exceptions import ConflictError, InvalidStateTransitionError
 from app.common.unit_of_work import UnitOfWork
 from app.domains.assessments.grading import sus_score
 from app.domains.identity.authentication import CurrentUser
@@ -86,10 +86,10 @@ class StudyGoalService:
         self._uow = uow
 
     async def get(self, user: CurrentUser) -> StudyGoals:
-        """Metas y avance; `404` si aún no las definió (la app lo muestra como «sin metas»)."""
+        """Metas y avance; sin metas elegidas devuelve la respuesta vacía (metas en 0), no `404`."""
         goals = await self._goals.get(user.id)
         if goals is None:
-            raise NotFoundError("Study goals", user.id)
+            return StudyGoals.empty()
         return await self._goals.progress(user.id, goals)
 
     async def save(self, user: CurrentUser, daily_minutes: int, monthly_topics: int) -> StudyGoals:

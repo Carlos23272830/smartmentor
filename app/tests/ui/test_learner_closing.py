@@ -1,6 +1,10 @@
 """E10, E11, E11b, E12, E13a y E13b: badge, progreso, autorizaciones, logros y encuesta."""
 
+import json
+
+import httpx
 import pytest
+import respx
 from apptest import button, page_texts, session_of
 from learner_support import (
     ACHIEVEMENTS,
@@ -18,8 +22,10 @@ from learner_support import (
     no_exception,
 )
 from streamlit.testing.v1 import AppTest
+from support import FIXTURES_DIR as FIXTURES
 from support import SRC_DIR
 
+from clients.api import ApiClient
 from clients.base import ApiError
 from clients.models import AttemptResult, ConsentGrant, Enrollment, NextAction, Page
 from clients.models_learner import StudyGoals
@@ -197,6 +203,44 @@ def test_e11_without_goals_they_can_be_chosen_b028() -> None:
     at.segmented_control(key="goal-monthly").set_value(3).run()
     no_exception(at)
     assert len(saved) == 1
+
+
+def _e11_texts_without_goals(status: int, body: object) -> list[str]:
+    """Textos de E11 cuando `GET /me/study-goals` responde `status` (cliente HTTP con respx)."""
+    at = learner_app("learner_path", PROGRESS, run=False)
+    with respx.mock:
+        respx.get("http://api.test/api/v1/me/study-goals").respond(status, json=body)
+        http = ApiClient(
+            "http://api.test",
+            lambda: "test-only-not-a-secret",
+            http=httpx.Client(base_url="http://api.test"),
+        )
+        client_of(at).get_study_goals = http.get_study_goals  # type: ignore[method-assign]
+        at.run()
+    no_exception(at)
+    return page_texts(at)
+
+
+def test_e11_without_goals_200_empty_and_404_show_the_same_b061() -> None:
+    """B-061: la API responde 200 con metas en 0; la API anterior, 404. La pantalla es igual."""
+    empty = json.loads((FIXTURES / "learner" / "goals_empty.json").read_text(encoding="utf-8"))
+    from_200 = _e11_texts_without_goals(200, empty)
+    from_404 = _e11_texts_without_goals(404, {"code": "NOT_FOUND"})
+    assert from_200 == from_404
+    assert "Todavía no tienes metas. Elige una para hoy y otra para este mes." in from_200
+    assert from_200.count("Aún no elegiste tu meta") == 2
+    assert not any(text.startswith("Racha de") for text in from_200)
+
+
+def test_e11_raw_empty_goals_are_shown_as_no_goals_b061() -> None:
+    """Aunque un cliente entregue el 200 vacío sin normalizar, no se dibujan ceros."""
+    at = learner_app("learner_path", PROGRESS, run=False)
+    client_of(at).get_study_goals = lambda: StudyGoals.model_validate(  # type: ignore[method-assign]
+        json.loads((FIXTURES / "learner" / "goals_empty.json").read_text(encoding="utf-8"))
+    )
+    at.run()
+    no_exception(at)
+    assert page_texts(at).count("Aún no elegiste tu meta") == 2
 
 
 def test_e11_changing_the_daily_goal_saves_it() -> None:

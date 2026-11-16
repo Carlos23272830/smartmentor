@@ -60,14 +60,19 @@ class LearnerApiOps:
         return self._request("GET", f"/badges/{public_id}/image.png").content
 
     def get_study_goals(self) -> StudyGoals | None:
-        """Ruta propuesta (no está en el contrato): un 404 significa «sin metas»."""
+        """Metas del aprendiz, o `None` si aún no eligió ninguna.
+
+        La API responde `200` con las metas en 0 cuando no hay metas (B-061); un `404` (API
+        anterior) significa lo mismo, por eso se sigue aceptando.
+        """
         try:
             response = self._request("GET", "/me/study-goals")
         except ApiError as error:
             if error.status == 404:
                 return None
             raise
-        return StudyGoals.model_validate(response.json())
+        goals = StudyGoals.model_validate(response.json())
+        return None if goals.is_empty else goals
 
     def set_study_goals(self, update: StudyGoalsUpdate) -> StudyGoals:
         response = self._request("PUT", "/me/study-goals", json=update.model_dump(mode="json"))

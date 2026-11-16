@@ -38,3 +38,11 @@ class StudyGoals:
     daily_minutes_done: int = 0
     monthly_topics_done: int = 0
     streak_days: int = 0
+
+    @classmethod
+    def empty(cls) -> "StudyGoals":
+        """Respuesta de quien aún no eligió metas (B-061): metas en 0 y nada de avance.
+
+        `0` no es una meta válida (el `PUT` exige al menos 1), así que no se confunde con una real.
+        """
+        return cls(daily_minutes_goal=0, monthly_topics_goal=0)

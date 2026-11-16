@@ -3,7 +3,8 @@
 - `BadgeAssertion`: el `badge.v1` (Open Badges 2.0) que sirve
   `GET /badges/{public_id}/assertion.json` sin sesión; la interfaz solo muestra su verificación.
 - `StudyGoals`: propuesta para «Mis metas» y la racha de E11. El contrato (`api-v2.md`) no tiene
-  esta ruta todavía; el cliente HTTP trata un 404 como «sin metas» y la sección no se dibuja.
+  esta ruta todavía; sin metas la API responde `200` con las metas en 0 (B-061) y el cliente lo
+  devuelve como `None` («sin metas»); un `404` de una API anterior significa lo mismo.
 - `InteractionEvent`: un evento de uso de `POST /me/events` (`EventBody` del OpenAPI), para el
   tiempo en tarea (m27).
 """
@@ -71,6 +72,11 @@ class StudyGoals(ApiModel):
     streak_days: int
     daily_options: list[int] = Field(default_factory=lambda: [15, 30, 45])
     monthly_options: list[int] = Field(default_factory=lambda: [2, 3, 4])
+
+    @property
+    def is_empty(self) -> bool:
+        """Sin metas elegidas: la API manda las dos metas en 0 (el `PUT` exige al menos 1)."""
+        return self.daily_minutes_goal < 1 and self.monthly_topics_goal < 1
 
 
 class AttemptSummary(ApiModel):
