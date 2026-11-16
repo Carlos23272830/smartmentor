@@ -375,6 +375,8 @@ async def test_each_candidate_stores_its_youtube_position_for_e6(
             )
         ).all()
     assert [(r.rank, r.search_position) for r in rows] == [(1, 3), (2, 2), (3, 1)]
+    listed = (await course.owner.get(f"{API}/topics/{topic}/video-candidates")).json()["candidates"]
+    assert [(c["rank"], c["search_position"]) for c in listed] == [(1, 3), (2, 2), (3, 1)]
 
 
 async def test_a_manual_video_is_a_backup_and_cannot_be_repeated(course: Course) -> None:

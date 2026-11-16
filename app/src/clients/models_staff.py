@@ -396,6 +396,8 @@ class VideoCandidate(ApiModel):
     status: VideoStatus
     is_relevant: bool | None = None
     origin: Literal["youtube", "instructor"] = "youtube"
+    search_position: int | None = None
+    """Posición en los resultados de YouTube (B-064); `None` si es anterior."""
 
 
 class VideoSearch(ApiModel):

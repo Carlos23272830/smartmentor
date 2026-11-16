@@ -101,6 +101,7 @@ class VideoResponse(BaseModel):
     characterization_source: str | None
     similarity: float | None
     rank: int | None
+    search_position: int | None
     status: str
     origin: str
     relevance_judgment: bool | None

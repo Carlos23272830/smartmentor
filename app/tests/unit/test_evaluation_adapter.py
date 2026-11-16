@@ -40,6 +40,7 @@ VIDEO: dict[str, Any] = {
     "characterization_source": "metadata",
     "similarity": 0.81,
     "rank": 1,
+    "search_position": 3,
     "status": "in_use",
     "origin": "youtube_api",
     "relevance_judgment": None,
