@@ -111,7 +111,17 @@ jobs:
             -v "$GITHUB_WORKSPACE/database/liquibase/changelog:/liquibase/changelog:ro" \
             smartmentor-liquibase:ci update
       - name: pytest
-        run: uv run pytest
+        run: uv run pytest --cov=app --cov-report=term-missing --cov-report=xml
+      - name: Resumen de cobertura (api)
+        # Solo informa: no hay umbral que rompa el trabajo (la meta del 80 % de la definición de hecho es manual).
+        if: ${{ !cancelled() }}
+        run: |
+          [ -f .coverage ] || exit 0
+          {
+            echo "### Cobertura de pruebas: api"
+            echo
+            uv run coverage report --format=markdown
+          } >> "$GITHUB_STEP_SUMMARY"
 
   app:
     name: app (Ruff, mypy, pytest)
@@ -122,6 +132,9 @@ jobs:
         working-directory: app
     env:
       APP_DATA_SOURCE: fixtures
+      # El rastreo de cobertura por defecto triplica el tiempo de las pruebas de Streamlit (518 s frente a
+      # 198 s medidos); con sysmon (Python 3.12) el costo es despreciable y el resultado es el mismo.
+      COVERAGE_CORE: sysmon
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: astral-sh/setup-uv@v10.3.3
@@ -139,7 +152,17 @@ jobs:
       - name: mypy (estricto)
         run: uv run mypy
       - name: pytest
-        run: uv run pytest
+        run: uv run pytest --cov=src --cov-report=term-missing --cov-report=xml
+      - name: Resumen de cobertura (app)
+        # Solo informa: no hay umbral que rompa el trabajo (la meta del 80 % de la definición de hecho es manual).
+        if: ${{ !cancelled() }}
+        run: |
+          [ -f .coverage ] || exit 0
+          {
+            echo "### Cobertura de pruebas: app"
+            echo
+            uv run coverage report --format=markdown
+          } >> "$GITHUB_STEP_SUMMARY"
 
   liquibase:
     name: liquibase (validate)
@@ -265,7 +288,17 @@ jobs:
             smartmentor-liquibase:ci update
       - name: pytest
         # El repositorio completo está en el espacio de trabajo: las pruebas leen ../prompts.
-        run: uv run pytest
+        run: uv run pytest --cov=app --cov-report=term-missing --cov-report=xml
+      - name: Resumen de cobertura (ai)
+        # Solo informa: no hay umbral que rompa el trabajo (la meta del 80 % de la definición de hecho es manual).
+        if: ${{ !cancelled() }}
+        run: |
+          [ -f .coverage ] || exit 0
+          {
+            echo "### Cobertura de pruebas: ai"
+            echo
+            uv run coverage report --format=markdown
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: La imagen de producción importa todos los módulos
         # Las pruebas corren con las dependencias de desarrollo; la imagen solo trae las de ejecución. Si una
         # dependencia se declara solo en el grupo dev, la imagen no arranca (ya pasó con httpx).
