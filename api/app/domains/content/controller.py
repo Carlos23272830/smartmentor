@@ -134,6 +134,7 @@ def _video(view: VideoView) -> VideoResponse:
         characterization_source=video.characterization_source,
         similarity=video.similarity,
         rank=video.rank,
+        search_position=video.search_position,
         status=video.status,
         origin=video.origin,
         relevance_judgment=view.relevance_judgment,

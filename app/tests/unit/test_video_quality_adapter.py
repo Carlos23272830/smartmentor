@@ -30,6 +30,7 @@ def _video(video_id: int, topic_id: int, title: str) -> dict[str, Any]:
         "characterization_source": None,
         "similarity": 0.8,
         "rank": 1,
+        "search_position": 3,
         "status": "in_use",
         "origin": "youtube_api",
         "relevance_judgment": True,

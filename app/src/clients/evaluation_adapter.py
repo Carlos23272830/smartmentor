@@ -44,6 +44,7 @@ def video_from_api(data: dict[str, Any]) -> dict[str, Any]:
         "relevance": data.get("similarity"),
         "status": data["status"],
         "is_relevant": data.get("relevance_judgment"),
+        "search_position": data.get("search_position"),
         "origin": "instructor" if data.get("origin") == "instructor" else "youtube",
     }
 

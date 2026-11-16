@@ -389,3 +389,18 @@ def test_the_video_status_follows_the_d5f_thresholds() -> None:
     assert quality_status(0.749) == "observation"
     assert quality_status(0.60) == "observation"
     assert quality_status(0.599) == "under_review"
+
+
+def test_the_public_video_exposes_its_youtube_search_position_b064() -> None:
+    from app.domains.content.controller import _video
+    from app.domains.content.entities import VideoCandidate
+    from app.domains.content.service import VideoView
+
+    def view(position: int | None) -> VideoView:
+        video = VideoCandidate(
+            id=1, topic_id=1, youtube_video_id="EXAMPLE0001", title="V", search_position=position
+        )
+        return VideoView(video=video, relevance_judgment=None)
+
+    assert _video(view(3)).search_position == 3
+    assert _video(view(None)).search_position is None  # candidato anterior a B-064
