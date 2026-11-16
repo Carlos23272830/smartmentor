@@ -151,6 +151,7 @@ class VideoSearchSummaryV1(_Strict):
 
     found: Annotated[int, Field(ge=0)]
     excluded: dict[str, Annotated[int, Field(ge=0)]] = Field(default_factory=dict)
+    queries: list[str] = Field(default_factory=list)
 
 
 class VideoResourceV1(_Strict):

@@ -403,6 +403,7 @@ class VideoSearch(ApiModel):
     status: str
     found: int | None = None
     excluded: dict[str, int] | None = None
+    queries: list[str] | None = None
     error_code: str | None = None
 
 

@@ -15,7 +15,9 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from app.ports.catalog import OutcomeRecord, SyllabusDocumentRecord, TopicRecord
 
 _TOPICS = """
-    SELECT id, course_id, name, coalesce(description, '') AS description, subtopics, position
+    SELECT id, course_id, name, coalesce(description, '') AS description, subtopics, position,
+           coalesce((SELECT c.name FROM courses c WHERE c.id = topics.course_id), '')
+               AS course_name
     FROM topics
     WHERE active AND review_status <> 'deleted'
 """
@@ -86,6 +88,7 @@ class PostgresCatalogReader:
                 subtopics=_list(r["subtopics"]),
                 position=r["position"],
                 outcomes=outcomes[r["id"]],
+                course_name=r["course_name"],
             )
             for r in rows
         ]

@@ -28,6 +28,19 @@ def test_youtube_returned_nothing() -> None:
     )
 
 
+def test_without_a_youtube_key_nothing_was_searched() -> None:
+    text = video_search_text(_search(found=0, queries=[]), 0)
+    assert text is not None and text.startswith("No se buscó en YouTube")
+    assert "YOUTUBE_API_KEY" in text
+
+
+def test_youtube_returned_nothing_after_the_broad_query_too() -> None:
+    search = _search(found=0, queries=["Tema subtema", "Tema Curso"])
+    assert video_search_text(search, 0) == (
+        "YouTube no devolvió videos para este tema. Puedes agregar uno a mano."
+    )
+
+
 def test_few_results_without_exclusions() -> None:
     assert video_search_text(_search(found=2, excluded={}), 2) == (
         "YouTube solo devolvió 2 videos para este tema."

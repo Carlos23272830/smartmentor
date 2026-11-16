@@ -163,6 +163,14 @@
           "description": "Videos dropped by the knowledge filters, by reason (duration_out_of_range, language_not_understood)",
           "title": "Excluded",
           "type": "object"
+        },
+        "queries": {
+          "description": "Queries sent to YouTube, in order; empty when there is no YouTube key",
+          "items": {
+            "type": "string"
+          },
+          "title": "Queries",
+          "type": "array"
         }
       },
       "required": [

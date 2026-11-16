@@ -7804,6 +7804,20 @@
             "title": "Job Id",
             "type": "string"
           },
+          "queries": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Queries"
+          },
           "status": {
             "title": "Status",
             "type": "string"

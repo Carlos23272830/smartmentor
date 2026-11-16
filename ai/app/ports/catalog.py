@@ -28,6 +28,7 @@ class TopicRecord:
     subtopics: list[str] = field(default_factory=list)
     position: int = 0
     outcomes: list[OutcomeRecord] = field(default_factory=list)
+    course_name: str = ""  # B-064: context for the fallback video search
 
     def similarity_text(self) -> str:
         """Text embedded for the profile and resume signals (as the notebook v2)."""

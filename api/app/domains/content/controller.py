@@ -242,6 +242,7 @@ def _search(info: VideoSearchInfo | None) -> VideoSearchResponse | None:
         status=info.status,
         found=info.found,
         excluded=info.excluded,
+        queries=info.queries,
         error_code=info.error_code,
         finished_at=info.finished_at,
     )

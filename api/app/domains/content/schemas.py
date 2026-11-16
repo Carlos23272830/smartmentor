@@ -114,6 +114,7 @@ class VideoSearchResponse(BaseModel):
     status: str
     found: int | None = None
     excluded: dict[str, int] | None = None
+    queries: list[str] | None = None
     error_code: str | None = None
     finished_at: UtcDatetime | None = None
 

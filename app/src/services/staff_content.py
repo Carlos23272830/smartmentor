@@ -128,6 +128,11 @@ def video_search_text(search: VideoSearch | None, candidates: int) -> str | None
             "La última búsqueda es anterior a este resumen. Busca de nuevo para ver cuántos videos "
             "devolvió YouTube y por qué quedaron fuera."
         )
+    if search.found == 0 and search.queries == []:
+        return (
+            "No se buscó en YouTube: el servicio de IA no tiene la clave de YouTube "
+            "(YOUTUBE_API_KEY). Puedes agregar un video a mano."
+        )
     if search.found == 0:
         return "YouTube no devolvió videos para este tema. Puedes agregar uno a mano."
     reasons = [

@@ -61,7 +61,7 @@ def _search_from_api(data: Any) -> dict[str, Any] | None:
     """La última búsqueda (B-064) sin `finished_at`, que la pantalla no usa."""
     if not isinstance(data, dict):
         return None
-    keys = ("job_id", "status", "found", "excluded", "error_code")
+    keys = ("job_id", "status", "found", "excluded", "queries", "error_code")
     return {k: data.get(k) for k in keys}
 
 

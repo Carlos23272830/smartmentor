@@ -648,6 +648,7 @@ class VideoSearchInfo:
     status: str
     found: int | None = None
     excluded: dict[str, int] | None = None
+    queries: list[str] | None = None
     error_code: str | None = None
     finished_at: datetime | None = None
 
@@ -703,15 +704,13 @@ class VideoSearchService:
         summary = (job.result or {}).get("search_summary") or {}
         found = summary.get("found")
         excluded = summary.get("excluded")
+        queries = summary.get("queries")
         return VideoSearchInfo(
             job_id=job.job_id,
             status=job.status,
             found=found if isinstance(found, int) else None,
-            excluded=(
-                {str(k): int(v) for k, v in excluded.items()}
-                if isinstance(excluded, dict)
-                else None
-            ),
+            excluded=_counts(excluded),
+            queries=[str(q) for q in queries] if isinstance(queries, list) else None,
             error_code=job.error.code if job.error is not None else None,
             finished_at=job.finished_at,
         )

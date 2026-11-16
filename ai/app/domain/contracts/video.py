@@ -40,6 +40,10 @@ class VideoSearchSummary(ContractModel):
         description="Videos dropped by the knowledge filters, by reason "
         "(duration_out_of_range, language_not_understood)",
     )
+    queries: list[str] = Field(
+        default_factory=list,
+        description="Queries sent to YouTube, in order; empty when there is no YouTube key",
+    )
 
 
 class VideoResource(ContractModel):
