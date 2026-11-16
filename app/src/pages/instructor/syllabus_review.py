@@ -62,6 +62,8 @@ MAX_MATERIAL_BYTES = 10 * 1024 * 1024
 MATERIALS_SKIPPED = "sr-materials-skipped"
 BLOOM_BY_LABEL: dict[str, BloomLevel] = {label: level for level, label in BLOOM_LABEL.items()}
 NEW = -1
+PREREQUISITES_PLACEHOLDER = "Elige los temas previos"  # `st.multiselect` trae «Choose options»
+SUBTOPIC_SEPARATOR = "·"  # los subtemas van en una línea separados por «·», como en Figma (D2b)
 
 client = get_client()
 state = get_staff_state()
@@ -150,7 +152,7 @@ def _edit_panel(topic: CourseTopic | None) -> None:
     seed_defaults(
         {
             f"sr-name-{tid}": topic.name if topic else "",
-            f"sr-sub-{tid}": "\n".join(topic.subtopics) if topic else "",
+            f"sr-sub-{tid}": f" {SUBTOPIC_SEPARATOR} ".join(topic.subtopics) if topic else "",
             f"sr-bloom-{tid}": BLOOM_LABEL[topic.bloom_level if topic else "apply"],
             f"sr-pre-{tid}": [
                 i for i in (topic.prerequisite_topic_ids if topic else []) if i in options
@@ -165,15 +167,24 @@ def _edit_panel(topic: CourseTopic | None) -> None:
             }
         )
     name = st.text_input("Nombre", key=f"sr-name-{tid}")
-    subtopics = st.text_area("Subtemas", help="Uno por línea.", key=f"sr-sub-{tid}")
+    subtopics = st.text_input(
+        "Subtemas",
+        help=f"Sepáralos con «{SUBTOPIC_SEPARATOR}».",
+        key=f"sr-sub-{tid}",
+    )
     st.markdown("**Resultados de aprendizaje**")
     for index, outcome in enumerate(outcomes):
         # Clave propia de cada resultado, no su posición: al quitar uno, el que ocupa su lugar
         # heredaba el estado del campo y Streamlit ignoraba su valor inicial.
         uid = outcome["key"]
         bloom_col, text_col, remove_col = st.columns([2, 6, 1], vertical_alignment="bottom")
+        # La etiqueta se ve una vez, sobre el primer resultado, como en Figma; las demás filas la
+        # conservan oculta para que el lector de pantalla la anuncie.
         chosen = bloom_col.selectbox(
-            "Verbo de Bloom", list(BLOOM_LABEL.values()), key=f"sr-ob-{tid}-{uid}"
+            "Verbo de Bloom",
+            list(BLOOM_LABEL.values()),
+            key=f"sr-ob-{tid}-{uid}",
+            label_visibility="visible" if index == 0 else "collapsed",
         )
         outcome["bloom"] = BLOOM_BY_LABEL[chosen]
         outcome["statement"] = text_col.text_input(
@@ -193,6 +204,7 @@ def _edit_panel(topic: CourseTopic | None) -> None:
         "Prerrequisitos",
         options,
         format_func=lambda i: names[i],
+        placeholder=PREREQUISITES_PLACEHOLDER,
         key=f"sr-pre-{tid}",
     )
     render_notice("**Si un prerrequisito forma un ciclo, no podrás guardar.**")
@@ -217,7 +229,9 @@ def _edit_panel(topic: CourseTopic | None) -> None:
             body = TopicWrite(
                 name=name.strip(),
                 description=topic.description if topic else None,
-                subtopics=[line.strip() for line in subtopics.splitlines() if line.strip()],
+                subtopics=[
+                    part.strip() for part in subtopics.split(SUBTOPIC_SEPARATOR) if part.strip()
+                ],
                 position=topic.position if topic else len(topics) + 1,
                 estimated_minutes=topic.estimated_minutes if topic else None,
                 is_mandatory=topic.is_mandatory if topic else False,
@@ -397,6 +411,7 @@ def _table_view() -> None:
         "Tema a editar",
         [t.id for t in topics],
         format_func=lambda i: f"{positions[i]} · {names[i]}",
+        placeholder="Elige un tema",
         key="sr-selected",
         disabled=not topics,
     )

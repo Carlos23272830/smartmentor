@@ -7,3 +7,14 @@
   padding: var(--space-8) var(--space-12);
   align-items: center;
 }
+
+/* Mismo cuadro punteado azul que el cargador del syllabus de D1b (V-101). */
+.st-key-nc-materials section,
+.st-key-sr-materials-upload section {
+  border: 1.5px dashed var(--learner-accent);
+  border-radius: var(--radius-card);
+  background: var(--learner-soft);
+  min-height: 96px;
+  justify-content: center;
+  align-items: center;
+}

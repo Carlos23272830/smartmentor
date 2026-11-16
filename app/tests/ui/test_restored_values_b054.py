@@ -66,7 +66,7 @@ def test_restoring_the_topic_draft_over_the_api_values_does_not_warn_d2b_b054(
         monkeypatch,
         {
             f"sr-name-{topic_id}": "Álgebra lineal avanzada",
-            f"sr-sub-{topic_id}": "Matrices\nVectores propios",
+            f"sr-sub-{topic_id}": "Matrices · Vectores propios",
             f"sr-bloom-{topic_id}": "Crear",
             f"sr-pre-{topic_id}": [],
         },
@@ -76,7 +76,7 @@ def test_restoring_the_topic_draft_over_the_api_values_does_not_warn_d2b_b054(
     assert_no_exception(at)
     assert _session_state_warnings(caplog) == []
     assert at.text_input(key=f"sr-name-{topic_id}").value == "Álgebra lineal avanzada"
-    assert at.text_area(key=f"sr-sub-{topic_id}").value == "Matrices\nVectores propios"
+    assert at.text_input(key=f"sr-sub-{topic_id}").value == "Matrices · Vectores propios"
     assert at.selectbox(key=f"sr-bloom-{topic_id}").value == "Crear"
     assert at.multiselect(key=f"sr-pre-{topic_id}").value == []
 
@@ -88,14 +88,14 @@ def test_restoring_the_draft_of_a_new_topic_does_not_warn_d2b_b054(
     at = staff_app(page=SYLLABUS)
     at.session_state["sr-edit"] = -1
     _restore_on_next_run(
-        monkeypatch, {"sr-name--1": "Tema nuevo", "sr-sub--1": "Uno\nDos", "sr-bloom--1": "Crear"}
+        monkeypatch, {"sr-name--1": "Tema nuevo", "sr-sub--1": "Uno · Dos", "sr-bloom--1": "Crear"}
     )
     with caplog.at_level("WARNING", logger="streamlit"):
         at.run()
     assert_no_exception(at)
     assert _session_state_warnings(caplog) == []
     assert at.text_input(key="sr-name--1").value == "Tema nuevo"
-    assert at.text_area(key="sr-sub--1").value == "Uno\nDos"
+    assert at.text_input(key="sr-sub--1").value == "Uno · Dos"
     assert at.selectbox(key="sr-bloom--1").value == "Crear"
 
 

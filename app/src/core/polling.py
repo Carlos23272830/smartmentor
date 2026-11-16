@@ -16,6 +16,7 @@ from components import loading
 from core.errors import is_global
 from core.session import get_session
 from core.staff_errors import show_staff_error
+from core.staff_state import get_staff_state
 
 # --- Modo espera (T-054) -------------------------------------------------------------------------
 # Mientras una pantalla U1x espera un trabajo de IA, las lecturas que siguen (releer la inscripción
@@ -55,7 +56,8 @@ def in_wait_mode() -> bool:
         return False
     if job_id == CREATING_ATTEMPT:
         return learner.pending_attempt is not None
-    return job_id in (learner.diagnostic_job_id, learner.quiz_job_id)
+    # La extracción del syllabus (D1c) es el trabajo que espera el instructor.
+    return job_id in (learner.diagnostic_job_id, learner.quiz_job_id, get_staff_state().job_id)
 
 
 loading.set_quiet_probe(in_wait_mode)

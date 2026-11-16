@@ -28,3 +28,16 @@
 .st-key-new-course-retry p {
   color: var(--warning-text);
 }
+
+/* D1b: la zona de carga del syllabus es una caja punteada azul, como en Figma (V-101). Es el
+   cargador estándar de Streamlit: se estiliza su elemento section, sin tocar su comportamiento ni su
+   teclado. El texto interno («Arrastra…», «Upload») lo pone Streamlit y no se puede mover dentro
+   de la caja. */
+.st-key-nc-file section {
+  border: 1.5px dashed var(--learner-accent);
+  border-radius: var(--radius-card);
+  background: var(--learner-soft);
+  min-height: 112px;
+  justify-content: center;
+  align-items: center;
+}

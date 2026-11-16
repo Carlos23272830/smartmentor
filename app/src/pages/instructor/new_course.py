@@ -27,7 +27,7 @@ from components.material_uploader import (
     render_material_uploader,
 )
 from core.container import get_client
-from core.polling import poll_job_or_rerun
+from core.polling import enter_wait_mode, leave_wait_mode, poll_job_or_rerun
 from core.staff_errors import show_staff_error
 from core.staff_state import (
     COURSES,
@@ -45,6 +45,9 @@ BREADCRUMB = "Mis cursos › Nuevo curso"
 # R-004: apuntes por carga (la API admite hasta 20 activos por curso).
 MAX_MATERIAL_FILES = 5
 SKIPPED_KEY = "nc-material-skipped"
+# Figma promete «menos de 20 segundos», pero la extracción con el LLM real tardó más (39 s en el
+# recorrido de staff, B-057): se dice un tope honesto, como en las pantallas de carga del aprendiz.
+EXTRACTION_ESTIMATE = "hasta 2 minutos"
 
 client = get_client()
 state = get_staff_state()
@@ -229,13 +232,17 @@ def _extracting() -> bool:
     """Dibuja D1c; devuelve True si el trabajo sigue en curso (hay que seguir sondeando)."""
     if state.job_id is None:
         st.stop()
+    # Modo espera: la tarjeta de carga ya está en pantalla; el sondeo no dibuja «Cargando…».
+    enter_wait_mode(state.job_id)
     job = client.poll_job(state.job_id)
     failed = job.status == "failed"
+    if failed:
+        leave_wait_mode()  # con el error en pantalla, reintentar o volver sí muestran el spinner
     with st.container(key="new-course-loading"):
         action = render_loading_steps(
             "Extrayendo temas del syllabus",
             extraction_steps(job),
-            "menos de 20 segundos",
+            EXTRACTION_ESTIMATE,
             key="extract",
             error_message=(
                 "No pudimos extraer los temas. Tu syllabus está guardado: puedes reintentar."
@@ -254,12 +261,14 @@ def _extracting() -> bool:
                 "o no se admiten. Los demás quedaron guardados."
             )
     if is_done(job) and not failed:
+        leave_wait_mode()
         state.job_id = None
         st.session_state.pop("nc-view", None)
         st.session_state.pop("nc-draft", None)
         st.session_state.pop(SKIPPED_KEY, None)
         st.switch_page(SYLLABUS_REVIEW)
     if action == "back":
+        leave_wait_mode()
         state.job_id = None
         st.session_state.pop("nc-view", None)
         st.session_state.pop("nc-draft", None)

@@ -74,7 +74,10 @@ def render_header(
                 key="nav-link-active" if path == active_path else None, width="content"
             ):
                 st.page_link(path, label=text)
-        with st.popover(initials(full_name), type="tertiary"):
+        with (
+            st.container(key="app-avatar", width="content"),
+            st.popover(initials(full_name), type="tertiary"),
+        ):
             st.markdown(f"**{full_name}**")
             st.caption(email)
             st.caption(f"**{active_label.upper()}**")
