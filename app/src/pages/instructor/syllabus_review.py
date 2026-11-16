@@ -32,6 +32,7 @@ from core.staff_state import (
     get_staff_state,
     idempotency_key,
 )
+from core.widget_state import seed_defaults
 from services.staff_courses import (
     course_for,
     cycle_text,
@@ -129,32 +130,40 @@ def _edit_panel(topic: CourseTopic | None) -> None:
             for o in (topic.learning_outcomes if topic else [])
         ] or [_outcome(None, "", "apply")]
     outcomes: list[dict[str, Any]] = st.session_state[outcomes_key]
-    name = st.text_input("Nombre", value=topic.name if topic else "", key=f"sr-name-{tid}")
-    subtopics = st.text_area(
-        "Subtemas",
-        value="\n".join(topic.subtopics) if topic else "",
-        help="Uno por línea.",
-        key=f"sr-sub-{tid}",
+    options = [t.id for t in topics if t.id != tid]
+    # Los widgets no llevan `value=`, `index=` ni `default=`: el valor de la API entra por el
+    # estado de sesión y no pisa un borrador restaurado al volver de Keycloak (B-040, B-054).
+    seed_defaults(
+        {
+            f"sr-name-{tid}": topic.name if topic else "",
+            f"sr-sub-{tid}": "\n".join(topic.subtopics) if topic else "",
+            f"sr-bloom-{tid}": BLOOM_LABEL[topic.bloom_level if topic else "apply"],
+            f"sr-pre-{tid}": [
+                i for i in (topic.prerequisite_topic_ids if topic else []) if i in options
+            ],
+        }
     )
+    for outcome in outcomes:
+        seed_defaults(
+            {
+                f"sr-ob-{tid}-{outcome['key']}": BLOOM_LABEL[outcome["bloom"]],
+                f"sr-os-{tid}-{outcome['key']}": outcome["statement"],
+            }
+        )
+    name = st.text_input("Nombre", key=f"sr-name-{tid}")
+    subtopics = st.text_area("Subtemas", help="Uno por línea.", key=f"sr-sub-{tid}")
     st.markdown("**Resultados de aprendizaje**")
     for index, outcome in enumerate(outcomes):
         # Clave propia de cada resultado, no su posición: al quitar uno, el que ocupa su lugar
-        # heredaba el estado del campo y Streamlit ignoraba su `value=`.
+        # heredaba el estado del campo y Streamlit ignoraba su valor inicial.
         uid = outcome["key"]
         bloom_col, text_col, remove_col = st.columns([2, 6, 1], vertical_alignment="bottom")
-        labels = list(BLOOM_LABEL.values())
         chosen = bloom_col.selectbox(
-            "Verbo de Bloom",
-            labels,
-            index=labels.index(BLOOM_LABEL[outcome["bloom"]]),
-            key=f"sr-ob-{tid}-{uid}",
+            "Verbo de Bloom", list(BLOOM_LABEL.values()), key=f"sr-ob-{tid}-{uid}"
         )
         outcome["bloom"] = BLOOM_BY_LABEL[chosen]
         outcome["statement"] = text_col.text_input(
-            "Resultado",
-            value=outcome["statement"],
-            key=f"sr-os-{tid}-{uid}",
-            label_visibility="collapsed",
+            "Resultado", key=f"sr-os-{tid}-{uid}", label_visibility="collapsed"
         )
         if remove_col.button("Quitar", key=f"sr-orm-{tid}-{uid}") and len(outcomes) > 1:
             outcomes.pop(index)
@@ -162,18 +171,10 @@ def _edit_panel(topic: CourseTopic | None) -> None:
     if st.button("+ Agregar resultado de aprendizaje", key=f"sr-oadd-{tid}", type="tertiary"):
         outcomes.append(_outcome(None, "", "apply"))
         st.rerun()
-    labels = list(BLOOM_LABEL.values())
-    bloom = st.selectbox(
-        "Nivel de Bloom",
-        labels,
-        index=labels.index(BLOOM_LABEL[topic.bloom_level]) if topic else 2,
-        key=f"sr-bloom-{tid}",
-    )
-    options = [t.id for t in topics if t.id != tid]
+    bloom = st.selectbox("Nivel de Bloom", list(BLOOM_LABEL.values()), key=f"sr-bloom-{tid}")
     prereqs = st.multiselect(
         "Prerrequisitos",
         options,
-        default=[i for i in (topic.prerequisite_topic_ids if topic else []) if i in options],
         format_func=lambda i: names[i],
         key=f"sr-pre-{tid}",
     )

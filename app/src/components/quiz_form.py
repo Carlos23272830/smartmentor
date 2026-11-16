@@ -1,6 +1,7 @@
 """Pregunta del quiz o del diagnóstico: opciones de una en una y revisión de una respuesta."""
 
 from collections.abc import Sequence
+from typing import Any
 
 import streamlit as st
 
@@ -18,21 +19,43 @@ def render_stem(stem: str, *, key: str) -> None:
         st.markdown(f"**{stem}**")
 
 
+def options_state(
+    *,
+    options: Sequence[str],
+    key: str,
+    selected: int | None,
+    allow_dont_know: bool = False,
+) -> dict[str, Any]:
+    """Valor inicial del radio de `render_options`, para ponerlo en `st.session_state`.
+
+    El radio no lleva `index=`: la opción ya elegida entra solo por el estado de sesión, así que al
+    restaurar un borrador (B-040) Streamlit no avisa de que el widget tiene un valor por defecto y
+    otro por la API de estado de sesión (B-054). La página lo aplica con `seed_defaults`.
+    """
+    labels = list(options) + ([DONT_KNOW_LABEL] if allow_dont_know else [])
+    index = selected if selected is not None and selected != DONT_KNOW else None
+    if selected == DONT_KNOW and allow_dont_know:
+        index = len(options)
+    if index is None or not 0 <= index < len(labels):
+        return {}
+    return {f"option-{key}": labels[index]}
+
+
 def render_options(
     *,
     stem: str,
     options: Sequence[str],
     key: str,
-    selected: int | None = None,
     allow_dont_know: bool = False,
 ) -> int | None:
-    """Pregunta de opción múltiple. Devuelve el índice elegido, `DONT_KNOW` o None sin elegir."""
+    """Pregunta de opción múltiple. Devuelve el índice elegido, `DONT_KNOW` o None sin elegir.
+
+    La opción ya elegida la pone la página con `options_state` (el componente no toca
+    `st.session_state`).
+    """
     labels = list(options) + ([DONT_KNOW_LABEL] if allow_dont_know else [])
-    index = selected if selected is not None and selected != DONT_KNOW else None
-    if selected == DONT_KNOW and allow_dont_know:
-        index = len(options)
     render_stem(stem, key=key)
-    choice = st.radio(stem, labels, index=index, label_visibility="collapsed", key=f"option-{key}")
+    choice = st.radio(stem, labels, index=None, label_visibility="collapsed", key=f"option-{key}")
     if choice is None:
         return None
     position = labels.index(choice)

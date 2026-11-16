@@ -6,6 +6,7 @@ elige de la lista que acepta la API (`BLOOM_ACTION_VERBS`); las reglas las aplic
 """
 
 from dataclasses import dataclass
+from typing import Any
 
 import streamlit as st
 
@@ -39,6 +40,24 @@ class ObjectiveEditorResult:
     reset_to_proposal: bool
 
 
+def objective_editor_state(draft: ObjectiveDraft, *, key: str) -> dict[str, Any]:
+    """Valor inicial de cada widget con `key` del editor, para ponerlo en `st.session_state`.
+
+    Los widgets no llevan `value=` ni `index=`: el valor inicial entra solo por el estado de
+    sesión. Así, al restaurar un borrador antes de dibujar la página (B-040), Streamlit no avisa de
+    que el widget tiene un valor por defecto y otro por la API de estado de sesión (B-054). La
+    página lo aplica con `widget_state.seed_defaults`, que no pisa lo ya escrito.
+    """
+    state: dict[str, Any] = {}
+    if draft.bloom_verb:
+        state[f"{key}-verb"] = draft.bloom_verb
+    if draft.content:
+        state[f"{key}-content"] = draft.content
+    if draft.criterion:
+        state[f"{key}-criterion"] = draft.criterion
+    return state
+
+
 def render_objective_editor(
     draft: ObjectiveDraft,
     *,
@@ -50,7 +69,9 @@ def render_objective_editor(
     """Formulario de las tres partes.
 
     El título «Editar tu objetivo» lo pone la ventana modal (`st.dialog`) de la página (V-041).
-    `topics_count` alimenta «Con este objetivo tu ruta tiene N temas».
+    `topics_count` alimenta «Con este objetivo tu ruta tiene N temas». El valor inicial de los
+    campos lo pone la página con `objective_editor_state` (el componente no toca
+    `st.session_state`).
     """
     st.caption("Redáctalo como un resultado medible: verbo de Bloom + contenido + criterio.")
     verbs = list(BLOOM_ACTION_VERBS)
@@ -61,15 +82,15 @@ def render_objective_editor(
     verb = st.selectbox(
         "Verbo de Bloom",
         verbs,
-        index=verbs.index(draft.bloom_verb) if draft.bloom_verb in verbs else None,
+        index=None,
         # Solo los verbos de la lista: la API rechaza los demás con 422 (B-033). Sin `placeholder`,
         # Streamlit muestra el texto de ayuda en inglés (B-039).
         placeholder=VERB_PLACEHOLDER,
         key=f"{key}-verb",
     )
     st.caption("Niveles: Recordar · Comprender · Aplicar · Analizar · Evaluar · Crear")
-    content = st.text_input("Contenido", value=draft.content, key=f"{key}-content")
-    criterion = st.text_input("Criterio medible", value=draft.criterion, key=f"{key}-criterion")
+    content = st.text_input("Contenido", key=f"{key}-content")
+    criterion = st.text_input("Criterio medible", key=f"{key}-criterion")
     current = ObjectiveDraft(verb or "", content, criterion)
     with st.container(key=f"panel-{key}-preview"):
         st.caption("**VISTA PREVIA**")

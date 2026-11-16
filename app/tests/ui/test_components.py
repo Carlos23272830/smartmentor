@@ -92,9 +92,15 @@ def test_loading_steps_failure_offers_retry_and_back() -> None:
 def _objective() -> None:
     import streamlit as st
 
-    from components.objective_editor import ObjectiveDraft, render_objective_editor
+    from components.objective_editor import (
+        ObjectiveDraft,
+        objective_editor_state,
+        render_objective_editor,
+    )
+    from core.widget_state import seed_defaults
 
     draft = ObjectiveDraft("Aplicar", "modelos de clasificación", "")
+    seed_defaults(objective_editor_state(draft, key="e4b"))
     st.session_state["result"] = render_objective_editor(
         draft, key="e4b", topics_count=4, pass_threshold=80
     )

@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Any
 
 import streamlit as st
 
@@ -35,14 +36,23 @@ class LikertQuestion:
     statement: str
 
 
-def render_likert(statement: str, *, key: str, value: int | None = None) -> int | None:
+def likert_state(*, key: str, value: int | None) -> dict[str, Any]:
+    """Valor inicial del radio de `render_likert`, para ponerlo en `st.session_state`.
+
+    El radio no lleva `index=`: la respuesta guardada entra solo por el estado de sesión y no
+    choca con un borrador restaurado (B-040, B-054). La página lo aplica con `seed_defaults`.
+    """
+    return {f"likert-radio-{key}": value} if value in SCALE else {}
+
+
+def render_likert(statement: str, *, key: str) -> int | None:
     """Una afirmación con su escala de 1 a 5. Devuelve el valor elegido o None."""
     with st.container(key=f"likert-{key}"):
         st.markdown(statement)
         return st.radio(
             statement,
             SCALE,
-            index=SCALE.index(value) if value in SCALE else None,
+            index=None,
             horizontal=True,
             label_visibility="collapsed",
             key=f"likert-radio-{key}",
