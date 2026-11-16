@@ -2,7 +2,9 @@
 
 from typing import Any
 
+import httpx
 import pytest
+import respx
 from apptest import container_keys, page_texts
 from staff_support import (
     assert_no_exception,
@@ -13,6 +15,7 @@ from staff_support import (
 from streamlit.proto.LabelVisibility_pb2 import LabelVisibility
 from streamlit.testing.v1 import AppTest
 
+from clients.api import ApiClient
 from clients.fixtures import FixturesClient
 from clients.models import Page
 from clients.models_staff import Course, CourseTopic, SyllabusInfo, TopicWrite
@@ -144,6 +147,29 @@ def test_d2_subtitle_keeps_only_what_the_api_sends(monkeypatch: pytest.MonkeyPat
     assert _subtitle(staff_app(page=SYLLABUS)) == "EN REVISIÓN · solo-nombre.pdf"
     _course_with_syllabus(monkeypatch, SyllabusInfo(pages=8))
     assert _subtitle(staff_app(page=SYLLABUS)) == "EN REVISIÓN · 8 páginas"
+
+
+@respx.mock
+def test_d2_subtitle_shows_file_and_pages_from_the_api_response(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """B-065: el curso llega por HTTP con `syllabus` y D2 arma el subtítulo con él."""
+    base = "http://api.test"
+    body = {
+        "id": 1,
+        "name": "Machine Learning",
+        "status": "in_review",
+        "owner_user_id": 3,
+        "topics_count": 4,
+        "enrolled_count": 0,
+        "syllabus": {"filename": "plan-api.pdf", "pages": 9, "characters": 5000},
+    }
+    respx.get(f"{base}/api/v1/courses/1").mock(return_value=httpx.Response(200, json=body))
+    api_course = ApiClient(
+        base, lambda: "test-only-not-a-secret", http=httpx.Client(base_url=base)
+    ).get_course(1)
+    _course_with_syllabus(monkeypatch, api_course.syllabus)
+    assert _subtitle(staff_app(page=SYLLABUS)) == "EN REVISIÓN · plan-api.pdf · 9 páginas"
 
 
 # --- D1c · espera sin «Cargando…» ----------------------------------------------------------------

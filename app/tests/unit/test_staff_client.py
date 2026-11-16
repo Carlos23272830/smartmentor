@@ -195,6 +195,47 @@ def test_api_client_uploads_a_material_with_its_origin_and_no_idempotency_key() 
     assert [m.id for m in client.list_materials(7)] == [1]
 
 
+API_COURSE = {
+    "id": 7,
+    "name": "Machine Learning",
+    "description": None,
+    "status": "in_review",
+    "owner_user_id": 3,
+    "extraction_error_code": None,
+    "extraction_job_id": None,
+    "learning_path": None,
+    "topics_count": 4,
+    "enrolled_count": 0,
+    "syllabus": {"filename": "programa.pdf", "pages": 12, "characters": 3400},
+    "created_at": None,
+    "updated_at": None,
+}
+
+
+@respx.mock
+def test_api_client_reads_the_syllabus_of_a_course_from_the_api_response() -> None:
+    """B-065: `GET /courses/{id}` trae `syllabus`; la lista y los cursos sin él, `null`."""
+    base = "http://api.test"
+    client = ApiClient(base, lambda: "test-only-not-a-secret", http=httpx.Client(base_url=base))
+    respx.get(f"{base}/api/v1/courses/7").mock(return_value=httpx.Response(200, json=API_COURSE))
+    course = client.get_course(7)
+    assert course.syllabus is not None
+    assert (course.syllabus.filename, course.syllabus.pages) == ("programa.pdf", 12)
+    assert course.syllabus.characters == 3400
+    respx.get(f"{base}/api/v1/courses").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "items": [{**API_COURSE, "syllabus": None}],
+                "total": 1,
+                "limit": 20,
+                "offset": 0,
+            },
+        )
+    )
+    assert client.list_courses(mine=True).items[0].syllabus is None
+
+
 def test_poll_job_runs_then_succeeds() -> None:
     client = FixturesClient("instructor")
     assert client.poll_job("j1").status == "running"
