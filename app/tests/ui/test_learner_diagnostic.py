@@ -138,7 +138,15 @@ def test_e3_last_question_submits_and_waits_for_the_job() -> None:
 
 def test_u1a_follows_figma_and_finishes_on_the_second_poll() -> None:
     at = learner_app("learner_calculating", DIAGNOSTIC)
-    matches_figma(at, "U1a", accepted=("Prototipo: esta pantalla avanza sola a los 2 segundos.",))
+    # Figma dice «menos de 20 segundos»; la app dice «hasta 2 minutos» (B-060).
+    matches_figma(
+        at,
+        "U1a",
+        accepted=(
+            "Tiempo estimado: menos de 20 segundos",
+            "Prototipo: esta pantalla avanza sola a los 2 segundos.",
+        ),
+    )
     at.run()  # segunda consulta: el trabajo terminó
     no_exception(at)
     assert "Tu punto de partida" in page_texts(at)

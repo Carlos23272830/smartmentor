@@ -16,10 +16,13 @@ from core.errors import show_action_error
 from core.learner_flow import (
     JobScreen,
     current_enrollment,
+    draw_waiting,
+    go_to_action,
     grading_screen,
     idempotency_key,
     wait_for_job,
 )
+from core.polling import CREATING_ATTEMPT, enter_wait_mode, leave_wait_mode
 from core.question_flow import SHORT_ANSWER_HINT, render_question_sheet
 from core.session import get_session
 from core.usage_events import build_event, close_view, open_view, record_once
@@ -91,6 +94,48 @@ if state.quiz_job_id and state.quiz_job_kind == "grade":
         state.attempt_id = graded_job.next_action.attempt_id
     st.switch_page(RESULT_PAGE)
     st.stop()
+
+# --- U1b · Pidiendo el intento de un reintento (B-060) -------------------------------------------
+# E7b deja el reintento pedido y viene aquí: U1b se dibuja antes de llamar a la API, que puede
+# tardar si tiene que generar preguntas. Si responde con un trabajo, sigue la espera de abajo.
+
+requested = state.pending_attempt
+if requested is not None and state.step_id is not None:
+    draw_waiting(
+        JobScreen(
+            key="quiz-prepare",
+            title=f"Preparando preguntas nuevas para tu intento {requested.number}",
+            steps=(
+                f"Revisar lo que fallaste en el intento {max(requested.number - 1, 1)}",
+                "Elegir preguntas nuevas con los mismos resultados de aprendizaje",
+                "Verificar que cada pregunta tenga una sola respuesta correcta",
+            ),
+            error_message="",
+        )
+    )
+    enter_wait_mode(CREATING_ATTEMPT)
+    try:
+        created = client.create_attempt(
+            enrollment.id,
+            state.step_id,
+            "topic",
+            idempotency_key=idempotency_key(requested.key),
+        )
+    except ApiError as error:
+        state.pending_attempt = None
+        leave_wait_mode()
+        if error.code == "ATTEMPT_IN_PROGRESS":
+            # Ya hay un intento abierto: la API dice a dónde ir.
+            go_to_action(client.get_enrollment(enrollment.id).next_action)
+        show_action_error(error)
+        st.stop()
+    state.pending_attempt = None
+    leave_wait_mode()
+    if isinstance(created, Attempt):
+        state.attempt_id, state.quiz_job_id = created.id, None
+    else:
+        state.quiz_job_id, state.quiz_job_kind = created.job_id, "prepare"
+    st.rerun()
 
 step_id = state.step_id or enrollment.next_action.step_id
 if step_id is None:

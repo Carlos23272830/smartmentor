@@ -25,6 +25,8 @@ from core.staff_errors import show_staff_error
 # así un sondeo abandonado no calla los spinners del resto de la app.
 
 WAIT_MODE_KEY = "wait_mode"
+CREATING_ATTEMPT = "creating-attempt"
+"""Marca del modo espera mientras el quiz pide el intento de un reintento (U1b, B-060)."""
 
 
 def _current_page() -> str:
@@ -49,7 +51,11 @@ def in_wait_mode() -> bool:
         return False
     page, job_id = marked
     learner = get_session().learner
-    return page == _current_page() and job_id in (learner.diagnostic_job_id, learner.quiz_job_id)
+    if page != _current_page():
+        return False
+    if job_id == CREATING_ATTEMPT:
+        return learner.pending_attempt is not None
+    return job_id in (learner.diagnostic_job_id, learner.quiz_job_id)
 
 
 loading.set_quiet_probe(in_wait_mode)
