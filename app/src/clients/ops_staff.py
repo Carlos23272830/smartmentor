@@ -120,6 +120,9 @@ def _page[M: BaseModel](model: type[M], data: Any) -> Page[M]:
 class StaffApiOps:
     """Implementación HTTP. `ApiClient` sobrescribe `_request` con la suya."""
 
+    _upload_timeout: httpx.Timeout
+    """Tiempo de espera de las cargas de archivos; lo fija `ApiClient`."""
+
     def _request(
         self,
         method: str,
@@ -128,6 +131,7 @@ class StaffApiOps:
         json: Any = None,
         params: dict[str, Any] | None = None,
         idempotency_key: str | None = None,
+        timeout: httpx.Timeout | None = None,
     ) -> httpx.Response:
         raise NotImplementedError
 
@@ -192,8 +196,13 @@ class StaffApiOps:
                 path, {"file": (name, content, "application/pdf")}, idempotency_key
             )
         else:
+            # El texto pegado llega al mismo endpoint que el PDF: misma espera larga (B-055).
             response = self._request(
-                "POST", path, json={"text": text}, idempotency_key=idempotency_key
+                "POST",
+                path,
+                json={"text": text},
+                idempotency_key=idempotency_key,
+                timeout=self._upload_timeout,
             )
         return _parse(JobAccepted, _json(response))
 

@@ -51,6 +51,10 @@ logger = logging.getLogger(__name__)
 
 API_PREFIX = "/api/v1"
 DEFAULT_TIMEOUT = httpx.Timeout(10.0, connect=3.0)
+# Cargas de archivos (syllabus y apuntes, D1b): la API lee el PDF y encola el trabajo; con la base
+# en la nube lenta pueden pasar de 10 s (B-055). Se sobrescribe con API_UPLOAD_TIMEOUT_SECONDS.
+DEFAULT_UPLOAD_TIMEOUT_SECONDS = 80.0
+UPLOAD_CONNECT_TIMEOUT_SECONDS = 3.0
 
 TokenProvider = Callable[[], str]
 
@@ -100,8 +104,12 @@ class ApiClient(LearnerApiOps, StaffApiOps):
         token_provider: TokenProvider,
         *,
         http: httpx.Client | None = None,
+        upload_timeout_seconds: float = DEFAULT_UPLOAD_TIMEOUT_SECONDS,
     ) -> None:
         self._token_provider = token_provider
+        self._upload_timeout = httpx.Timeout(
+            upload_timeout_seconds, connect=UPLOAD_CONNECT_TIMEOUT_SECONDS
+        )
         self._http = http or httpx.Client(base_url=base_url, timeout=DEFAULT_TIMEOUT)
 
     # --- Infraestructura ---
@@ -168,7 +176,11 @@ class ApiClient(LearnerApiOps, StaffApiOps):
         try:
             with loading_indicator():
                 response = self._http.post(
-                    f"{API_PREFIX}{path}", files=files, data=data, headers=headers
+                    f"{API_PREFIX}{path}",
+                    files=files,
+                    data=data,
+                    headers=headers,
+                    timeout=self._upload_timeout,
                 )
         except httpx.HTTPError as error:
             raise ApiError(503, "SERVICE_UNAVAILABLE", "API unreachable") from error

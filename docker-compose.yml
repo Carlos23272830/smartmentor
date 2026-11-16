@@ -292,6 +292,8 @@ services:
       PILOT_WINDOW_TEXT: ${PILOT_WINDOW_TEXT:-}
       # La API por la red interna (puerto del contenedor, no el publicado en el anfitrión).
       API_BASE_URL: ${API_BASE_URL:-http://api:8000}
+      # Espera (segundos) de las cargas de archivos del instructor; el resto de llamadas espera 10 s.
+      API_UPLOAD_TIMEOUT_SECONDS: ${API_UPLOAD_TIMEOUT_SECONDS:-80}
       # Login OIDC con st.login (cliente confidencial smartmentor-ui). Solo se exigen con APP_DATA_SOURCE=api:
       # el compose no puede condicionarlo, así que van con :- y la app falla nombrando la variable que falte.
       OIDC_SERVER_METADATA_URL: ${OIDC_SERVER_METADATA_URL:-http://keycloak:8080/realms/smartmentor/.well-known/openid-configuration}

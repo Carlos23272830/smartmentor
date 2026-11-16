@@ -33,5 +33,8 @@ def get_client() -> SmartMentorClient:
             )
         return session.fixtures_client
     return ApiClient(
-        settings.api_base_url, auth.access_token, http=_http_pool(settings.api_base_url)
+        settings.api_base_url,
+        auth.access_token,
+        http=_http_pool(settings.api_base_url),
+        upload_timeout_seconds=settings.api_upload_timeout_seconds,
     )
