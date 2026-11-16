@@ -165,7 +165,10 @@ def _edit_panel(topic: CourseTopic | None) -> None:
         outcome["statement"] = text_col.text_input(
             "Resultado", key=f"sr-os-{tid}-{uid}", label_visibility="collapsed"
         )
-        if remove_col.button("Quitar", key=f"sr-orm-{tid}-{uid}") and len(outcomes) > 1:
+        if (
+            remove_col.button("Quitar", key=f"sr-orm-{tid}-{uid}", type="tertiary")
+            and len(outcomes) > 1
+        ):
             outcomes.pop(index)
             st.rerun()
     if st.button("+ Agregar resultado de aprendizaje", key=f"sr-oadd-{tid}", type="tertiary"):
@@ -178,9 +181,10 @@ def _edit_panel(topic: CourseTopic | None) -> None:
         format_func=lambda i: names[i],
         key=f"sr-pre-{tid}",
     )
-    st.caption("Si un prerrequisito forma un ciclo, no podrás guardar.")
+    render_notice("**Si un prerrequisito forma un ciclo, no podrás guardar.**")
     with st.container(horizontal=True):
-        delete = bool(topic) and st.button("Eliminar tema", key=f"sr-del-{tid}")
+        delete = bool(topic) and st.button("Eliminar tema", key=f"sr-del-{tid}", type="tertiary")
+        st.space("stretch")
         cancel = st.button("Cancelar", key=f"sr-cancel-{tid}")
         save = st.button(
             "Guardar cambios",
@@ -237,6 +241,7 @@ def _reextract_panel() -> None:
         f"{review_summary(counts).replace(' · ', ', ')}. El registro de revisión vuelve a cero."
     )
     with st.container(horizontal=True):
+        st.space("stretch")
         if st.button("Cancelar", key="sr-reextract-cancel"):
             st.session_state["sr-reextract"] = False
             st.rerun()
@@ -340,10 +345,10 @@ def _table_view() -> None:
     if edit is not None and can_review:
         target = next((t for t in topics if t.id == edit), None)
         st.dialog(
-            "Editar tema" if target else "Agregar tema", width="large", on_dismiss=_close_edit
+            "Editar tema" if target else "Agregar tema", width="medium", on_dismiss=_close_edit
         )(_edit_panel)(target)
     if st.session_state.get("sr-reextract"):
-        st.dialog("¿Volver a extraer los temas?", width="medium", on_dismiss=_close_reextract)(
+        st.dialog("¿Volver a extraer los temas?", width="small", on_dismiss=_close_reextract)(
             _reextract_panel
         )()
 
