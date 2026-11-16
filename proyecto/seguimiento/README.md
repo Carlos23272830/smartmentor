@@ -15,6 +15,7 @@ Completa al plan, no lo reemplaza. [`PLAN_IMPLEMENTACION_V3.md`](../../PLAN_IMPL
 | [`SUBIDAS.md`](SUBIDAS.md) | Cada `push` a GitHub y cada pull request (`S-NNN`) | Solo se agregan entradas |
 | [`PENDIENTES.md`](PENDIENTES.md) | Resumen de lo que falta, con las funcionalidades de cada punto | Se rehace en cada corte, con la fecha y el commit de `dev` |
 | [`MEJORAS.md`](MEJORAS.md) | Propuestas que nadie pidió pero conviene hacer (`M-NNN`) | Se marca si se aceptan o se descartan |
+| [`PLAN_EXPERIMENTOS_R005.md`](PLAN_EXPERIMENTOS_R005.md) | Plan de los experimentos de R-005 de esta fase: jueces-agente, modelos, nombres `experimento_`, orden y puertas | Se actualiza con cada experimento |
 
 ## Fecha y hora
 
