@@ -77,7 +77,17 @@ async def test_attempt_items_history_and_study_goals(
     assert foreign_step.json()["code"] == "STEP_NOT_FOUND"
 
     missing = await learner.get(f"{API}/me/study-goals")
-    assert missing.status_code == 404
+    # B-061: sin metas elegidas es 200 con la respuesta vacía (metas en 0), no 404.
+    assert missing.status_code == 200, missing.text
+    assert missing.json() == {
+        "daily_minutes_goal": 0,
+        "daily_minutes_done": 0,
+        "monthly_topics_goal": 0,
+        "monthly_topics_done": 0,
+        "streak_days": 0,
+        "daily_options": [15, 30, 45],
+        "monthly_options": [2, 3, 4],
+    }
     saved = await learner.put(
         f"{API}/me/study-goals", json={"daily_minutes_goal": 30, "monthly_topics_goal": 3}
     )

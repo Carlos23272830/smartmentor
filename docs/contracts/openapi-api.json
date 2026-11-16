@@ -12502,7 +12502,7 @@
     },
     "/api/v1/me/study-goals": {
       "get": {
-        "description": "Metas personales y avance de hoy y del mes (E11, P2). `404` si aún no hay metas.",
+        "description": "Metas personales y avance de hoy y del mes (E11, P2).\n\nSin metas elegidas responde `200` con las metas en 0 y sin avance (B-061), no `404`.",
         "operationId": "get_study_goals_api_v1_me_study_goals_get",
         "responses": {
           "200": {

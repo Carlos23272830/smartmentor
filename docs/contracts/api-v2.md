@@ -196,7 +196,7 @@ Campos sin valor van en `null`. `screen` es una ayuda para la app (código de Fi
 | `POST /me/events` | learner | `{"events": [{"enrollment_id", "event_type", "topic_id", "occurred_at", "payload"}]}` (≤ 100; tipos en [4.2](#42-eventos-de-uso-post-meevents)) | `202 {accepted: n}` | `404 ENROLLMENT_NOT_FOUND`, `422` | — |
 | `GET /me/enrollments/{id}/steps/{step_id}/attempts` | learner | — | `200 [AttemptHistoryItem]` (intentos calificados del tema) | `404 ENROLLMENT_NOT_FOUND`, `STEP_NOT_FOUND` | E7c |
 | `GET /me/enrollments/{id}/final/attempts` | learner | — | `200 [AttemptHistoryItem]` (intentos calificados de la final) | `404 ENROLLMENT_NOT_FOUND` | E9, E9c |
-| `GET /me/study-goals` | learner | — | `200 StudyGoals`; `404 NOT_FOUND` si aún no hay metas | — | E11 (P2) |
+| `GET /me/study-goals` | learner | — | `200 StudyGoals` (sin metas elegidas: `200` con las metas y el avance en `0`, ver nota abajo; no hay `404`) | — | E11 (P2) |
 | `PUT /me/study-goals` | learner | `{"daily_minutes_goal": 30, "monthly_topics_goal": 3}` | `200 StudyGoals` | `422` | E11 (P2) |
 
 `rating` ∈ `useful`, `audio_issue`, `outdated`, `too_long`. `sus_items`: 10 enteros de 1 a 5; `sus_score` = (Σ impares − 5 + 25 − Σ pares) × 2,5.
@@ -295,7 +295,7 @@ Los ítems de `Diagnostic` y `Attempt` traen además `topic_name`, `bloom_level`
 
 `AttemptHistoryItem`: `{"attempt_id", "number", "score", "correct", "total", "extra_grant", "passed"}`.
 
-`StudyGoals`: `{"daily_minutes_goal", "daily_minutes_done", "monthly_topics_goal", "monthly_topics_done", "streak_days", "daily_options": [15, 30, 45], "monthly_options": [2, 3, 4]}`. Los minutos del día suman `payload.seconds` de los eventos de hoy (`America/Bogota`); los temas del mes cuentan los pasos aprobados en el mes; la racha son los días seguidos con eventos que terminan hoy o ayer.
+`StudyGoals`: `{"daily_minutes_goal", "daily_minutes_done", "monthly_topics_goal", "monthly_topics_done", "streak_days", "daily_options": [15, 30, 45], "monthly_options": [2, 3, 4]}`. Los minutos del día suman `payload.seconds` de los eventos de hoy (`America/Bogota`); los temas del mes cuentan los pasos aprobados en el mes; la racha son los días seguidos con eventos que terminan hoy o ayer. **Sin metas elegidas (B-061)** `GET /me/study-goals` responde `200` con la respuesta vacía: `daily_minutes_goal` y `monthly_topics_goal` en `0`, el avance (`*_done`, `streak_days`) en `0` y las opciones por omisión. El `PUT` exige metas de al menos 1, así que un `0` nunca es una meta elegida y la interfaz lo lee como «Aún no elegiste tu meta». Antes respondía `404 NOT_FOUND`; con metas la respuesta no cambia.
 
 `AttemptResult`:
 

@@ -700,7 +700,10 @@ def _goals(goals: StudyGoals) -> StudyGoalsResponse:
 
 @router.get("/study-goals", response_model=StudyGoalsResponse)
 async def get_study_goals(user: LearnerUser, service: StudyGoalServiceDep) -> StudyGoalsResponse:
-    """Metas personales y avance de hoy y del mes (E11, P2). `404` si aún no hay metas."""
+    """Metas personales y avance de hoy y del mes (E11, P2).
+
+    Sin metas elegidas responde `200` con las metas en 0 y sin avance (B-061), no `404`.
+    """
     return _goals(await service.get(user))
 
 
