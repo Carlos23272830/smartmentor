@@ -8514,7 +8514,7 @@
     },
     "/api/v1/courses/{course_id}/archive": {
       "post": {
-        "description": "Archiva un curso en borrador o publicado (D1, AD5): se desactiva, nunca se elimina.",
+        "description": "Archiva un curso en borrador, publicado o con extracción fallida (D1, AD5).\n\nSe desactiva, nunca se elimina.",
         "operationId": "archive_course_api_v1_courses__course_id__archive_post",
         "parameters": [
           {

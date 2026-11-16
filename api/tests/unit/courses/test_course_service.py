@@ -587,3 +587,23 @@ async def test_a_new_owner_of_a_published_course_becomes_evaluator(world: World)
     await world.course_service.assign_owner(world.admin, published_id, OTHER_INSTRUCTOR_ID)
     await world.course_service.assign_owner(world.admin, published_id, None)
     assert recorder.calls == [(published_id, OTHER_INSTRUCTOR_ID, world.admin.id)]
+
+
+async def test_an_extraction_failed_course_can_be_archived(world: World) -> None:
+    course_id = await new_course(world)
+    await world.courses.update(course_id, {"status": "extraction_failed"})
+    view = await world.course_service.archive(world.instructor, course_id)
+    assert view.course.status == "archived"
+    again = await world.course_service.archive(world.instructor, course_id)  # idempotente
+    assert again.course.status == "archived"
+
+
+@pytest.mark.parametrize("status", ["in_review", "extracting"])
+async def test_in_review_and_extracting_courses_cannot_be_archived(
+    world: World, status: str
+) -> None:
+    course_id = await new_course(world)
+    await world.courses.update(course_id, {"status": status})
+    with pytest.raises(InvalidStateTransitionError):
+        await world.course_service.archive(world.instructor, course_id)
+    assert (await world.course_service.get(world.instructor, course_id)).course.status == status
