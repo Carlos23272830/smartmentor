@@ -7442,6 +7442,16 @@
             "title": "Has Backup",
             "type": "boolean"
           },
+          "last_search": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VideoSearchResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "topic_id": {
             "title": "Topic Id",
             "type": "integer"
@@ -7738,6 +7748,72 @@
           "relevance_judgment"
         ],
         "title": "VideoResponse",
+        "type": "object"
+      },
+      "VideoSearchResponse": {
+        "description": "La última búsqueda de videos del tema (B-064): cuántos devolvió YouTube y por qué quedaron\nfuera. `found` y `excluded` son nulos si la búsqueda es anterior a B-064 o falló.",
+        "properties": {
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "excluded": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excluded"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "found": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Found"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "status"
+        ],
+        "title": "VideoSearchResponse",
         "type": "object"
       },
       "WeakTopicResponse": {
@@ -13934,6 +14010,75 @@
           }
         ],
         "summary": "Add Video Candidate",
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/v1/topics/{topic_id}/video-candidates/search": {
+      "post": {
+        "description": "Vuelve a buscar los videos del tema en YouTube (B-064); los candidatos llegan como nuevos.\n\nSi ya hay una búsqueda en curso para el tema, devuelve esa misma.",
+        "operationId": "search_video_candidates_api_v1_topics__topic_id__video_candidates_search_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "topic_id",
+            "required": true,
+            "schema": {
+              "title": "Topic Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "UUID que identifica la operación.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "UUID que identifica la operación.",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "Token (pegar)": []
+          },
+          {
+            "Login (usuario y contraseña)": []
+          }
+        ],
+        "summary": "Search Video Candidates",
         "tags": [
           "content"
         ]

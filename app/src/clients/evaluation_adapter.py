@@ -53,7 +53,16 @@ def topic_videos_from_api(data: dict[str, Any]) -> dict[str, Any]:
         "topic_id": data["topic_id"],
         "topic_name": data.get("topic_name") or "",
         "candidates": [video_from_api(c) for c in data.get("candidates") or []],
+        "last_search": _search_from_api(data.get("last_search")),
     }
+
+
+def _search_from_api(data: Any) -> dict[str, Any] | None:
+    """La última búsqueda (B-064) sin `finished_at`, que la pantalla no usa."""
+    if not isinstance(data, dict):
+        return None
+    keys = ("job_id", "status", "found", "excluded", "error_code")
+    return {k: data.get(k) for k in keys}
 
 
 def _criteria(rubric: Any) -> list[str]:

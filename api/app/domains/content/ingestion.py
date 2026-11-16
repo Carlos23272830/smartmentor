@@ -28,6 +28,7 @@ from app.domains.content.constants import (
     ResourceKind,
     ResourceType,
     ReviewStatus,
+    VideoOrigin,
     VideoStatus,
 )
 from app.domains.content.contracts import (
@@ -488,5 +489,15 @@ class VideoIngestor(_ContentIngestor):
                         video_candidate_id=require_id(video),
                     )
                 )
+        # B-064: al buscar de nuevo, un video de YouTube que ya no salió en esta búsqueda pierde su
+        # puesto (el ranking es el de la búsqueda vigente); conserva su estado y sus juicios.
+        returned = {c.youtube_video_id for c in result.candidates}
+        for video in existing:
+            if (
+                video.origin == VideoOrigin.YOUTUBE_API
+                and video.youtube_video_id not in returned
+                and video.rank is not None
+            ):
+                await self._videos.update(require_id(video), {"rank": None})
         await self._uow.commit()
         return created > 0

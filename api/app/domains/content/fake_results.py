@@ -212,6 +212,8 @@ def fake_video_candidates(input_: dict[str, Any]) -> dict[str, Any]:
         ],
         "selected_video_id": VIDEO_IDS[0],
         "backup_video_ids": list(VIDEO_IDS[1:]),
+        # B-064: lo que devolvió la búsqueda y por qué quedaron fuera los demás.
+        "search_summary": {"found": 5, "excluded": {"duration_out_of_range": 2}},
     }
 
 

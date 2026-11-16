@@ -146,6 +146,13 @@ class VideoCandidateOut(_Strict):
     relevance_judgment: bool | None = None
 
 
+class VideoSearchSummaryV1(_Strict):
+    """Qué devolvió YouTube y por qué los filtros descartaron videos (B-064)."""
+
+    found: Annotated[int, Field(ge=0)]
+    excluded: dict[str, Annotated[int, Field(ge=0)]] = Field(default_factory=dict)
+
+
 class VideoResourceV1(_Strict):
     topic_id: str
     origin: Literal["youtube_api", "instructor", "none"]
@@ -153,3 +160,4 @@ class VideoResourceV1(_Strict):
     candidates: list[VideoCandidateOut]
     selected_video_id: str | None = None
     backup_video_ids: list[str] = Field(default_factory=list)
+    search_summary: VideoSearchSummaryV1 | None = None

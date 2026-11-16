@@ -10,6 +10,7 @@ no instructor list the resource has ``origin = none`` (L-08) and the instructor 
 from __future__ import annotations
 
 import logging
+from collections import Counter
 from collections.abc import Sequence
 from typing import Any, Literal
 
@@ -18,9 +19,15 @@ from pydantic import BaseModel, Field
 from app.application.content.context import TaskContext, TaskResult, load_topic
 from app.application.llm_runner import CallContext, EmbeddingRunner
 from app.application.video.characterize import covered_subtopics, video_embedding_text
-from app.domain.contracts.video import CharacterizationSource, VideoCandidate, VideoResource
+from app.domain.contracts.video import (
+    CharacterizationSource,
+    VideoCandidate,
+    VideoResource,
+    VideoSearchSummary,
+)
 from app.domain.errors import TaskError
 from app.domain.video_ranking import (
+    MAX_DURATION_SECONDS,
     Rankable,
     Ranked,
     RankingPreferences,
@@ -42,7 +49,7 @@ logger = logging.getLogger("app.video")
 VIDEO_CONTRACT = "video_resource.v1"
 WATCH_URL = "https://www.youtube.com/watch?v={video_id}"
 SIMILARITY_PURPOSE: EmbeddingPurpose = "similarity"
-SEARCH_RESULTS = 15
+SEARCH_RESULTS = 50  # B-064: the quota is per search call, not per result (up to 50)
 QUERY_SUBTOPICS = 2
 
 
@@ -60,7 +67,7 @@ class CollectInput(BaseModel):
 class PreferencesInput(BaseModel):
     language: str = Field(default="es", pattern=r"^[a-z]{2}$")
     min_duration_seconds: int = Field(default=240, ge=1)
-    max_duration_seconds: int = Field(default=1800, ge=1)
+    max_duration_seconds: int = Field(default=MAX_DURATION_SECONDS, ge=1)
     english_allowed: bool = False
 
     def to_domain(self) -> RankingPreferences:
@@ -108,10 +115,14 @@ class VideoRecommender:
         embeddings: EmbeddingRunner,
         english_fallback: bool = True,
         english_score: float = 0.3,
+        search_results: int = SEARCH_RESULTS,
+        max_duration_seconds: int = MAX_DURATION_SECONDS,
     ) -> None:
         # La colecta es por tema (la comparte todo el curso): el inglés es respaldo, no descarte.
         self._english_fallback = english_fallback
         self._english_score = english_score
+        self._search_results = search_results
+        self._max_duration_seconds = max_duration_seconds
         self._catalog = catalog
         self._search = search
         self._transcripts = transcripts
@@ -125,7 +136,7 @@ class VideoRecommender:
         query = VideoSearchQuery(
             text=_search_text(topic),
             language=data.language,
-            max_results=SEARCH_RESULTS,
+            max_results=self._search_results,
             embeddable_only=True,
         )
         try:
@@ -139,6 +150,7 @@ class VideoRecommender:
     def _collect_prefs(self, data: CollectInput) -> RankingPreferences:
         return RankingPreferences(
             language=data.language,
+            max_duration_seconds=self._max_duration_seconds,
             english_allowed=self._english_fallback,
             english_score=self._english_score,
         )
@@ -149,6 +161,7 @@ class VideoRecommender:
         hits = [
             h for h in await self._hits(topic, data) if h.youtube_video_id not in instructor_ids
         ]
+        found = len(hits)
         hits += [
             VideoSearchHit(
                 youtube_video_id=v.youtube_video_id,
@@ -161,7 +174,9 @@ class VideoRecommender:
             for v in data.instructor_videos
         ]
         if not hits:
-            return self._resource(topic.id, [], [], self._collect_prefs(data))
+            return self._resource(
+                topic.id, [], [], self._collect_prefs(data), VideoSearchSummary(found=0)
+            )
 
         texts: list[str] = []
         covered_by_id: dict[str, list[str]] = {}
@@ -212,7 +227,8 @@ class VideoRecommender:
             )
             for rank, r in enumerate(ranked, start=1)
         ]
-        return self._resource(topic.id, candidates, ranked, prefs)
+        summary = VideoSearchSummary(found=found, excluded=dict(Counter(excluded.values())))
+        return self._resource(topic.id, candidates, ranked, prefs, summary)
 
     # ---------- video.rank ----------
 
@@ -272,6 +288,7 @@ class VideoRecommender:
         candidates: list[VideoCandidate],
         ranked: Sequence[Ranked],
         prefs: RankingPreferences,
+        summary: VideoSearchSummary | None = None,
     ) -> VideoResource:
         if not candidates:
             return VideoResource(
@@ -279,6 +296,7 @@ class VideoRecommender:
                 origin="none",
                 embedding_model=self._embeddings.model,
                 candidates=[],
+                search_summary=summary,
             )
         selected, backups = select_with_backups(ranked, prefs.backup_count)
         origin = next(c.origin for c in candidates if c.youtube_video_id == selected)
@@ -289,6 +307,7 @@ class VideoRecommender:
             candidates=candidates,
             selected_video_id=selected,
             backup_video_ids=backups,
+            search_summary=summary,
         )
 
 

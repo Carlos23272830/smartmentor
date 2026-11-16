@@ -31,6 +31,17 @@ class VideoCandidate(ContractModel):
     )
 
 
+class VideoSearchSummary(ContractModel):
+    """What the YouTube search returned and why the filters dropped videos (B-064)."""
+
+    found: int = Field(ge=0, description="Videos returned by the YouTube search")
+    excluded: dict[str, int] = Field(
+        default_factory=dict,
+        description="Videos dropped by the knowledge filters, by reason "
+        "(duration_out_of_range, language_not_understood)",
+    )
+
+
 class VideoResource(ContractModel):
     topic_id: str
     origin: Literal["youtube_api", "instructor", "none"] = Field(
@@ -40,6 +51,9 @@ class VideoResource(ContractModel):
     candidates: list[VideoCandidate]
     selected_video_id: str | None = None
     backup_video_ids: list[str] = Field(default_factory=list)
+    search_summary: VideoSearchSummary | None = Field(
+        default=None, description="Only in video.collect_candidates (B-064): why there are few"
+    )
 
     @model_validator(mode="after")
     def _check_ranking(self) -> Self:

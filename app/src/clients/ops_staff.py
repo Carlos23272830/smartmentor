@@ -335,6 +335,15 @@ class StaffApiOps:
         data = _json(self._request("GET", f"/topics/{topic_id}/video-candidates"))
         return _parse(TopicVideos, topic_videos_from_api(data))
 
+    def search_video_candidates(self, topic_id: int, *, idempotency_key: str) -> JobAccepted:
+        """Vuelve a buscar los videos del tema en YouTube (B-064)."""
+        return self._send(
+            JobAccepted,
+            "POST",
+            f"/topics/{topic_id}/video-candidates/search",
+            key=idempotency_key,
+        )
+
     def update_video_candidate(
         self, candidate_id: int, *, status: VideoStatus | None, is_relevant: bool | None
     ) -> VideoCandidate:
@@ -742,6 +751,10 @@ class StaffFixturesOps:
     def list_video_candidates(self, topic_id: int) -> TopicVideos:
         del topic_id
         return self._model(TopicVideos, "video_candidates")
+
+    def search_video_candidates(self, topic_id: int, *, idempotency_key: str) -> JobAccepted:
+        del topic_id, idempotency_key
+        return self._model(JobAccepted, "job_accepted")
 
     def update_video_candidate(
         self, candidate_id: int, *, status: VideoStatus | None, is_relevant: bool | None

@@ -136,6 +136,8 @@ def build_content_services(deps: ContentDeps) -> ContentServices:
         embeddings=deps.embeddings,
         english_fallback=settings.ai_video_english_fallback,
         english_score=settings.ai_video_english_score,
+        search_results=settings.ai_video_search_results,
+        max_duration_seconds=settings.ai_video_max_minutes * 60,
     )
     orchestrator = CourseContentOrchestrator(
         catalog=deps.catalog,

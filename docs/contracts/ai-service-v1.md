@@ -175,7 +175,9 @@ Respuesta: `learning_path.v1`. Reglas (plan 5.4.8): orden topológico que respet
 
 ### 4.3 `POST /v1/tasks/video.rank`
 
-Cuerpo: `{"topic_id": "12", "candidates": [<VideoCandidate de video_resource.v1 sin rank>], "preferences": {"language": "es", "min_duration_seconds": 240, "max_duration_seconds": 1800, "english_allowed": false}}`. Respuesta: `video_resource.v1` con `rank` 1..n, `selected_video_id` y hasta dos `backup_video_ids`.
+Cuerpo: `{"topic_id": "12", "candidates": [<VideoCandidate de video_resource.v1 sin rank>], "preferences": {"language": "es", "min_duration_seconds": 240, "max_duration_seconds": 2400, "english_allowed": false}}`. Respuesta: `video_resource.v1` con `rank` 1..n, `selected_video_id` y hasta dos `backup_video_ids`.
+
+**Colecta (B-064).** `video.collect_candidates` pide a YouTube `AI_VIDEO_SEARCH_RESULTS` resultados (50 por defecto; la cuota se cobra por búsqueda, no por resultado) y descarta los que duran menos de 4 minutos o más de `AI_VIDEO_MAX_MINUTES` (40 por defecto, la regla del primer corte). El resultado trae `search_summary = {"found": <resultados de YouTube>, "excluded": {"duration_out_of_range": n, "language_not_understood": m}}`, para que D5e explique por qué un tema tiene pocos videos. `video.rank` no lo trae.
 
 **Uso desde la API (R-001, inglés por aprendiz).** La colecta (`video.collect_candidates`) es por tema y deja el inglés como respaldo penalizado, así que el video `in_use` ya es el adecuado para quien entiende inglés. Al abrir un tema (E6), si el video del tema está en inglés y el aprendiz **no** declara inglés B1 o superior en la hoja de vida (`user_profiles.languages`, código `en`), la API llama a `video.rank` con los videos `in_use` y de respaldo del tema y `preferences = {"language": "es", "english_allowed": false}`, y muestra `selected_video_id`. Con inglés B1 o superior (`english_allowed: true`) no hace falta reordenar y se muestra el video del tema. Si `video.rank` no deja ninguno o `ai/` no responde, se muestra el video del tema.
 

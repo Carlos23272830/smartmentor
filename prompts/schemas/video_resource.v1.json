@@ -145,6 +145,31 @@
       ],
       "title": "VideoCandidate",
       "type": "object"
+    },
+    "VideoSearchSummary": {
+      "additionalProperties": false,
+      "description": "What the YouTube search returned and why the filters dropped videos (B-064).",
+      "properties": {
+        "found": {
+          "description": "Videos returned by the YouTube search",
+          "minimum": 0,
+          "title": "Found",
+          "type": "integer"
+        },
+        "excluded": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "description": "Videos dropped by the knowledge filters, by reason (duration_out_of_range, language_not_understood)",
+          "title": "Excluded",
+          "type": "object"
+        }
+      },
+      "required": [
+        "found"
+      ],
+      "title": "VideoSearchSummary",
+      "type": "object"
     }
   },
   "additionalProperties": false,
@@ -192,6 +217,18 @@
       },
       "title": "Backup Video Ids",
       "type": "array"
+    },
+    "search_summary": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/VideoSearchSummary"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Only in video.collect_candidates (B-064): why there are few"
     }
   },
   "required": [

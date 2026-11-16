@@ -20,7 +20,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 MIN_DURATION_SECONDS = 240  # notebook v2: 4 minutes
-MAX_DURATION_SECONDS = 1800  # notebook v2: 30 minutes (the report uses 40)
+# 40 minutes: the pedagogical rule of the first deliverable (B-064). The notebook used 30 and left
+# most topics with one or two candidates.
+MAX_DURATION_SECONDS = 2400
 IDEAL_MIN_SECONDS = 480
 IDEAL_MAX_SECONDS = 1200
 UNKNOWN_SCORE = 0.5
