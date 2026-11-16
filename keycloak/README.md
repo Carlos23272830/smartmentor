@@ -166,16 +166,16 @@ scripts/dev-seed-recorrido-users.sh --no-verify   # sin la verificación (GET /m
 
 Crea el usuario en Keycloak (rol de realm correspondiente) y, en la base de la aplicación, solo por la API con el token del administrador sembrado (`POST /users` y `PUT /users/{id}/roles`; no escribe SQL). Es idempotente: lo que ya existe no se toca. No imprime contraseñas ni tokens. Necesita el stack encendido con `--with-admin` y `REQUIRE_SECOND_FACTOR=false` (el token se pide con `smartmentor-dev-tools`, sin OTP). **Solo desarrollo.**
 
-### Segundo instructor como evaluador (DEF-24)
+### Segundo instructor como evaluador (DEF-24, B-036)
 
-Para probar la calificación de respuestas cortas o la anotación de preguntas hace falta un instructor asignado como evaluador del curso que **no** sea su dueño. `scripts/dev-seed-evaluator.sh` lo crea en Keycloak y en la base (con rol `instructor`, contraseña `SEED_USERS_PASSWORD`) y lo asigna con `POST /courses/{id}/evaluators` usando el token del administrador sembrado:
+Para anotar preguntas y calificar respuestas cortas hace falta ser evaluador del curso. El instructor dueño ya es evaluador de sí mismo: la API lo asigna al publicar el curso (B-036), así que con el instructor sembrado alcanza para probar esas pantallas. Este paso es opcional y sirve para probar la asignación de **otro** instructor: `scripts/dev-seed-evaluator.sh` lo crea en Keycloak y en la base (con rol `instructor`, contraseña `SEED_USERS_PASSWORD`) y lo asigna con `POST /courses/{id}/evaluators` usando el token del administrador sembrado:
 
 ```bash
 scripts/dev-seed-evaluator.sh               # lista los cursos con su id y su dueño
 scripts/dev-seed-evaluator.sh --course 3    # crea evaluador.smartmentor@yopmail.com y lo asigna al curso 3
 ```
 
-Es idempotente y no imprime contraseñas ni tokens. Necesita el stack encendido con `--with-admin` y `REQUIRE_SECOND_FACTOR=false` (el token del admin se pide con `smartmentor-dev-tools`, sin OTP). **Solo desarrollo.**
+Es idempotente (si el usuario ya era evaluador del curso, por ejemplo el dueño de un curso publicado, la API responde 409 y el script lo deja igual) y no imprime contraseñas ni tokens. Necesita el stack encendido con `--with-admin` y `REQUIRE_SECOND_FACTOR=false` (el token del admin se pide con `smartmentor-dev-tools`, sin OTP). **Solo desarrollo.**
 
 ## Rotar secretos
 
