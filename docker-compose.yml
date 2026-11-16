@@ -53,6 +53,8 @@ x-ai-environment: &ai-environment
   AI_LEVELING_PRIOR_SCALE: ${AI_LEVELING_PRIOR_SCALE:-minmax}
   AI_LEVELING_SIMILARITY_FLOOR: ${AI_LEVELING_SIMILARITY_FLOOR:-0.5}
   AI_LEVELING_SIMILARITY_CEILING: ${AI_LEVELING_SIMILARITY_CEILING:-0.8}
+  # Fragmentos que recupera el RAG por explicación (R-005, E5): de 1 a 20.
+  AI_RAG_TOP_K: ${AI_RAG_TOP_K:-4}
 
 x-ai-service: &ai-service
   # Contexto en la raíz: la imagen copia prompts/ (fuente de verdad de prompts y esquemas) además de ai/.
