@@ -66,4 +66,7 @@ markers = ["integration: pruebas que requieren la base de datos smartmentor_test
 # SQLAlchemy asíncrono ejecuta el código de los repositorios dentro de greenlets: sin esto, la
 # cobertura no cuenta las líneas que siguen a cada `await` sobre la base.
 [tool.coverage.run]
+source = ["app"]
+branch = false
+omit = ["tests/*"]
 concurrency = ["greenlet", "thread"]
