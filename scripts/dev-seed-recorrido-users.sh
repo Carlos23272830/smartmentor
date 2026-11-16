@@ -71,17 +71,19 @@ command -v jq >/dev/null || die "Falta jq."
 
 # Cada entrada: «CORREO|ROL|NOMBRE COMPLETO|NOMBRE|APELLIDO». Los correos salen de las variables.
 USERS=()
-add_user() {  # add_user VARIABLE ROL NOMBRE_COMPLETO NOMBRE APELLIDO
+# El valor se pasa como "${VARIABLE:-}" (no por nombre) para que scripts/check-env-coherence.py vea que
+# el script usa cada variable documentada en .env.example.
+add_user() {  # add_user VARIABLE VALOR ROL NOMBRE_COMPLETO NOMBRE APELLIDO
   local var="$1" email
-  email="$(printf '%s' "${!var:-}" | tr '[:upper:]' '[:lower:]')"
+  email="$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')"
   [ -n "$email" ] || die "Falta $var en el .env (valor de ejemplo en .env.example)."
   [[ "$email" =~ ^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]+$ ]] || die "Correo no válido en $var."
-  USERS+=("$email|$2|$3|$4|$5")
+  USERS+=("$email|$3|$4|$5|$6")
 }
-add_user SEED_A3B_LEARNER_EMAIL learner "Aprendiz A3b" Aprendiz A3b
-add_user SEED_QUIZ_ATTEMPTS_LEARNER_EMAIL learner "Aprendiz Intentos quiz" Aprendiz "Intentos quiz"
-add_user SEED_FINAL_ATTEMPTS_LEARNER_EMAIL learner "Aprendiz Intentos final" Aprendiz "Intentos final"
-add_user SEED_EVALUATOR_INSTRUCTOR_EMAIL instructor "Instructor Evaluador" Instructor Evaluador
+add_user SEED_A3B_LEARNER_EMAIL "${SEED_A3B_LEARNER_EMAIL:-}" learner "Aprendiz A3b" Aprendiz A3b
+add_user SEED_QUIZ_ATTEMPTS_LEARNER_EMAIL "${SEED_QUIZ_ATTEMPTS_LEARNER_EMAIL:-}" learner "Aprendiz Intentos quiz" Aprendiz "Intentos quiz"
+add_user SEED_FINAL_ATTEMPTS_LEARNER_EMAIL "${SEED_FINAL_ATTEMPTS_LEARNER_EMAIL:-}" learner "Aprendiz Intentos final" Aprendiz "Intentos final"
+add_user SEED_EVALUATOR_INSTRUCTOR_EMAIL "${SEED_EVALUATOR_INSTRUCTOR_EMAIL:-}" instructor "Instructor Evaluador" Instructor Evaluador
 
 # 1) Keycloak
 echo "1/3 Keycloak (realm $REALM):"
