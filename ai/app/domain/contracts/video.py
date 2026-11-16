@@ -26,6 +26,12 @@ class VideoCandidate(ContractModel):
     characterization_source: CharacterizationSource | None = None
     similarity: float | None = Field(default=None, ge=-1, le=1, description="Cosine vs topic")
     rank: int = Field(ge=1)
+    search_position: int | None = Field(
+        default=None,
+        ge=1,
+        description="Position in the YouTube search results (1 = first); E6 baseline. "
+        "None for the instructor's videos",
+    )
     relevance_judgment: bool | None = Field(
         default=None, description="Instructor judgement for P@3 and nDCG@3 (D5e)"
     )

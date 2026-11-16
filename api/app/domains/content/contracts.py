@@ -143,6 +143,7 @@ class VideoCandidateOut(_Strict):
     characterization_source: Literal["metadata", "transcript", "instructor"] | None = None
     similarity: Annotated[float, Field(ge=-1, le=1)] | None = None
     rank: Annotated[int, Field(ge=1)]
+    search_position: Annotated[int, Field(ge=1)] | None = None
     relevance_judgment: bool | None = None
 
 
