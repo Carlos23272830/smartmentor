@@ -1,5 +1,6 @@
 """Puertos de los repositorios de rutas, inscripciones, pasos, intentos extra y alertas."""
 
+from collections.abc import Sequence
 from typing import Any, Protocol
 
 from app.domains.courses.entities import Course, Topic
@@ -107,6 +108,15 @@ class PlatformReader(Protocol):
     async def profile(self, user_id: int) -> UserProfile | None: ...
 
     async def consent_in_force(self, user_id: int, consent_type: str) -> bool: ...
+
+    async def learner_facts(
+        self, user_ids: Sequence[int], consent_type: str
+    ) -> dict[int, tuple[str, bool]]:
+        """(nombre, autorización vigente de `consent_type`) de cada usuario, en una sola lectura.
+
+        Los usuarios que no existen no aparecen en el resultado.
+        """
+        ...
 
     async def pilot_running(self, learning_path_id: int) -> bool: ...
 

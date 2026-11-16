@@ -6,6 +6,7 @@ los puertos `ProgressReader` y `AssessmentHistory`, que implementa el dominio `a
 """
 
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, Protocol
@@ -483,11 +484,14 @@ class EnrollmentService:
         )
         return [await self._view(e) for e in items], total
 
-    async def learner_facts(self, user_id: int) -> tuple[str, bool]:
-        """(nombre, autorización `pilot_research` vigente) del aprendiz, para AD5."""
-        user = await self._reader.user(user_id)
-        consent = await self._reader.consent_in_force(user_id, ConsentType.PILOT_RESEARCH)
-        return (user.full_name if user is not None else "", consent)
+    async def learner_facts(self, user_ids: Iterable[int]) -> dict[int, tuple[str, bool]]:
+        """(nombre, autorización `pilot_research` vigente) de cada aprendiz, para AD5.
+
+        Una sola lectura para todos; el usuario que no existe queda como `("", False)`.
+        """
+        ids = list(dict.fromkeys(user_ids))
+        found = await self._reader.learner_facts(ids, ConsentType.PILOT_RESEARCH)
+        return {user_id: found.get(user_id, ("", False)) for user_id in ids}
 
     async def admin_enroll(self, user_id: int, learning_path_id: int) -> EnrollmentView:
         if await self._reader.user(user_id) is None:

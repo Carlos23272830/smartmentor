@@ -1,5 +1,6 @@
 """Repositorios SQLAlchemy de rutas, inscripciones, pasos, intentos extra y alertas."""
 
+from collections.abc import Sequence
 from typing import Any, ClassVar
 
 from sqlalchemy import func, select, text
@@ -15,6 +16,7 @@ from app.domains.courses.repository_impl import (
     SqlAlchemyTopicRepository,
 )
 from app.domains.identity.entities import User, UserProfile
+from app.domains.identity.models import ConsentModel, UserModel
 from app.domains.identity.repository_impl import (
     SqlAlchemyConsentRepository,
     SqlAlchemyProfileRepository,
@@ -306,6 +308,34 @@ class SqlAlchemyPlatformReader:
     async def consent_in_force(self, user_id: int, consent_type: str) -> bool:
         latest = await self._consents.latest(user_id, consent_type)
         return latest is not None and latest.in_force
+
+    async def learner_facts(
+        self, user_ids: Sequence[int], consent_type: str
+    ) -> dict[int, tuple[str, bool]]:
+        ids = set(user_ids)
+        if not ids:
+            return {}
+        # Una sola sentencia: el usuario y su autorización más reciente del tipo (la misma regla
+        # de `consent_in_force`: gana la última fila y vale si está activa y sin revocar).
+        latest_ids = (
+            select(func.max(ConsentModel.id))
+            .where(ConsentModel.user_id.in_(ids), ConsentModel.consent_type == consent_type)
+            .group_by(ConsentModel.user_id)
+        )
+        latest = (
+            select(ConsentModel.user_id, ConsentModel.active, ConsentModel.revoked_at)
+            .where(ConsentModel.id.in_(latest_ids))
+            .subquery()
+        )
+        rows = await self._session.execute(
+            select(UserModel.id, UserModel.full_name, latest.c.active, latest.c.revoked_at)
+            .outerjoin(latest, latest.c.user_id == UserModel.id)
+            .where(UserModel.id.in_(ids))
+        )
+        return {
+            int(user_id): (full_name, bool(active) and revoked_at is None)
+            for user_id, full_name, active, revoked_at in rows.all()
+        }
 
     async def pilot_running(self, learning_path_id: int) -> bool:
         # `pilots` es del dominio del piloto: aquí solo se lee si hay uno en curso.

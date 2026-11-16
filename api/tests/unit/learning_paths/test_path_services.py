@@ -1,6 +1,8 @@
 """Servicios de rutas sobre repositorios en memoria y `FakeAiService` (sin base de datos)."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
+from datetime import UTC, datetime
 
 import pytest
 
@@ -8,6 +10,7 @@ from app.common.exceptions import ConflictError, DomainError, ForbiddenError
 from app.domains.ai_gateway.fake import FakeAiService
 from app.domains.courses.entities import Course, Topic
 from app.domains.identity.entities import User, UserProfile
+from app.domains.learning_paths.controller import _admin_page
 from app.domains.learning_paths.entities import (
     Alert,
     AttemptGrant,
@@ -105,6 +108,8 @@ class Reader:
     consents: set[tuple[int, str]] = field(default_factory=set)
     running_pilot: bool = False
     arm: str | None = None
+    unknown_users: set[int] = field(default_factory=set)  # sin fila en `users`
+    fact_reads: list[list[int]] = field(default_factory=list)  # una entrada por lectura en lote
 
     async def course(self, course_id: int) -> Course | None:
         return self.courses.get(course_id)
@@ -116,6 +121,8 @@ class Reader:
         return list(self.nodes)
 
     async def user(self, user_id: int) -> User | None:
+        if user_id in self.unknown_users:
+            return None
         return User(id=user_id, full_name=f"Usuario {user_id}", email=f"u{user_id}@example.org")
 
     async def profile(self, user_id: int) -> UserProfile | None:
@@ -123,6 +130,17 @@ class Reader:
 
     async def consent_in_force(self, user_id: int, consent_type: str) -> bool:
         return (user_id, consent_type) in self.consents
+
+    async def learner_facts(
+        self, user_ids: Sequence[int], consent_type: str
+    ) -> dict[int, tuple[str, bool]]:
+        self.fact_reads.append(list(user_ids))
+        found = {i: await self.user(i) for i in user_ids}
+        return {
+            i: (user.full_name, await self.consent_in_force(i, consent_type))
+            for i, user in found.items()
+            if user is not None
+        }
 
     async def pilot_running(self, learning_path_id: int) -> bool:
         return self.running_pilot
@@ -326,3 +344,48 @@ async def test_withdraw_and_move_take_the_learner_out_of_the_analysis(world: Wor
     assert closed.value.code == "ENROLLMENT_CLOSED"
     withdrawn = await world.enrollment_service.withdraw(moved.enrollment.id or 0)
     assert withdrawn.next_action.type == "none"
+
+
+async def test_the_admin_list_reads_names_and_consents_once_for_the_whole_page(
+    world: World,
+) -> None:
+    """B-056: antes eran dos consultas por inscripción; ahora una lectura por página."""
+    with_consent, without_consent, unknown = 5, 6, 7
+    world.reader.consents |= {
+        (u, "data_processing") for u in (with_consent, without_consent, unknown)
+    }
+    world.reader.consents.add((with_consent, "pilot_research"))
+    world.reader.consents.add((7, "data_processing"))  # el tipo equivocado no cuenta
+    world.reader.unknown_users.add(unknown)
+    for user_id in (with_consent, without_consent, unknown):
+        await world.enrollment_service.enroll(user_id, 1)
+    for enrollment in world.enrollments.items.values():
+        enrollment.created_at = datetime(2026, 1, 1, tzinfo=UTC)  # la base la pone al insertar
+
+    views, total = await world.enrollment_service.admin_search(
+        learning_path_id=None, status=None, limit=20, offset=0
+    )
+    page = await _admin_page(views, world.enrollment_service)
+
+    assert total == 3
+    assert world.reader.fact_reads == [[with_consent, without_consent, unknown]]
+    # Igual que la lectura fila a fila: (nombre, consentimiento), o ("", False) sin dato.
+    assert [(r.user_id, r.full_name, r.pilot_consent) for r in page] == [
+        (with_consent, f"Usuario {with_consent}", True),
+        (without_consent, f"Usuario {without_consent}", False),
+        (unknown, "", False),
+    ]
+    for response, view in zip(page, views, strict=True):
+        assert response.id == view.enrollment.id
+        assert response.learning_path.id == 1
+
+
+async def test_learner_facts_ignores_repeated_ids_and_skips_the_read_when_empty(
+    world: World,
+) -> None:
+    world.reader.consents.add((LEARNER, "pilot_research"))
+    assert await world.enrollment_service.learner_facts([LEARNER, LEARNER]) == {
+        LEARNER: (f"Usuario {LEARNER}", True)
+    }
+    assert world.reader.fact_reads == [[LEARNER]]
+    assert await world.enrollment_service.learner_facts([]) == {}

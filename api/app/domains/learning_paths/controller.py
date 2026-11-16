@@ -423,9 +423,22 @@ async def mark_alert_read(
 # --- administración de inscripciones (AD5) -----------------------------------------------------
 
 
-async def _admin(view: EnrollmentView, service: EnrollmentService) -> AdminEnrollmentResponse:
+async def _admin_page(
+    views: list[EnrollmentView], service: EnrollmentService
+) -> list[AdminEnrollmentResponse]:
+    """Una respuesta por inscripción; nombre y consentimiento se leen una vez para todas (B-056)."""
+    facts = await service.learner_facts(v.enrollment.user_id for v in views)
+    return [_admin_response(v, *facts[v.enrollment.user_id]) for v in views]
+
+
+async def _admin_one(view: EnrollmentView, service: EnrollmentService) -> AdminEnrollmentResponse:
+    return (await _admin_page([view], service))[0]
+
+
+def _admin_response(
+    view: EnrollmentView, full_name: str, pilot_consent: bool
+) -> AdminEnrollmentResponse:
     user_id = view.enrollment.user_id
-    full_name, pilot_consent = await service.learner_facts(user_id)
     return AdminEnrollmentResponse.model_validate(
         {
             **enrollment_response(view),
@@ -448,7 +461,7 @@ async def admin_list_enrollments(
         learning_path_id=learning_path_id, status=status, limit=limit, offset=offset
     )
     return Page[AdminEnrollmentResponse](
-        items=[await _admin(v, service) for v in views],
+        items=await _admin_page(views, service),
         total=total,
         limit=limit,
         offset=offset,
@@ -460,7 +473,7 @@ async def admin_enroll(
     payload: AdminEnrollmentCreate, service: EnrollmentServiceDep
 ) -> AdminEnrollmentResponse:
     """Inscribe a un aprendiz (exige su consentimiento de datos: `403 CONSENT_REQUIRED`)."""
-    return await _admin(
+    return await _admin_one(
         await service.admin_enroll(payload.user_id, payload.learning_path_id), service
     )
 
@@ -472,7 +485,7 @@ async def withdraw_enrollment(
     service: EnrollmentServiceDep,
 ) -> AdminEnrollmentResponse:
     """Retira la inscripción (no se borra) y la saca del análisis."""
-    return await _admin(await service.withdraw(enrollment_id), service)
+    return await _admin_one(await service.withdraw(enrollment_id), service)
 
 
 @admin_router.patch("/enrollments/{enrollment_id}/move", response_model=AdminEnrollmentResponse)
@@ -480,7 +493,7 @@ async def move_enrollment(
     enrollment_id: int, payload: MoveRequest, service: EnrollmentServiceDep
 ) -> AdminEnrollmentResponse:
     """Mueve al aprendiz a otra ruta: la inscripción nueva queda fuera del análisis."""
-    return await _admin(await service.move(enrollment_id, payload.learning_path_id), service)
+    return await _admin_one(await service.move(enrollment_id, payload.learning_path_id), service)
 
 
 routers: list[APIRouter] = [router, admin_router]
