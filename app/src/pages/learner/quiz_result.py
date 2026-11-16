@@ -73,13 +73,23 @@ def _route_row(index: int, label: str, color: str, text: str) -> None:
 def _exhausted(content: StepContent, path: PathDetail) -> None:
     """E7c · Intentos agotados."""
     total = content.attempts.max + content.attempts.extra_granted
+    # Temas que se pueden seguir sin este: los que la API no dejó «en espera» (B-059). Si todos
+    # dependen del agotado no hay nada que prometer ni acción para continuar.
+    can_continue = [
+        s for s in path.steps if s.step_id != step_id and s.status in ("pending", "in_progress")
+    ]
+    waiting = [s for s in path.steps if s.status == "on_hold"]
+    alert = (
+        f"{content.topic.name} queda marcado como tema crítico. Tu instructor ya recibió una "
+        "alerta y puede habilitarte nuevos intentos."
+    )
     render_page_header(
         f"Usaste los {total} intentos de este tema",
         breadcrumb=_breadcrumb(content, path),
         caption=(
-            f"{content.topic.name} queda marcado como tema crítico. Tu instructor ya recibió una "
-            "alerta y puede habilitarte nuevos intentos. Mientras tanto, puedes seguir con los "
-            "temas que no dependen de este."
+            f"{alert} Mientras tanto, puedes seguir con los temas que no dependen de este."
+            if can_continue
+            else f"{alert} Tu ruta queda en espera hasta que decida."
         ),
     )
     try:
@@ -95,10 +105,6 @@ def _exhausted(content: StepContent, path: PathDetail) -> None:
             pass_threshold=content.quiz_rules.pass_threshold,
             exhausted=True,
         )
-    can_continue = [
-        s for s in path.steps if s.step_id != step_id and s.status in ("pending", "in_progress")
-    ]
-    waiting = [s for s in path.steps if s.status == "on_hold"]
     with route_col, st.container(key="card-attempts-route"):
         st.subheader("Qué pasa con tu ruta", anchor=False)
         rows = [("Puedes seguir", "green", s.name) for s in can_continue]

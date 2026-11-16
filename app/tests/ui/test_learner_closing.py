@@ -18,9 +18,10 @@ from learner_support import (
     no_exception,
 )
 from streamlit.testing.v1 import AppTest
+from support import SRC_DIR
 
 from clients.base import ApiError
-from clients.models import AttemptResult, NextAction
+from clients.models import AttemptResult, ConsentGrant, Enrollment, NextAction, Page
 from clients.models_learner import StudyGoals
 from core import features
 
@@ -129,6 +130,31 @@ def test_e11_shows_progress_bars_and_badges_v050() -> None:
     assert any("Racha de 3 días" in text for text in badges)
     assert any("Datos: autorizado el" in text for text in badges)
     assert any("Piloto: " in text for text in badges)
+
+
+def test_e11_draws_the_empty_bar_at_zero_percent_b061() -> None:
+    at = learner_app("learner_path", PROGRESS, run=False)
+    client = client_of(at)
+    original = client.list_enrollments
+
+    def at_zero(**kwargs: int) -> Page[Enrollment]:
+        page = original(**kwargs)
+        for item in page.items:
+            item.progress = item.progress.model_copy(update={"steps_done": 0, "percent": 0})
+        return page
+
+    client.list_enrollments = at_zero  # type: ignore[method-assign,assignment]
+    at.run()
+    no_exception(at)
+    assert next(p.value for p in at.progress) == 0
+    assert len(at.get("progress")) == 3  # curso (vacía) y las dos metas
+
+
+def test_e11_bar_track_is_visible_on_the_white_card_b061() -> None:
+    """Streamlit pinta el riel con el blanco de la tarjeta: sin esta regla, con 0 % hay un hueco."""
+    css = (SRC_DIR / "static" / "styles" / "components" / "progress.css").read_text("utf-8")
+    assert '.st-key-card-progress-route [data-testid="stProgressBarTrack"]' in css
+    assert "background: var(--bg-neutral)" in css
 
 
 def test_e11_streak_of_one_day_is_singular_b046() -> None:
@@ -263,8 +289,31 @@ def _fill(at: AppTest, count: int, start: int = 0) -> None:
 
 
 def test_e13a_follows_figma() -> None:
-    at = learner_app("learner_completed", SURVEY)
+    # Figma dibuja la variante de quien participa en el piloto (B-061).
+    at = learner_app("learner_completed", SURVEY, run=False)
+    session_of(at).me.consent_status.pilot_research = ConsentGrant(granted=True)
+    at.run()
     matches_figma(at, "E13a", accepted=("Fundamentos de ML · Encuesta final",))
+
+
+def _survey_intro(*, participates: bool) -> str:
+    at = learner_app("learner_completed", SURVEY, run=False)
+    session_of(at).me.consent_status.pilot_research = ConsentGrant(granted=participates)
+    at.run()
+    no_exception(at)
+    return next(t for t in page_texts(at) if t.startswith("Es voluntaria y no afecta tu badge."))
+
+
+def test_e13a_cites_the_consent_only_when_the_learner_joined_the_pilot_b061() -> None:
+    intro = _survey_intro(participates=True)
+    assert "según el consentimiento informado" in intro
+
+
+def test_e13a_does_not_claim_a_study_use_when_the_learner_opted_out_b061() -> None:
+    intro = _survey_intro(participates=False)
+    assert "consentimiento" not in intro
+    assert "analizan" not in intro
+    assert "no se usan en el estudio" in intro
 
 
 def test_e13_shows_the_step_progress_bar() -> None:

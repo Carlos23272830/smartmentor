@@ -18,7 +18,7 @@ from streamlit.testing.v1 import AppTest
 from support import SRC_DIR
 
 from clients.base import ApiError
-from clients.models import NextAction
+from clients.models import NextAction, PathDetail
 from clients.ops_learner import LearnerScript
 
 GRADE_SCRIPT = LearnerScript({"submit_attempt": "learner/job_accepted_grading"})
@@ -561,6 +561,52 @@ def test_e7c_exhausted_attempts_from_next_action() -> None:
     assert "40 % · 2 de 5" in texts
     assert "Necesitas 70 % para aprobar." in texts
     assert "Recursos de repaso" in texts
+
+
+def test_e7c_offers_to_continue_when_a_topic_does_not_depend_on_the_exhausted_one_b059() -> None:
+    at = _result("learner_exhausted")
+    no_exception(at)
+    texts = page_texts(at)
+    assert any(
+        "Mientras tanto, puedes seguir con los temas que no dependen de este" in t for t in texts
+    )
+    assert "Continuar con Árboles de decisión" in [b.label for b in at.button]
+    assert "Volver a mi ruta" in [b.label for b in at.button]
+
+
+def test_e7c_promises_nothing_when_every_topic_depends_on_the_exhausted_one_b059() -> None:
+    """Caso real: los otros temas dependen del agotado y la API los deja «en espera»."""
+    at = learner_app("learner_exhausted", QUIZ_RESULT, run=False)
+    session_of(at).learner.step_id = 813
+    client = client_of(at)
+    original = client.get_path
+
+    def all_waiting(enrollment_id: int) -> PathDetail:
+        path = original(enrollment_id)
+        steps = [
+            step if step.step_id == 813 else step.model_copy(update={"status": "on_hold"})
+            for step in path.steps
+        ]
+        return path.model_copy(update={"steps": steps})
+
+    client.get_path = all_waiting  # type: ignore[method-assign]
+    at.run()
+    no_exception(at)
+    texts = page_texts(at)
+    assert not any("Mientras tanto" in t or "no dependen de este" in t for t in texts)
+    assert any("Tu ruta queda en espera hasta que decida." in t for t in texts)
+    assert "Tu instructor ya recibió una alerta" in " ".join(texts)
+    assert at.button(key="result-back").label == "Volver a mi ruta"
+    assert "result-continue" not in {b.key for b in at.button}
+    assert "Puedes seguir" not in {
+        m.group(1) for e in at.markdown if (m := re.fullmatch(r":[a-z]+-badge\[(.*)\]", e.value))
+    }
+
+
+def test_e7c_shows_a_single_threshold_text_b059() -> None:
+    at = _result("learner_exhausted")
+    needs = [t for t in page_texts(at) if t.startswith("Necesitas")]
+    assert needs == ["Necesitas 70 % para aprobar."]
 
 
 def test_e7c_route_rows_have_one_badge_each() -> None:
