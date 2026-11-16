@@ -40,6 +40,20 @@ from app.domains.learning_paths.models import (
 
 
 class SqlAlchemyPathRepository(SqlAlchemyLearningPathRepository):
+    async def get_many(self, path_ids: list[int]) -> dict[int, LearningPath]:
+        if not path_ids:
+            return {}
+        rows = (
+            (
+                await self._session.execute(
+                    select(LearningPathModel).where(LearningPathModel.id.in_(set(path_ids)))
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return {row.id: self._to_entity(row) for row in rows}
+
     async def list_published(self, *, limit: int, offset: int) -> tuple[list[LearningPath], int]:
         # Un curso archivado sale del catálogo aunque su ruta siga publicada (estados.md).
         conditions = [
@@ -196,6 +210,20 @@ class SqlAlchemyAttemptGrantRepository(SqlAlchemyCrudRepository[AttemptGrantMode
             )
         ).scalar_one()
         return int(total)
+
+    async def final_attempts_granted_for(self, enrollment_ids: list[int]) -> dict[int, int]:
+        if not enrollment_ids:
+            return {}
+        rows = await self._session.execute(
+            select(AttemptGrantModel.enrollment_id, func.sum(AttemptGrantModel.attempts))
+            .where(
+                AttemptGrantModel.enrollment_id.in_(enrollment_ids),
+                AttemptGrantModel.active.is_(True),
+            )
+            .group_by(AttemptGrantModel.enrollment_id)
+        )
+        found = {int(row[0]): int(row[1] or 0) for row in rows.all() if row[0] is not None}
+        return {i: found.get(i, 0) for i in enrollment_ids}
 
 
 class SqlAlchemyAlertRepository(SqlAlchemyCrudRepository[AlertModel, Alert]):

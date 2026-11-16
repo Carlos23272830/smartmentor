@@ -33,6 +33,9 @@ OWNER, STRANGER, LEARNER = 2, 3, 4
 
 
 class Paths(InMemoryRepository[LearningPath]):
+    async def get_many(self, path_ids: list[int]) -> dict[int, LearningPath]:
+        return {i: self.items[i] for i in path_ids if i in self.items}
+
     async def list_published(self, *, limit: int, offset: int) -> tuple[list[LearningPath], int]:
         found = [p for p in self.items.values() if p.status == "published"]
         return found[offset : offset + limit], len(found)
@@ -86,6 +89,9 @@ class Steps(InMemoryRepository[PathStep]):
 class Grants(InMemoryRepository[AttemptGrant]):
     async def final_attempts_granted(self, enrollment_id: int) -> int:
         return sum(g.attempts for g in self.items.values() if g.enrollment_id == enrollment_id)
+
+    async def final_attempts_granted_for(self, enrollment_ids: list[int]) -> dict[int, int]:
+        return {i: await self.final_attempts_granted(i) for i in enrollment_ids}
 
 
 class Alerts(InMemoryRepository[Alert]):
@@ -160,6 +166,14 @@ class Progress:
         self, enrollment: Enrollment, steps: list[PathStep], path: LearningPath | None = None
     ) -> ProgressFacts:
         return ProgressFacts(status=enrollment.status)
+
+    async def facts_many(
+        self,
+        enrollments: list[Enrollment],
+        steps: dict[int, list[PathStep]],
+        paths: dict[int, LearningPath],
+    ) -> dict[int, ProgressFacts]:
+        return {e.id: ProgressFacts(status=e.status) for e in enrollments if e.id is not None}
 
     async def history(self, enrollment_id: int) -> LearnerHistory:
         return LearnerHistory()

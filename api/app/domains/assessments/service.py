@@ -317,6 +317,39 @@ class _Base:
 # --- progreso (puertos ProgressReader y AssessmentHistory) -------------------------------------
 
 
+def _facts(
+    enrollment: Enrollment,
+    steps: list[PathStep],
+    diagnostic: Diagnostic | None,
+    attempts: list[AssessmentAttempt],
+    *,
+    diagnostic_job: str | None,
+    grading_job: str | None,
+    final_remaining: int,
+    has_survey: bool,
+) -> ProgressFacts:
+    """Arma `ProgressFacts` con lo ya leído (lo comparten `facts` y `facts_many`)."""
+    open_attempt = next((a for a in reversed(attempts) if a.status in OPEN_ATTEMPTS), None)
+    grading = next((a for a in attempts if a.status == AttemptStatus.GRADING), None)
+    finals = [a for a in attempts if a.assessment_type == "final"]
+    graded_finals = [a for a in finals if a.status == AttemptStatus.GRADED]
+    last_final = graded_finals[-1] if graded_finals else None
+    return ProgressFacts(
+        status=enrollment.status,
+        diagnostic_status=diagnostic.status if diagnostic is not None else None,
+        diagnostic_job_id=diagnostic_job,
+        steps=tuple(StepState(require_id(s), s.topic_id, s.step_order, s.status) for s in steps),
+        open_attempt_id=open_attempt.id if open_attempt else None,
+        open_attempt_step_id=open_attempt.path_step_id if open_attempt else None,
+        grading_attempt_id=grading.id if grading else None,
+        grading_job_id=grading_job,
+        last_final_attempt_id=last_final.id if last_final else None,
+        last_final_passed=last_final.passed if last_final else None,
+        final_attempts_remaining=final_remaining,
+        has_survey=has_survey,
+    )
+
+
 class LearnerProgress(_Base):
     async def facts(
         self, enrollment: Enrollment, steps: list[PathStep], path: LearningPath | None = None
@@ -329,29 +362,72 @@ class LearnerProgress(_Base):
             ref = await self._jobs.finalize_job(enrollment, path.course_id)
             diagnostic_job = ref.job_id if ref is not None else None
         attempts = await self._r.attempts.list_for_enrollment(require_id(enrollment))
-        open_attempt = next((a for a in reversed(attempts) if a.status in OPEN_ATTEMPTS), None)
         grading = next((a for a in attempts if a.status == AttemptStatus.GRADING), None)
         grading_job = await self._first_grading_job(grading, enrollment, path) if grading else None
-        finals = [a for a in attempts if a.assessment_type == "final"]
-        graded_finals = [a for a in finals if a.status == AttemptStatus.GRADED]
-        last_final = graded_finals[-1] if graded_finals else None
         used, maximum = await self._final_counters(enrollment, path, attempts)
-        return ProgressFacts(
-            status=enrollment.status,
-            diagnostic_status=diagnostic.status if diagnostic is not None else None,
-            diagnostic_job_id=diagnostic_job,
-            steps=tuple(
-                StepState(require_id(s), s.topic_id, s.step_order, s.status) for s in steps
-            ),
-            open_attempt_id=open_attempt.id if open_attempt else None,
-            open_attempt_step_id=open_attempt.path_step_id if open_attempt else None,
-            grading_attempt_id=grading.id if grading else None,
-            grading_job_id=grading_job,
-            last_final_attempt_id=last_final.id if last_final else None,
-            last_final_passed=last_final.passed if last_final else None,
-            final_attempts_remaining=max(maximum - used, 0),
+        return _facts(
+            enrollment,
+            steps,
+            diagnostic,
+            attempts,
+            diagnostic_job=diagnostic_job,
+            grading_job=grading_job,
+            final_remaining=max(maximum - used, 0),
             has_survey=await self._r.surveys.has_final_survey(require_id(enrollment)),
         )
+
+    async def facts_many(
+        self,
+        enrollments: list[Enrollment],
+        steps: dict[int, list[PathStep]],
+        paths: dict[int, LearningPath],
+    ) -> dict[int, ProgressFacts]:
+        """`facts` de varias inscripciones con lecturas en lote (B-063).
+
+        Lee diagnósticos, intentos, intentos extra y encuestas de todas a la vez. Las inscripciones
+        con el diagnóstico calificándose o un intento en calificación tienen que ubicar (o pedir)
+        su trabajo de IA: esas, que son pocas, pasan por `facts` una por una. `paths` trae la
+        ruta de cada inscripción, por id de ruta.
+        """
+        ids = [require_id(e) for e in enrollments]
+        if not ids:
+            return {}
+        diagnostics = await self._r.diagnostics.by_enrollments(ids)
+        attempts: dict[int, list[AssessmentAttempt]] = {i: [] for i in ids}
+        for attempt in await self._r.attempts.list_for_enrollments(ids):
+            attempts.setdefault(attempt.enrollment_id, []).append(attempt)
+        granted = await self._r.grants.final_attempts_granted_for(ids)
+        surveyed = await self._r.surveys.final_survey_enrollments(ids)
+        found: dict[int, ProgressFacts] = {}
+        for enrollment in enrollments:
+            enrollment_id = require_id(enrollment)
+            path = paths.get(enrollment.learning_path_id)
+            own_steps = steps.get(enrollment_id, [])
+            diagnostic = diagnostics.get(enrollment_id)
+            own_attempts = attempts[enrollment_id]
+            needs_job = (diagnostic is not None and diagnostic.status == "scoring") or any(
+                a.status == AttemptStatus.GRADING for a in own_attempts
+            )
+            if path is None or needs_job:
+                found[enrollment_id] = await self.facts(enrollment, own_steps, path)
+                continue
+            used = sum(
+                1
+                for a in own_attempts
+                if a.assessment_type == "final" and a.status not in OPEN_ATTEMPTS
+            )
+            maximum = path.max_attempts + granted.get(enrollment_id, 0)
+            found[enrollment_id] = _facts(
+                enrollment,
+                own_steps,
+                diagnostic,
+                own_attempts,
+                diagnostic_job=None,
+                grading_job=None,
+                final_remaining=max(maximum - used, 0),
+                has_survey=enrollment_id in surveyed,
+            )
+        return found
 
     async def _first_grading_job(
         self, attempt: AssessmentAttempt, enrollment: Enrollment, path: LearningPath

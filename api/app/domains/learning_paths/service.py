@@ -77,6 +77,15 @@ class ProgressReader(Protocol):
         """
         ...
 
+    async def facts_many(
+        self,
+        enrollments: list[Enrollment],
+        steps: dict[int, list[PathStep]],
+        paths: dict[int, LearningPath],
+    ) -> dict[int, ProgressFacts]:
+        """`facts` de varias inscripciones con lecturas en lote (listados, B-063)."""
+        ...
+
 
 @dataclass(frozen=True)
 class AttemptSummary:
@@ -444,7 +453,7 @@ class EnrollmentService:
         self, user: CurrentUser, *, limit: int, offset: int
     ) -> tuple[list[EnrollmentView], int]:
         items, total = await self._enrollments.list_for_user(user.id, limit=limit, offset=offset)
-        return [await self._view(e) for e in items], total
+        return await self._views(items), total
 
     async def path_view(self, user: CurrentUser, enrollment_id: int) -> PathView:
         enrollment = await self.get_own(user, enrollment_id)
@@ -471,6 +480,28 @@ class EnrollmentService:
         facts = await self._progress.facts(enrollment, steps, path)
         return EnrollmentView(enrollment, path, steps, next_action(facts))
 
+    async def _views(self, enrollments: list[Enrollment]) -> list[EnrollmentView]:
+        """Las vistas de una página de inscripciones con lecturas en lote, no por fila (B-063)."""
+        if not enrollments:
+            return []
+        paths = await self._paths.get_many(list({e.learning_path_id for e in enrollments}))
+        for enrollment in enrollments:
+            if enrollment.learning_path_id not in paths:
+                raise errors.path_not_found(enrollment.learning_path_id)
+        steps: dict[int, list[PathStep]] = {require_id(e): [] for e in enrollments}
+        for step in await self._steps.list_for_enrollments(list(steps)):
+            steps[step.enrollment_id].append(step)
+        facts = await self._progress.facts_many(enrollments, steps, paths)
+        return [
+            EnrollmentView(
+                e,
+                paths[e.learning_path_id],
+                steps[require_id(e)],
+                next_action(facts[require_id(e)]),
+            )
+            for e in enrollments
+        ]
+
     async def view_of(self, enrollment: Enrollment) -> EnrollmentView:
         return await self._view(enrollment)
 
@@ -482,7 +513,7 @@ class EnrollmentService:
         items, total = await self._enrollments.search(
             learning_path_id=learning_path_id, status=status, limit=limit, offset=offset
         )
-        return [await self._view(e) for e in items], total
+        return await self._views(items), total
 
     async def learner_facts(self, user_ids: Iterable[int]) -> dict[int, tuple[str, bool]]:
         """(nombre, autorización `pilot_research` vigente) de cada aprendiz, para AD5.

@@ -43,6 +43,10 @@ class DiagnosticRepository(Protocol):
         self, enrollment_id: int, *, for_update: bool = False
     ) -> Diagnostic | None: ...
 
+    async def by_enrollments(self, enrollment_ids: list[int]) -> dict[int, Diagnostic]:
+        """El diagnóstico de cada inscripción que lo tiene, en una lectura (B-063)."""
+        ...
+
     async def update(self, diagnostic_id: int, changes: dict[str, Any]) -> Diagnostic | None: ...
 
     async def list_by_status(self, status: str) -> list[Diagnostic]: ...
@@ -61,6 +65,10 @@ class AttemptRepository(Protocol):
 
     async def list_for_enrollment(self, enrollment_id: int) -> list[AssessmentAttempt]:
         """Intentos activos de la inscripción, por id."""
+        ...
+
+    async def list_for_enrollments(self, enrollment_ids: list[int]) -> list[AssessmentAttempt]:
+        """Intentos activos de varias inscripciones, por inscripción y luego por id (B-063)."""
         ...
 
     async def list_by_status(self, status: str) -> list[AssessmentAttempt]: ...
@@ -113,3 +121,7 @@ class ContentReader(Protocol):
 
 class SurveyLookup(Protocol):
     async def has_final_survey(self, enrollment_id: int) -> bool: ...
+
+    async def final_survey_enrollments(self, enrollment_ids: list[int]) -> set[int]:
+        """Cuáles de las inscripciones ya respondieron la encuesta final (B-063)."""
+        ...
