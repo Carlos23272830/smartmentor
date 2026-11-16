@@ -137,3 +137,17 @@ def test_settings_rejects_an_unreasonable_upload_timeout(
     monkeypatch.setenv("API_UPLOAD_TIMEOUT_SECONDS", value)
     with pytest.raises(ValidationError):
         Settings()
+
+
+def test_get_client_passes_the_configured_upload_timeout_b055(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """La unión `Settings` → `get_client()` → `ApiClient`: cambiar la variable cambia la espera."""
+    from core import container
+
+    settings = Settings(app_data_source="api", api_base_url=BASE, api_upload_timeout_seconds=123.0)
+    monkeypatch.setattr(container, "get_settings", lambda: settings)
+    monkeypatch.setattr(container, "_http_pool", lambda base_url: httpx.Client(base_url=base_url))
+    client = container.get_client()
+    assert isinstance(client, ApiClient)
+    assert client._upload_timeout.read == 123.0
