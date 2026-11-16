@@ -85,8 +85,11 @@ render_stat_tiles(
 
 with st.container(key="card-progress-route"):
     st.markdown(f"**{enrollment.learning_path.name}**")
-    if progress.steps_total:
-        st.progress(min(progress.steps_done / progress.steps_total, 1.0))
+    # Siempre se dibuja la barra, también con 0 % (B-061): el riel vacío (ver progress.css) dice
+    # «aún no hay avance»; un hueco parece un error.
+    st.progress(
+        min(progress.steps_done / progress.steps_total, 1.0) if progress.steps_total else 0.0
+    )
     next_name = step_name(path, enrollment.next_action.step_id)
     if next_name:
         st.caption(f"Siguiente paso: {next_name}")

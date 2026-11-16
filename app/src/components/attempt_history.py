@@ -24,6 +24,7 @@ def render_attempt_history(
     *,
     key: str,
     pass_threshold: float | None = None,
+    threshold_goal: str = "aprobar",
     exhausted: bool = False,
     title: str = "Historial de intentos",
 ) -> None:
@@ -42,4 +43,5 @@ def render_attempt_history(
             with score_col.container(key=f"attempt-score-{key}-{row.number}"):
                 st.markdown(f":red[{percent_points(row.score)} · {row.correct} de {row.total}]")
         if pass_threshold is not None:
-            st.caption(f"Necesitas {percent_points(pass_threshold)} para aprobar.")
+            # Un solo texto de umbral por tarjeta; `threshold_goal` dice para qué es (B-059).
+            st.caption(f"Necesitas {percent_points(pass_threshold)} para {threshold_goal}.")

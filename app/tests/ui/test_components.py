@@ -236,6 +236,20 @@ def test_attempt_history_lists_attempts_and_flags_exhausted() -> None:
     assert "Intentos agotados" in badges(at)
 
 
+def _history_badge() -> None:
+    from components.attempt_history import AttemptRow, render_attempt_history
+
+    render_attempt_history(
+        [AttemptRow(1, 76, 7, 10)], key="e9c", pass_threshold=80, threshold_goal="obtener el badge"
+    )
+
+
+def test_attempt_history_names_what_the_threshold_is_for_b059() -> None:
+    shown = texts(run(_history_badge))
+    assert shown.count("Necesitas 80 % para obtener el badge.") == 1
+    assert not [t for t in shown if t.startswith("Necesitas") and "aprobar" in t]
+
+
 def test_attempt_history_scores_are_red() -> None:
     raw = [e.value for e in run(_history).markdown]
     assert ":red[60 % · 3 de 5]" in raw

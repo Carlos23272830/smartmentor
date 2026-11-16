@@ -272,6 +272,13 @@ def test_e9c_exhausted_attempts_show_history_and_weak_topics() -> None:
     assert "Reintentar evaluación final" not in texts
 
 
+def test_e9c_shows_a_single_threshold_text_b059() -> None:
+    at = learner_app("learner_final_exhausted", FINAL_RESULT)
+    no_exception(at)
+    needs = [t for t in page_texts(at) if t.startswith("Necesitas")]
+    assert needs == ["Necesitas 80 % para obtener el badge."]
+
+
 def test_e9_offline() -> None:
     at = learner_app("learner_offline", FINAL_RESULT)
     no_exception(at)
