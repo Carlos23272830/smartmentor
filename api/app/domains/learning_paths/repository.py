@@ -18,6 +18,10 @@ from app.domains.learning_paths.entities import (
 class PathRepository(Protocol):
     async def get(self, path_id: int) -> LearningPath | None: ...
 
+    async def get_many(self, path_ids: list[int]) -> dict[int, LearningPath]:
+        """Las rutas pedidas, por id, en una sola lectura (B-063). Las que no existen no vienen."""
+        ...
+
     async def update(self, path_id: int, changes: dict[str, Any]) -> LearningPath | None: ...
 
     async def list_published(self, *, limit: int, offset: int) -> tuple[list[LearningPath], int]:
@@ -73,6 +77,10 @@ class AttemptGrantRepository(Protocol):
 
     async def final_attempts_granted(self, enrollment_id: int) -> int:
         """Suma de intentos extra de la evaluación final de la inscripción."""
+        ...
+
+    async def final_attempts_granted_for(self, enrollment_ids: list[int]) -> dict[int, int]:
+        """`final_attempts_granted` de varias inscripciones en una lectura (B-063); 0 si no hay."""
         ...
 
 

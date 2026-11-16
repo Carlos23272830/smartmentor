@@ -35,6 +35,19 @@ class SqlAlchemySurveyRepository(SqlAlchemyCrudRepository[SurveyResponseModel, S
         )
         return found.first() is not None
 
+    async def final_survey_enrollments(self, enrollment_ids: list[int]) -> set[int]:
+        if not enrollment_ids:
+            return set()
+        rows = await self._session.execute(
+            select(SurveyResponseModel.enrollment_id)
+            .where(
+                SurveyResponseModel.enrollment_id.in_(enrollment_ids),
+                SurveyResponseModel.survey_type == "final",
+            )
+            .distinct()
+        )
+        return {int(enrollment_id) for (enrollment_id,) in rows.all()}
+
 
 class SqlAlchemyEventRepository:
     """`interaction_events` es de solo inserción (sin `_audit`, plan 5.2.1): SQL explícito."""

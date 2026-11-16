@@ -121,6 +121,22 @@ class SqlAlchemyDiagnosticRepository(SqlAlchemyCrudRepository[DiagnosticModel, D
         ).scalar_one_or_none()
         return None if row is None else self._to_entity(row)
 
+    async def by_enrollments(self, enrollment_ids: list[int]) -> dict[int, Diagnostic]:
+        if not enrollment_ids:
+            return {}
+        rows = (
+            (
+                await self._session.execute(
+                    select(DiagnosticModel)
+                    .where(DiagnosticModel.enrollment_id.in_(enrollment_ids))
+                    .execution_options(populate_existing=True)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return {row.enrollment_id: self._to_entity(row) for row in rows}
+
     async def list_by_status(self, status: str) -> list[Diagnostic]:
         rows = (
             (
@@ -167,6 +183,26 @@ class SqlAlchemyAttemptRepository(
                         AssessmentAttemptModel.active.is_(True),
                     )
                     .order_by(AssessmentAttemptModel.id)
+                    .execution_options(populate_existing=True)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return [self._to_entity(row) for row in rows]
+
+    async def list_for_enrollments(self, enrollment_ids: list[int]) -> list[AssessmentAttempt]:
+        if not enrollment_ids:
+            return []
+        rows = (
+            (
+                await self._session.execute(
+                    select(AssessmentAttemptModel)
+                    .where(
+                        AssessmentAttemptModel.enrollment_id.in_(enrollment_ids),
+                        AssessmentAttemptModel.active.is_(True),
+                    )
+                    .order_by(AssessmentAttemptModel.enrollment_id, AssessmentAttemptModel.id)
                     .execution_options(populate_existing=True)
                 )
             )
