@@ -35,6 +35,8 @@ class Settings(BaseSettings):
 
     # API real.
     api_base_url: str = "http://api:8020"
+    # Segundos de espera al subir el syllabus o apuntes (B-055); el resto de llamadas espera 10 s.
+    api_upload_timeout_seconds: float = Field(default=80.0, gt=0, le=600)
 
     # Keycloak (cliente confidencial `smartmentor-ui`).
     oidc_server_metadata_url: str | None = Field(default=None)
