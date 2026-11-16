@@ -10,19 +10,22 @@ con IA». Los apuntes se suben antes que el syllabus; un apunte sin texto se omi
 D1c, y si la extracción falla en D1d, al reintentar la API no los duplica.
 """
 
-import re
-from dataclasses import dataclass, field
-from typing import Final
+from dataclasses import dataclass
 
 import streamlit as st
-from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 from clients.base import ApiError
 from clients.jobs import is_done
-from clients.models_staff import CourseCreate, MaterialOrigin
+from clients.models_staff import CourseCreate
 from components.formatting import file_size
 from components.layout import render_page_header
 from components.loading_steps import render_loading_steps
+from components.material_uploader import (
+    SKIPPABLE_MATERIAL_ERRORS,
+    MaterialFile,
+    escape_markdown,
+    render_material_uploader,
+)
 from core.container import get_client
 from core.polling import poll_job_or_rerun
 from core.staff_errors import show_staff_error
@@ -41,21 +44,6 @@ UPLOAD, PASTE = "Subir PDF", "Pegar texto"
 BREADCRUMB = "Mis cursos › Nuevo curso"
 # R-004: apuntes por carga (la API admite hasta 20 activos por curso).
 MAX_MATERIAL_FILES = 5
-MATERIAL_TYPES = ["pdf", "txt", "md"]
-MATERIAL_ORIGINS: Final[dict[MaterialOrigin, str]] = {
-    "own_notes": "Apuntes propios",
-    "open_license": "Libro o material abierto",
-    "permitted": "Otro, con permiso de uso",
-}
-# Rechazos de un apunte que no detienen el curso: se omite y se avisa en D1c.
-SKIPPABLE_MATERIAL_ERRORS = frozenset(
-    {
-        "MATERIAL_NO_TEXT",
-        "MATERIAL_UNSUPPORTED_TYPE",
-        "MATERIAL_TOO_LARGE",
-        "MATERIAL_LIMIT_REACHED",
-    }
-)
 SKIPPED_KEY = "nc-material-skipped"
 
 client = get_client()
@@ -71,13 +59,6 @@ class Draft:
     text: str = ""
     file_name: str | None = None
     file_size: int = 0
-    material_origins: dict[str, MaterialOrigin] = field(default_factory=dict)
-    """Origen elegido por apunte, por `file_id`, para no perderlo si el formulario se redibuja."""
-
-
-def _escape(text: str) -> str:
-    """El nombre de un archivo se muestra tal cual, sin que lo interprete el Markdown."""
-    return re.sub(r"([\\\[\]*_`])", r"\\\1", text)
 
 
 def _draft() -> Draft:
@@ -95,7 +76,7 @@ view = st.session_state.get("nc-view", "extracting" if state.job_id else "form")
 draft = _draft()
 
 
-def _upload_materials(course_id: int, materials: list[tuple[str, bytes, MaterialOrigin]]) -> None:
+def _upload_materials(course_id: int, materials: list[MaterialFile]) -> None:
     """Sube los apuntes; los que la API rechaza por su contenido se anotan para avisar en D1c."""
     skipped: list[str] = []
     for name, content, origin in materials:
@@ -108,9 +89,7 @@ def _upload_materials(course_id: int, materials: list[tuple[str, bytes, Material
     st.session_state[SKIPPED_KEY] = skipped
 
 
-def _submit(
-    file: tuple[str, bytes] | None, materials: list[tuple[str, bytes, MaterialOrigin]]
-) -> None:
+def _submit(file: tuple[str, bytes] | None, materials: list[MaterialFile]) -> None:
     """Crea el curso (una vez), sube los apuntes y envía el syllabus; pasa a D1c o D1d."""
     try:
         if state.course_id is None:
@@ -226,55 +205,17 @@ def _form() -> None:
         _submit(file if draft.mode == UPLOAD else None, materials)
 
 
-def _materials_card() -> tuple[list[tuple[str, bytes, MaterialOrigin]], bool]:
-    """Tarjeta «Apuntes y lecturas · opcional» (R-004): archivos que se enviarán y si sobran.
-
-    Cada archivo lleva su «Origen», que la API guarda como la licencia de la fuente. Uno de más
-    de 10 MB se marca y no se envía; no bloquea el curso.
-    """
-    ready: list[tuple[str, bytes, MaterialOrigin]] = []
+def _materials_card() -> tuple[list[MaterialFile], bool]:
+    """Tarjeta «Apuntes y lecturas · opcional» (R-004): archivos que se enviarán y si sobran."""
     with st.container(key="card-new-course-materials"):
         st.subheader("Apuntes y lecturas · opcional", anchor=False)
         st.caption(
             "La IA redacta la explicación de cada tema a partir de estos documentos. Sin apuntes, "
             "usa solo el syllabus y las explicaciones quedan más cortas."
         )
-        uploads: list[UploadedFile] = (
-            st.file_uploader(
-                "Arrastra aquí tus apuntes, guías o capítulos de libros abiertos",
-                type=MATERIAL_TYPES,
-                accept_multiple_files=True,
-                key="nc-materials",
-            )
-            or []
+        return render_material_uploader(
+            "nc-materials", max_files=MAX_MATERIAL_FILES, max_bytes=MAX_BYTES
         )
-        st.caption(
-            f"o haz clic para elegir archivos · PDF, TXT o MD, hasta {MAX_MATERIAL_FILES} "
-            "archivos de 10 MB cada uno"
-        )
-        for upload in uploads:
-            too_big = upload.size > MAX_BYTES
-            with st.container(horizontal=True, key=f"new-course-material-row-{upload.file_id}"):
-                st.markdown(f"{_escape(upload.name)} · {file_size(upload.size)}")
-                st.space("stretch")
-                origin = st.selectbox(
-                    "Origen",
-                    list(MATERIAL_ORIGINS),
-                    index=list(MATERIAL_ORIGINS).index(
-                        draft.material_origins.get(upload.file_id, "own_notes")
-                    ),
-                    format_func=MATERIAL_ORIGINS.__getitem__,
-                    key=f"nc-material-origin-{upload.file_id}",
-                    label_visibility="collapsed",
-                    width=240,
-                )
-                draft.material_origins[upload.file_id] = origin
-                if too_big:
-                    st.badge("Muy pesado", color="orange")
-                else:
-                    st.badge("Listo", color="green")
-                    ready.append((upload.name, upload.getvalue(), origin))
-    return ready, len(uploads) > MAX_MATERIAL_FILES
 
 
 def _retry_text(progress_label: str) -> str:
@@ -307,7 +248,7 @@ def _extracting() -> bool:
             with st.container(key="new-course-retry"):
                 st.markdown(_retry_text(job.progress_label))
         if skipped := st.session_state.get(SKIPPED_KEY):
-            names = ", ".join(f"«{_escape(name)}»" for name in skipped)
+            names = ", ".join(f"«{escape_markdown(name)}»" for name in skipped)
             st.warning(
                 f"No pudimos usar estos apuntes: {names}. No tienen texto que la IA pueda leer "
                 "o no se admiten. Los demás quedaron guardados."
@@ -357,7 +298,7 @@ def _error() -> None:
         "El PDF parece escaneado: no tiene texto seleccionable. Sube otro archivo o pega el "
         "texto del syllabus."
     )
-    name = _escape(draft.file_name or "syllabus.pdf")
+    name = escape_markdown(draft.file_name or "syllabus.pdf")
     st.error(
         f":red[**{name} · 0 caracteres de texto detectados**]\n\n"
         "Tus datos del curso están guardados. No se perdió nada."

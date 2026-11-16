@@ -404,6 +404,24 @@ class MaterialService:
         await load_course(self._courses, user, course_id)
         return await self._materials.list_for_course(course_id)
 
+    async def deactivate(
+        self, user: CurrentUser, course_id: int, material_id: int
+    ) -> CourseMaterial:
+        """Retira el apunte del RAG (R-010): la fila queda inactiva, nunca se borra.
+
+        `ai/` deja de usarlo la próxima vez que indexa el curso (retira su `source_documents`).
+        Las explicaciones ya generadas no cambian. Desactivar dos veces no es un error.
+        """
+        await load_course(self._courses, user, course_id)
+        material = await self._materials.get(material_id)
+        if material is None or material.course_id != course_id:
+            raise NotFoundError("Material", material_id, code="MATERIAL_NOT_FOUND")
+        if not material.active:
+            return material
+        updated = await self._materials.set_active(material_id, False)
+        await self._uow.commit()
+        return updated or material
+
 
 @dataclass(frozen=True)
 class Score:

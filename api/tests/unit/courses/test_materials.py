@@ -140,3 +140,77 @@ async def test_the_limit_of_active_materials_is_enforced(
     with pytest.raises(BusinessRuleError) as error:
         await service.upload(world.instructor, course_id, extra, MaterialOrigin.OWN_NOTES)
     assert error.value.code == "MATERIAL_LIMIT_REACHED"
+
+
+# --- desactivar (R-010) -----------------------------------------------------------------------
+
+
+async def test_a_deactivated_material_leaves_the_list_and_can_be_uploaded_again(
+    world: World, service: MaterialService
+) -> None:
+    course_id = await new_course(world)
+    extracted = await extract_material(NOTES.encode(), "apuntes.md")
+    material, _ = await service.upload(
+        world.instructor, course_id, extracted, MaterialOrigin.OWN_NOTES
+    )
+    assert material.id is not None
+
+    retired = await service.deactivate(world.instructor, course_id, material.id)
+
+    assert not retired.active
+    assert await service.list_materials(world.instructor, course_id) == []
+    again, created = await service.upload(
+        world.instructor, course_id, extracted, MaterialOrigin.OWN_NOTES
+    )
+    assert created
+    assert again.id != material.id
+
+
+async def test_deactivating_twice_is_not_an_error(world: World, service: MaterialService) -> None:
+    course_id = await new_course(world)
+    extracted = await extract_material(NOTES.encode(), "apuntes.md")
+    material, _ = await service.upload(
+        world.instructor, course_id, extracted, MaterialOrigin.OWN_NOTES
+    )
+    assert material.id is not None
+    await service.deactivate(world.instructor, course_id, material.id)
+    commits = world.uow.commits
+
+    again = await service.deactivate(world.instructor, course_id, material.id)
+
+    assert not again.active
+    assert world.uow.commits == commits
+
+
+async def test_a_material_of_another_course_is_not_found(
+    world: World, service: MaterialService
+) -> None:
+    course_id = await new_course(world)
+    other_course = await new_course(world, "Otro curso")
+    extracted = await extract_material(NOTES.encode(), "apuntes.md")
+    material, _ = await service.upload(
+        world.instructor, course_id, extracted, MaterialOrigin.OWN_NOTES
+    )
+    assert material.id is not None
+
+    with pytest.raises(NotFoundError) as error:
+        await service.deactivate(world.instructor, other_course, material.id)
+    assert error.value.code == "MATERIAL_NOT_FOUND"
+    with pytest.raises(NotFoundError) as missing:
+        await service.deactivate(world.instructor, course_id, 999)
+    assert missing.value.code == "MATERIAL_NOT_FOUND"
+
+
+async def test_another_instructor_cannot_deactivate_it(
+    world: World, service: MaterialService
+) -> None:
+    course_id = await new_course(world)
+    extracted = await extract_material(NOTES.encode(), "apuntes.md")
+    material, _ = await service.upload(
+        world.instructor, course_id, extracted, MaterialOrigin.OWN_NOTES
+    )
+    assert material.id is not None
+
+    with pytest.raises(NotFoundError) as error:
+        await service.deactivate(world.other_instructor, course_id, material.id)
+    assert error.value.code == "COURSE_NOT_FOUND"

@@ -7,7 +7,7 @@ are compared only within the same model, and the score is the cosine similarity.
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 
 from app.application.embeddings.chunking import Chunk
@@ -20,6 +20,7 @@ class _Source:
     course_id: int
     sha256: str
     material: SourceMaterial
+    active: bool = True
 
 
 @dataclass
@@ -50,7 +51,7 @@ class InMemoryKnowledgeStore:
 
     async def has_source(self, course_id: int, sha256: str, model: str) -> bool:
         source = self._source(course_id, sha256)
-        if source is None:
+        if source is None or not source.active:
             return False
         chunks = [c for c in self._chunks if c.source_id == source.id]
         return bool(chunks) and all(model in c.vectors for c in chunks)
@@ -68,6 +69,7 @@ class InMemoryKnowledgeStore:
         if source is None:
             source = _Source(len(self._sources) + 1, course_id, sha256, material)
             self._sources.append(source)
+        source.active = True
         existing = {c.index: c for c in self._chunks if c.source_id == source.id}
         for chunk, vector in zip(chunks, vectors, strict=True):
             stored = existing.get(chunk.index)
@@ -90,10 +92,18 @@ class InMemoryKnowledgeStore:
             score=score,
         )
 
+    async def retire_sources_except(self, course_id: int, keep_sha256: Collection[str]) -> int:
+        retired = 0
+        for source in self._sources:
+            if source.course_id == course_id and source.active and source.sha256 not in keep_sha256:
+                source.active = False
+                retired += 1
+        return retired
+
     async def search(
         self, course_id: int, vector: Sequence[float], model: str, k: int
     ) -> list[RetrievedChunk]:
-        course_sources = {s.id for s in self._sources if s.course_id == course_id}
+        course_sources = {s.id for s in self._sources if s.course_id == course_id and s.active}
         scored = [
             (cosine(vector, c.vectors[model]), c)
             for c in self._chunks

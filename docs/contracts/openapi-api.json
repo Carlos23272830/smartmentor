@@ -3835,6 +3835,11 @@
       "MaterialResponse": {
         "description": "Apunte o lectura del curso (R-004). El texto extraído no viaja: solo su tamaño.",
         "properties": {
+          "active": {
+            "description": "`false`: desactivado, ya no alimenta el RAG (R-010)",
+            "title": "Active",
+            "type": "boolean"
+          },
           "byte_size": {
             "anyOf": [
               {
@@ -3917,6 +3922,7 @@
           "byte_size",
           "page_count",
           "extracted_char_count",
+          "active",
           "created_at"
         ],
         "title": "MaterialResponse",
@@ -8926,6 +8932,66 @@
           }
         ],
         "summary": "Upload Material",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/v1/courses/{course_id}/materials/{material_id}/deactivate": {
+      "patch": {
+        "description": "Quita un apunte del curso (R-010): deja de usarse en las próximas explicaciones.\n\nSe desactiva, nunca se borra. Para volver a usarlo, se sube de nuevo el mismo archivo.",
+        "operationId": "deactivate_material_api_v1_courses__course_id__materials__material_id__deactivate_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "title": "Course Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "material_id",
+            "required": true,
+            "schema": {
+              "title": "Material Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "Token (pegar)": []
+          },
+          {
+            "Login (usuario y contraseña)": []
+          }
+        ],
+        "summary": "Deactivate Material",
         "tags": [
           "courses"
         ]

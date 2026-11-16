@@ -63,6 +63,7 @@ class MaterialResponse(BaseModel):
     byte_size: int | None
     page_count: int | None
     extracted_char_count: int | None = Field(description="Caracteres de texto extraídos")
+    active: bool = Field(description="`false`: desactivado, ya no alimenta el RAG (R-010)")
     created_at: UtcDatetime | None
 
 

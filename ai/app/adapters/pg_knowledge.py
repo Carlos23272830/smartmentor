@@ -9,7 +9,7 @@ model so vectors of different models are never compared. Vectors travel as text 
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from typing import Any
 
 from sqlalchemy import Row, text
@@ -129,6 +129,17 @@ class PgKnowledgeStore:
                 "sha": content_sha256,
             },
         )
+
+    async def retire_sources_except(self, course_id: int, keep_sha256: Collection[str]) -> int:
+        query = text(
+            """
+            UPDATE source_documents SET active = false
+            WHERE course_id = :course_id AND active AND NOT (sha256 = ANY(:keep))
+            """
+        )
+        async with self._engine.begin() as conn:
+            result = await conn.execute(query, {"course_id": course_id, "keep": list(keep_sha256)})
+        return int(result.rowcount or 0)
 
     async def search(
         self, course_id: int, vector: Sequence[float], model: str, k: int

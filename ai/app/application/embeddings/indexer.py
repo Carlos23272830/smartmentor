@@ -2,6 +2,9 @@
 
 Idempotent by content: a source with the same SHA-256 and a vector of the same model is not
 embedded again, and a topic whose text did not change keeps its vector (``content_sha256``).
+
+The stored documents follow the current sources: one that is no longer read (a note the
+instructor deactivated, R-010, or a replaced syllabus) is retired so the search stops using it.
 """
 
 from __future__ import annotations
@@ -59,14 +62,17 @@ class CourseIndexer:
         """Index the sources and the topics of the course; the report counts what is current."""
         model = self._embeddings.model
         chunks_total = 0
+        current: set[str] = set()
         for material in await self._sources.sources(course_id):
             sha = sha256_text(material.text)
+            current.add(sha)
             chunks = split_chunks(material.text)
             chunks_total += len(chunks)
             if not chunks or await self._knowledge.has_source(course_id, sha, model):
                 continue
             vectors = await self._embed_all([c.text for c in chunks], "document", ctx)
             await self._knowledge.save_source(course_id, material, sha, chunks, vectors, model)
+        await self._knowledge.retire_sources_except(course_id, current)
 
         topics_total = 0
         for topic in await self._catalog.course_topics(course_id):
