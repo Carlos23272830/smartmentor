@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
-# Crea cuatro usuarios de DESARROLLO para los recorridos de prueba manuales (A3b, intentos del quiz,
-# intentos del examen final y evaluación humana):
+# Crea ocho usuarios de DESARROLLO para los recorridos de prueba manuales (A3b, intentos del quiz,
+# intentos del examen final y evaluación humana) y para los experimentos R-005 (prefijo experimento_):
 #
 #   Aprendiz A3b             aprendiz    SEED_A3B_LEARNER_EMAIL
 #   Aprendiz Intentos quiz   aprendiz    SEED_QUIZ_ATTEMPTS_LEARNER_EMAIL
 #   Aprendiz Intentos final  aprendiz    SEED_FINAL_ATTEMPTS_LEARNER_EMAIL
 #   Instructor Evaluador     instructor  SEED_EVALUATOR_INSTRUCTOR_EMAIL
+#   experimento_estudiante   aprendiz    SEED_EXPERIMENT_LEARNER_EMAIL
+#   experimento_instructor   instructor  SEED_EXPERIMENT_INSTRUCTOR_EMAIL
+#   experimento_evaluador_1  instructor  SEED_EXPERIMENT_EVALUATOR_1_EMAIL
+#   experimento_evaluador_2  instructor  SEED_EXPERIMENT_EVALUATOR_2_EMAIL
 #
 # Por qué existe: para iniciar sesión la persona debe existir en Keycloak y en la base de la
 # aplicación, con el MISMO correo verificado. En su primer ingreso la API enlaza ambos por el `sub`
@@ -40,7 +44,7 @@ VERIFY=1
 for arg in "$@"; do
   case "$arg" in
     --no-verify) VERIFY=0 ;;
-    -h|--help) sed -n '2,29p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,38p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Argumento desconocido: $arg" >&2; exit 2 ;;
   esac
 done
@@ -84,6 +88,10 @@ add_user SEED_A3B_LEARNER_EMAIL "${SEED_A3B_LEARNER_EMAIL:-}" learner "Aprendiz 
 add_user SEED_QUIZ_ATTEMPTS_LEARNER_EMAIL "${SEED_QUIZ_ATTEMPTS_LEARNER_EMAIL:-}" learner "Aprendiz Intentos quiz" Aprendiz "Intentos quiz"
 add_user SEED_FINAL_ATTEMPTS_LEARNER_EMAIL "${SEED_FINAL_ATTEMPTS_LEARNER_EMAIL:-}" learner "Aprendiz Intentos final" Aprendiz "Intentos final"
 add_user SEED_EVALUATOR_INSTRUCTOR_EMAIL "${SEED_EVALUATOR_INSTRUCTOR_EMAIL:-}" instructor "Instructor Evaluador" Instructor Evaluador
+add_user SEED_EXPERIMENT_LEARNER_EMAIL "${SEED_EXPERIMENT_LEARNER_EMAIL:-}" learner experimento_estudiante experimento estudiante
+add_user SEED_EXPERIMENT_INSTRUCTOR_EMAIL "${SEED_EXPERIMENT_INSTRUCTOR_EMAIL:-}" instructor experimento_instructor experimento instructor
+add_user SEED_EXPERIMENT_EVALUATOR_1_EMAIL "${SEED_EXPERIMENT_EVALUATOR_1_EMAIL:-}" instructor experimento_evaluador_1 experimento evaluador_1
+add_user SEED_EXPERIMENT_EVALUATOR_2_EMAIL "${SEED_EXPERIMENT_EVALUATOR_2_EMAIL:-}" instructor experimento_evaluador_2 experimento evaluador_2
 
 # 1) Keycloak
 echo "1/3 Keycloak (realm $REALM):"

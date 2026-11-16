@@ -150,7 +150,7 @@ Si la variable está vacía, el usuario se omite sin error. Como con los demás,
 
 ### Usuarios para los recorridos de prueba
 
-Para los recorridos manuales hay cuatro usuarios de desarrollo más, que `scripts/dev-seed-recorrido-users.sh` crea con la contraseña `SEED_USERS_PASSWORD`, correo verificado y sin OTP:
+Para los recorridos manuales hay ocho usuarios de desarrollo más (los cuatro últimos son las cuentas `experimento_` de los experimentos R-005), que `scripts/dev-seed-recorrido-users.sh` crea con la contraseña `SEED_USERS_PASSWORD`, correo verificado y sin OTP:
 
 | Nombre visible | Rol | Variable de correo (valor de `.env.example`) |
 | --- | --- | --- |
@@ -158,6 +158,10 @@ Para los recorridos manuales hay cuatro usuarios de desarrollo más, que `script
 | Aprendiz Intentos quiz | `learner` | `SEED_QUIZ_ATTEMPTS_LEARNER_EMAIL` (`aprendiz.intentos-quiz.smartmentor@yopmail.com`) |
 | Aprendiz Intentos final | `learner` | `SEED_FINAL_ATTEMPTS_LEARNER_EMAIL` (`aprendiz.intentos-final.smartmentor@yopmail.com`) |
 | Instructor Evaluador | `instructor` | `SEED_EVALUATOR_INSTRUCTOR_EMAIL` (`instructor.evaluador.smartmentor@yopmail.com`) |
+| `experimento_estudiante` | `learner` | `SEED_EXPERIMENT_LEARNER_EMAIL` (`experimento_estudiante.smartmentor@yopmail.com`) |
+| `experimento_instructor` | `instructor` | `SEED_EXPERIMENT_INSTRUCTOR_EMAIL` (`experimento_instructor.smartmentor@yopmail.com`) |
+| `experimento_evaluador_1` | `instructor` | `SEED_EXPERIMENT_EVALUATOR_1_EMAIL` (`experimento_evaluador_1.smartmentor@yopmail.com`) |
+| `experimento_evaluador_2` | `instructor` | `SEED_EXPERIMENT_EVALUATOR_2_EMAIL` (`experimento_evaluador_2.smartmentor@yopmail.com`) |
 
 ```bash
 scripts/dev-seed-recorrido-users.sh               # crea lo que falte y verifica con GET /me
