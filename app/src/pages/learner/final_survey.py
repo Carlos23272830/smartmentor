@@ -17,6 +17,7 @@ from components.likert_scale import (
 )
 from core.container import get_client
 from core.errors import show_action_error
+from core.identity import current_me
 from core.learner_flow import current_enrollment
 from core.session import get_session
 from core.widget_state import seed_defaults
@@ -27,6 +28,23 @@ client = get_client()
 state = get_session().learner
 enrollment = current_enrollment(client)
 step = state.survey_step if state.survey_step in (1, 2) else 1
+
+
+def _intro() -> str:
+    """Texto de la cabecera de E13a según la elección del piloto (B-061).
+
+    Solo con el consentimiento `pilot_research` las respuestas entran al estudio. Sin él, la
+    encuesta es opcional y no se promete un uso de los datos que no se autorizó.
+    """
+    if current_me().consent_status.pilot_research.granted:
+        return (
+            "Es voluntaria y no afecta tu badge. Tus respuestas se analizan sin tu nombre y solo "
+            "para evaluar la plataforma, según el consentimiento informado."
+        )
+    return (
+        "Es voluntaria y no afecta tu badge. Como elegiste no participar en el piloto, tus "
+        "respuestas no se usan en el estudio."
+    )
 
 
 def _scale(index: int) -> None:
@@ -58,10 +76,7 @@ if step == 1:
     st.caption(f"{course} · Encuesta final")
     render_page_header(
         "Cuéntanos cómo te fue",
-        caption=(
-            "Es voluntaria y no afecta tu badge. Tus respuestas se analizan sin tu nombre y solo "
-            "para evaluar la plataforma, según el consentimiento informado."
-        ),
+        caption=_intro(),
     )
     st.markdown("**Paso 1 de 2**")
     st.caption("unos 3 minutos")

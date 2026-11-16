@@ -136,9 +136,9 @@ if result.attempts.remaining <= 0:
             [AttemptRow(h.number, h.score, h.correct, h.total, h.extra_grant) for h in history],
             key="final",
             pass_threshold=result.pass_threshold,
+            threshold_goal="obtener el badge",
             exhausted=True,
         )
-        st.caption(f"Necesitas {threshold} para obtener el badge.")
     with topics_col, st.container(key="card-attempts-weak"):
         st.subheader("Temas a repasar", anchor=False)
         for topic in plan.weak_topics:
