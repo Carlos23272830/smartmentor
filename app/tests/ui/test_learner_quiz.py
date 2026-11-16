@@ -25,6 +25,12 @@ GRADE_SCRIPT = LearnerScript({"submit_attempt": "learner/job_accepted_grading"})
 RETRY_SCRIPT = LearnerScript({"create_attempt": "learner/job_accepted_retry"})
 
 
+# Figma promete «menos de 20 segundos», pero preparar preguntas tardó unos 90 s en el recorrido
+# del 2026-11-15: la app dice «hasta 2 minutos» (B-060). La nota del prototipo no va en la app.
+FIGMA_ESTIMATE = "Tiempo estimado: menos de 20 segundos"
+FIGMA_PROTOTYPE_NOTE = "Prototipo: esta pantalla avanza sola a los 2 segundos."
+
+
 def _answer_all(at: AppTest, count: int) -> None:
     """Responde `count` preguntas del quiz: opción 0 y, en la corta, un texto."""
     for _ in range(count):
@@ -359,7 +365,7 @@ def test_e6c_submit_with_short_answer_waits_for_grading_u1c() -> None:
 def test_u1c_follows_figma() -> None:
     at = _open_quiz(script=GRADE_SCRIPT)
     _answer_all(at, 5)
-    matches_figma(at, "U1c", accepted=("Prototipo: esta pantalla avanza sola a los 2 segundos.",))
+    matches_figma(at, "U1c", accepted=(FIGMA_ESTIMATE, FIGMA_PROTOTYPE_NOTE))
 
 
 def test_u1c_error_keeps_the_answers_and_offers_retry() -> None:
@@ -395,7 +401,7 @@ def test_u1b_follows_figma_and_continues_to_the_new_quiz() -> None:
     matches_figma(
         at,
         "U1b",
-        accepted=("Prototipo: esta pantalla avanza sola a los 2 segundos.",),
+        accepted=(FIGMA_ESTIMATE, FIGMA_PROTOTYPE_NOTE),
     )
     at.switch_page(QUIZ).run()  # segunda consulta: las preguntas están listas
     no_exception(at)
@@ -676,3 +682,86 @@ def test_grading_screen_reads_the_attempt_once_per_attempt_b052() -> None:
     at = AppTest.from_function(app).run()
     assert not at.exception
     assert len(at.session_state["calls"]) == 1
+
+
+# --- B-060 · U1b desde el clic en «Reintentar con preguntas nuevas» ------------------------------
+
+
+def _record_create_attempt(at: AppTest) -> list[dict[str, object]]:
+    """Envuelve `create_attempt` para ver qué había en la sesión mientras se pedía el intento."""
+    from core import polling
+
+    client = client_of(at)
+    original = client.create_attempt
+    calls: list[dict[str, object]] = []
+
+    def spy(*args: object, **kwargs: object) -> object:
+        learner = session_of(at).learner
+        calls.append(
+            {
+                "key": kwargs.get("idempotency_key"),
+                "pending": learner.pending_attempt,
+                "quiet": polling.in_wait_mode(),
+            }
+        )
+        return original(*args, **kwargs)  # type: ignore[arg-type]
+
+    client.create_attempt = spy  # type: ignore[method-assign]
+    return calls
+
+
+def test_e7b_retry_asks_for_the_attempt_from_the_quiz_with_u1b_on_screen_b060() -> None:
+    at = _result("learner_quiz_failed")
+    calls = _record_create_attempt(at)
+    button(at, "Reintentar con preguntas nuevas").click().run()
+    no_exception(at)
+    assert len(calls) == 1
+    call = calls[0]
+    # Se pide con U1b en pantalla (el reintento sigue pendiente) y sin «Cargando…» encima.
+    assert call["pending"] is not None
+    assert call["quiet"] is True
+    learner = session_of(at).learner
+    assert learner.pending_attempt is None
+    assert learner.attempt_id == 9002
+    assert "Quiz: Regresión logística" in page_texts(at)
+
+
+def test_e7b_retry_keeps_the_same_idempotency_key_b060() -> None:
+    """La clave sigue siendo la del intento (`attempt-<inscripción>-<tema>-<usados>`)."""
+    at = _result("learner_quiz_failed")
+    calls = _record_create_attempt(at)
+    button(at, "Reintentar con preguntas nuevas").click().run()
+    keys = session_of(at).idempotency_keys
+    names = [name for name in keys if name.startswith("attempt-") and name.endswith("-813-1")]
+    assert len(names) == 1
+    assert calls[0]["key"] == keys[names[0]]
+
+
+def test_e7b_retry_that_needs_new_questions_shows_u1b_with_the_new_estimate_b060() -> None:
+    at = _result("learner_quiz_failed")
+    client_of(at)._script = LearnerScript(
+        {**client_of(at)._script.docs, "create_attempt": "learner/job_accepted_retry"}
+    )
+    button(at, "Reintentar con preguntas nuevas").click().run()
+    no_exception(at)
+    texts = page_texts(at)
+    assert "Preparando preguntas nuevas para tu intento 2" in texts
+    assert "Tiempo estimado: hasta 2 minutos" in texts
+    assert "Tiempo estimado: menos de 20 segundos" not in texts
+
+
+def test_e7b_retry_with_an_open_attempt_follows_the_api_b060() -> None:
+    at = _result("learner_quiz_failed")
+    fail(at, "create_attempt", ApiError(409, "ATTEMPT_IN_PROGRESS", "open"))
+    button(at, "Reintentar con preguntas nuevas").click().run()
+    no_exception(at)
+    assert session_of(at).learner.pending_attempt is None
+
+
+def test_e7b_retry_error_is_shown_and_forgets_the_pending_attempt_b060() -> None:
+    at = _result("learner_quiz_failed")
+    fail(at, "create_attempt", ApiError(409, "MAX_ATTEMPTS_EXCEEDED", "no more"))
+    button(at, "Reintentar con preguntas nuevas").click().run()
+    no_exception(at)
+    assert session_of(at).learner.pending_attempt is None
+    assert at.error

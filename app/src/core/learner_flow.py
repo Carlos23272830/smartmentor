@@ -22,7 +22,8 @@ from core.session import get_session
 from services.assessment import grading_rubric_step
 
 POLL_SECONDS = 2
-ESTIMATE = "menos de 20 segundos"
+# Medido en los recorridos del 2026-11-15: preparar preguntas nuevas tardó unos 90 s (B-060).
+ESTIMATE = "hasta 2 minutos"
 PATH_PAGE = "pages/learner/path.py"
 NO_ROUTE = "Todavía no tienes una ruta. Elige una en el catálogo."
 # Inscripciones que siguen vivas (no terminadas ni abandonadas), para elegir la de por omisión.
@@ -160,6 +161,11 @@ def _draw(screen: JobScreen, job: Job | None, polls: int) -> None:
     states = _step_states(job, polls, len(screen.steps))
     steps = [LoadingStep(label, state) for label, state in zip(screen.steps, states, strict=True)]
     render_loading_steps(screen.title, steps, ESTIMATE, key=screen.key)
+
+
+def draw_waiting(screen: JobScreen) -> None:
+    """Dibuja la carga con el primer paso en curso, antes de que exista el trabajo (B-060)."""
+    _draw(screen, None, 0)
 
 
 def wait_for_job(

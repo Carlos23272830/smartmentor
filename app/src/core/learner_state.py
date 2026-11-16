@@ -60,6 +60,18 @@ class UsageLog:
     pending: list[InteractionEvent] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class PendingAttempt:
+    """Reintento del quiz pedido en E7b que la página del quiz todavía no creó (B-060).
+
+    `key` es el nombre de la clave de idempotencia del intento y `number`, el número del intento
+    nuevo (para el título de U1b).
+    """
+
+    key: str
+    number: int
+
+
 @dataclass
 class LearnerState:
     step_id: int | None = None
@@ -68,6 +80,8 @@ class LearnerState:
     diagnostic_job_id: str | None = None
     quiz_job_id: str | None = None
     quiz_job_kind: str = "grade"
+    # B-060: E7b deja aquí el reintento y el quiz lo pide con U1b ya en pantalla.
+    pending_attempt: PendingAttempt | None = None
     final_attempt_id: int | None = None
     # Intento de la final que E9 acaba de abrir (reintento o «Continuar»): E8 lo muestra aunque la
     # inscripción leída todavía diga `review_final` (B-041). Se olvida al entregar o calificar.
@@ -98,5 +112,6 @@ class LearnerState:
         self.awaiting_final_questions = False
         self.job_id = self.diagnostic_job_id = self.quiz_job_id = None
         self.quiz_job_kind = "grade"
+        self.pending_attempt = None
         self.edit_objective = False
         self.survey_step = 1

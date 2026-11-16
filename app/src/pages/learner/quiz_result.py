@@ -19,7 +19,8 @@ from components.quiz_form import render_answer_review
 from components.rubric_result import render_rubric_result
 from core.container import get_client
 from core.errors import show_action_error
-from core.learner_flow import current_enrollment, go_to_action, idempotency_key
+from core.learner_flow import current_enrollment, go_to_action
+from core.learner_state import PendingAttempt
 from core.session import get_session
 from services.assessment import rubric_view
 from services.content import explanation_text, explanation_title, source_note
@@ -249,18 +250,10 @@ with st.container(key="card-next-attempt"):
 with st.container(horizontal=True):
     _back_to_path()
     if st.button("Reintentar con preguntas nuevas", type="primary", key="result-retry"):
-        try:
-            created = client.create_attempt(
-                enrollment.id,
-                step_id or 0,
-                "topic",
-                idempotency_key=idempotency_key(f"attempt-{enrollment.id}-{step_id}-{used}"),
-            )
-        except ApiError as error:
-            show_action_error(error)
-        else:
-            if isinstance(created, Attempt):
-                state.attempt_id, state.quiz_job_id = created.id, None
-            else:
-                state.quiz_job_id, state.quiz_job_kind = created.job_id, "prepare"
-            st.switch_page(QUIZ_PAGE)
+        # B-060: pedir el intento puede tardar (si hay que generar preguntas). Se pide en la
+        # página del quiz, con U1b ya en pantalla, y no aquí con E7b congelada en «Cargando…».
+        state.step_id, state.attempt_id, state.quiz_job_id = step_id, None, None
+        state.pending_attempt = PendingAttempt(
+            key=f"attempt-{enrollment.id}-{step_id}-{used}", number=used + 1
+        )
+        st.switch_page(QUIZ_PAGE)
