@@ -9,6 +9,8 @@ from staff_support import (
     staff_text_reader,  # noqa: F401
 )
 
+from core.styles import STYLES_DIR
+
 USERS = "pages/admin/users.py"
 LOGS = "pages/admin/llm_logs.py"
 METRICS = "pages/admin/metrics.py"
@@ -107,6 +109,19 @@ def test_ad2_kpis() -> None:
         "Latencia p95": "11,8 s",
         "JSON inválido": "0,9 %",
     }
+
+
+def test_ad2_catalog_link_is_a_text_button_in_blue_underlined() -> None:
+    """V-017: el enlace al catálogo es un botón de texto (`tertiary`) que el CSS pinta azul y
+    subrayado, como en Figma."""
+    at = staff_app("admin", page=LOGS)
+    link = at.button(key="ll-catalog")
+    assert link.label == "Ver el catálogo de prompts y versiones (documentación del equipo)"
+    assert link.proto.type == "tertiary"
+    css = (STYLES_DIR / "components" / "llm_logs.css").read_text(encoding="utf-8")
+    assert ".st-key-ll-catalog button" in css
+    assert "text-decoration: underline" in css
+    assert "color: var(--learner-text)" in css
 
 
 def test_ad2_empty_forbidden() -> None:

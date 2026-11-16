@@ -9,6 +9,8 @@ from staff_support import (
     staff_text_reader,  # noqa: F401
 )
 
+from core.styles import STYLES_DIR
+
 NEW_COURSE = "pages/instructor/new_course.py"
 SYLLABUS = "pages/instructor/syllabus_review.py"
 COURSES = "pages/instructor/courses.py"
@@ -182,6 +184,41 @@ def test_d2c_reextract_asks_for_confirmation() -> None:
     at = click(at, "Sí, volver a extraer")
     assert_no_exception(at)
     assert any("Extrayendo temas del syllabus" in t for t in page_texts(at))
+
+
+def test_d2b_links_warning_and_footer_match_figma() -> None:
+    """V-071, V-072: «Quitar», «Eliminar tema» y «+ Agregar…» son botones de texto; el aviso del
+    ciclo va en una caja ámbar y «Eliminar tema» queda antes de «Cancelar» y «Guardar»."""
+    at = staff_app(page=SYLLABUS)
+    at = click(at, "Editar tema")
+    prefixes = ("sr-orm-", "sr-del-", "sr-oadd-", "sr-cancel-", "sr-save-")
+    types = {b.label: b.proto.type for b in at.button if b.key and b.key.startswith(prefixes)}
+    assert types == {
+        "Quitar": "tertiary",
+        "+ Agregar resultado de aprendizaje": "tertiary",
+        "Eliminar tema": "tertiary",
+        "Cancelar": "secondary",
+        "Guardar cambios": "primary",
+    }
+    footer = [b.label for b in at.button if b.key and b.key.startswith(("sr-del-", "sr-cancel-"))]
+    assert footer == ["Eliminar tema", "Cancelar"]
+    assert any(
+        "Si un prerrequisito forma un ciclo, no podrás guardar." in w.value for w in at.warning
+    )
+    css = (STYLES_DIR / "components" / "syllabus_review.css").read_text(encoding="utf-8")
+    for prefix in ("sr-orm-", "sr-del-", "sr-oadd-"):
+        assert f'[class*="st-key-{prefix}"] button' in css
+    assert "text-decoration: underline" in css
+
+
+def test_d2c_dialog_is_narrow_and_keeps_its_buttons() -> None:
+    """V-074: la ventana D2c es angosta (500 px, no 750) y sus botones se conservan."""
+    source = (STYLES_DIR.parents[1] / SYLLABUS).read_text(encoding="utf-8")
+    assert 'st.dialog("¿Volver a extraer los temas?", width="small"' in source
+    at = staff_app(scenario="loading", page=SYLLABUS)
+    at = click(at, "Volver a extraer temas")
+    assert at.button(key="sr-reextract-cancel").proto.type == "secondary"
+    assert at.button(key="sr-reextract-ok").proto.type == "primary"
 
 
 def test_d2d_graph_view_and_publish() -> None:
