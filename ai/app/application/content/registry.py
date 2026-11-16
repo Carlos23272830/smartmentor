@@ -123,7 +123,12 @@ def build_content_services(deps: ContentDeps) -> ContentServices:
         knowledge=deps.knowledge,
         embeddings=deps.embeddings,
     )
-    retriever = Retriever(indexer=indexer, knowledge=deps.knowledge, embeddings=deps.embeddings)
+    retriever = Retriever(
+        indexer=indexer,
+        knowledge=deps.knowledge,
+        embeddings=deps.embeddings,
+        top_k=settings.ai_rag_top_k,
+    )
     checker = FaithfulnessChecker(deps.runner)
     explanations = ExplanationService(
         runner=deps.runner, retriever=retriever, checker=checker, catalog=deps.catalog

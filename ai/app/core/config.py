@@ -113,6 +113,11 @@ class Settings(BaseSettings):
     ai_leveling_similarity_floor: float = Field(default=0.5, ge=-1, le=1)
     ai_leveling_similarity_ceiling: float = Field(default=0.8, ge=-1, le=1)
 
+    # --- Recuperación (RAG, R-005, experimento E5) ---
+    # Fragmentos que se recuperan por explicación. Subirlo da más contexto (y más costo de LLM);
+    # el caché de generación no cambia: su clave ya incluye los fragmentos recuperados.
+    ai_rag_top_k: int = Field(default=4, ge=1, le=20)
+
     @field_validator(
         "ai_database_user",
         "ai_database_password",

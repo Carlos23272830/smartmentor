@@ -58,11 +58,12 @@ def _keys(at: AppTest) -> set[str]:
     return {b.key for b in at.button if b.key}
 
 
-def test_d1_only_draft_or_published_courses_offer_archive() -> None:
+def test_d1_only_draft_published_or_failed_extraction_courses_offer_archive() -> None:
     at = staff_app(page=COURSES)
     keys = _keys(at)
     assert "courses-2-archive" in keys  # publicado
     assert "courses-3-archive" in keys  # borrador
+    assert "courses-7-archive" in keys  # extracción fallida
     assert "courses-1-archive" not in keys  # en revisión
 
 

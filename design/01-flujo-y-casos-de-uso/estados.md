@@ -20,6 +20,7 @@ stateDiagram-v2
     generating_content --> published: recursos y preguntas revisados
     published --> archived: cierra el curso
     draft --> archived: desactiva el curso
+    extraction_failed --> archived: retira el curso sin reintentar la extracción
     archived --> [*]
 
     state "draft - Borrador" as draft
@@ -41,7 +42,7 @@ stateDiagram-v2
 | `in_review` → `extracting` | `instructor` | D2c | Se pierden las correcciones; el registro de revisión vuelve a cero |
 | `in_review` → `generating_content` | `instructor` | D2, D2d | Aprueba los temas y valida el grafo |
 | `generating_content` → `published` | `instructor` | D5 | Recursos y preguntas revisados |
-| `published` → `archived`, `draft` → `archived` | `admin` o `instructor` dueño | D1, AD5 | Se desactiva, nunca se elimina |
+| `published` → `archived`, `draft` → `archived`, `extraction_failed` → `archived` | `admin` o `instructor` dueño | D1, AD5 | Se desactiva, nunca se elimina |
 
 Un curso aparece en el catálogo del aprendiz (E1) solo cuando está `published`.
 

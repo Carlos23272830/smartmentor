@@ -324,7 +324,10 @@ async def update_course(
 async def archive_course(
     course_id: int, user: StaffUser, service: CourseServiceDep
 ) -> CourseResponse:
-    """Archiva un curso en borrador o publicado (D1, AD5): se desactiva, nunca se elimina."""
+    """Archiva un curso en borrador, publicado o con extracción fallida (D1, AD5).
+
+    Se desactiva, nunca se elimina.
+    """
     return _course_response(await service.archive(user, course_id))
 
 

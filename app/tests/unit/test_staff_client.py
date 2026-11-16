@@ -125,7 +125,7 @@ def test_scenarios_forbidden_and_error() -> None:
 
 def test_empty_scenario_and_default_courses() -> None:
     client = FixturesClient("instructor")
-    assert client.list_courses().total == 6
+    assert client.list_courses().total == 7
     client.staff_scenario = "empty"
     assert client.list_courses().items == []
 

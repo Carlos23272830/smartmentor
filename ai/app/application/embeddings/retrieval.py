@@ -1,4 +1,7 @@
-"""Retrieval of the fragments that ground an explanation (top-k = 4 by cosine, plan 5.4.7)."""
+"""Retrieval of the fragments that ground an explanation (top-k by cosine, plan 5.4.7).
+
+The top-k comes from ``AI_RAG_TOP_K`` (4 by default).
+"""
 
 from __future__ import annotations
 
@@ -7,8 +10,6 @@ from app.application.embeddings.store import KnowledgeStore, RetrievedChunk
 from app.application.llm_runner import CallContext, EmbeddingRunner
 from app.domain.errors import TaskError
 from app.ports.catalog import TopicRecord
-
-TOP_K = 4
 
 
 def topic_query(topic: TopicRecord, extra: str = "") -> str:
@@ -25,7 +26,7 @@ class Retriever:
         indexer: CourseIndexer,
         knowledge: KnowledgeStore,
         embeddings: EmbeddingRunner,
-        top_k: int = TOP_K,
+        top_k: int,
     ) -> None:
         self._indexer = indexer
         self._knowledge = knowledge

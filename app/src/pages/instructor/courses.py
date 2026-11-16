@@ -3,8 +3,9 @@
 Lista los cursos del instructor (`GET /courses?mine=true`; la API fuerza `mine` para el
 instructor). Cada fila lleva a su syllabus, a su ruta o a la revisión de sus recursos.
 
-Un curso en borrador o publicado se puede archivar (`POST /courses/{id}/archive`, AD5): sale del
-catálogo del aprendiz y no se elimina. Los archivados se ocultan salvo que se pidan.
+Un curso en borrador, publicado o con extracción fallida se puede archivar
+(`POST /courses/{id}/archive`, AD5): sale del catálogo del aprendiz y no se elimina.
+Los archivados se ocultan salvo que se pidan.
 """
 
 import streamlit as st
@@ -62,7 +63,7 @@ if not courses.items:
         _open_new_course()
     st.stop()
 
-ARCHIVABLE = ("draft", "published")
+ARCHIVABLE = ("draft", "published", "extraction_failed")
 NAVIGATION = (("syllabus", "Syllabus"), ("path", "Ruta"), ("resources", "Recursos"))
 PENDING_ARCHIVE = "courses-archive-pending"
 
