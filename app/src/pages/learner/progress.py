@@ -195,11 +195,13 @@ def _goals(current: StudyGoals, *, new: bool) -> tuple[int | None, int | None]:
     return daily, monthly
 
 
-# La API responde 404 mientras la persona no tenga metas; antes la sección no se mostraba y nunca
-# se podían elegir (B-028). Sin metas se muestra vacía, con las opciones por omisión.
-current_goals = goals or NO_GOALS
+# El cliente da `None` mientras la persona no tenga metas (la API responde 200 con metas en 0, o
+# 404 en versiones anteriores); antes la sección no se mostraba y nunca se podían elegir (B-028).
+# Sin metas se muestra vacía, con las opciones por omisión (también si llega un 200 vacío crudo).
+has_goals = goals is not None and not goals.is_empty
+current_goals = goals if goals is not None and has_goals else NO_GOALS
 with st.container(key="card-goals"):
-    daily, monthly = _goals(current_goals, new=goals is None)
+    daily, monthly = _goals(current_goals, new=not has_goals)
 if (daily, monthly) != (current_goals.daily_minutes_goal, current_goals.monthly_topics_goal) and (
     daily is not None and monthly is not None
 ):

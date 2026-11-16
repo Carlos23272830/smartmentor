@@ -107,6 +107,26 @@ def test_api_reads_the_public_assertion_and_image() -> None:
 
 
 @respx.mock
+def test_api_goals_empty_200_means_no_goals_b061() -> None:
+    """La API responde 200 con las metas en 0 cuando no hay metas elegidas (B-061)."""
+    data = json.loads((LEARNER_DIR / "goals_empty.json").read_text(encoding="utf-8"))
+    respx.get("http://api.test/api/v1/me/study-goals").respond(200, json=data)
+    client = _client(httpx.Client(base_url="http://api.test"))
+    assert client.get_study_goals() is None
+
+
+@respx.mock
+def test_api_goals_with_goals_are_returned_unchanged() -> None:
+    data = json.loads((LEARNER_DIR / "goals.json").read_text(encoding="utf-8"))
+    respx.get("http://api.test/api/v1/me/study-goals").respond(200, json=data)
+    client = _client(httpx.Client(base_url="http://api.test"))
+    goals = client.get_study_goals()
+    assert goals is not None
+    assert (goals.daily_minutes_goal, goals.monthly_topics_goal) == (30, 3)
+    assert goals.streak_days == 3
+
+
+@respx.mock
 def test_api_goals_404_means_no_goals_and_history_is_listed() -> None:
     respx.get("http://api.test/api/v1/me/study-goals").respond(404, json={"code": "NOT_FOUND"})
     respx.get("http://api.test/api/v1/me/enrollments/7/steps/813/attempts").respond(
