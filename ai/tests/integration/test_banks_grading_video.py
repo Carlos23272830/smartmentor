@@ -15,6 +15,7 @@ from app.domain.contracts.video import VideoResource
 from app.domain.errors import TaskError
 from app.ports.jobs import JobRefs
 from app.ports.llm import LlmRequest
+from app.ports.video import VideoSearchHit, VideoSearchQuery
 from eval.fake_answers import quiz_bank
 from eval.pipeline import EvalWorld
 from eval.runtime import EvalRuntime, FakeVideoSearch
@@ -300,6 +301,63 @@ async def test_collect_candidates_ranks_by_topic_and_picks_top_three(world: Eval
     assert search.queries[0].embeddable_only and search.queries[0].language == "es"
 
 
+async def test_collect_candidates_says_how_many_were_found_and_why_they_were_dropped(
+    world: EvalWorld,
+) -> None:
+    """B-064: the result tells D5e what the search returned and why the filters dropped videos."""
+    result = await world.call("video.collect_candidates", {"topic_id": "3"}, REFS)
+    resource = VideoResource.model_validate(result.result)
+    summary = resource.search_summary
+    assert summary is not None
+    assert summary.found == 6  # the fake search returns six videos
+    # The 90-minute course and the one-minute video are out of the 4 to 40 minute range.
+    assert summary.excluded == {"duration_out_of_range": 2}
+    assert len(resource.candidates) == summary.found - sum(summary.excluded.values())
+
+
+async def test_a_precise_query_with_few_results_falls_back_to_a_broad_one(
+    runtime: EvalRuntime, world: EvalWorld
+) -> None:
+    """B-064: «Fundamentos de MLOps» plus two subtopics returned 0 videos; the name alone, 50."""
+    search = runtime.video_search
+    assert isinstance(search, FakeVideoSearch)
+    original = search.search
+    topic = next(t for t in world.catalog.topic_list if t.id == "3")
+    precise = " ".join([topic.name, *topic.subtopics[:2]])
+
+    async def picky(query: VideoSearchQuery) -> list[VideoSearchHit]:
+        if query.text == precise:
+            search.queries.append(query)
+            return []
+        return await original(query)
+
+    search.search = picky  # type: ignore[method-assign]
+    result = await world.call("video.collect_candidates", {"topic_id": "3"}, REFS)
+    resource = VideoResource.model_validate(result.result)
+    summary = resource.search_summary
+    assert summary is not None
+    assert summary.queries[0] == precise
+    assert len(summary.queries) == 2 and summary.queries[1].startswith(topic.name)
+    assert summary.found == 6
+    assert resource.candidates
+
+
+async def test_a_precise_query_with_enough_results_makes_a_single_search(
+    world: EvalWorld,
+) -> None:
+    result = await world.call("video.collect_candidates", {"topic_id": "3"}, REFS)
+    summary = VideoResource.model_validate(result.result).search_summary
+    assert summary is not None and len(summary.queries) == 1
+
+
+async def test_collect_candidates_asks_youtube_for_50_results(world: EvalWorld) -> None:
+    """B-064: the quota is charged per search, not per result, so the search asks for 50."""
+    await world.call("video.collect_candidates", {"topic_id": "3"}, REFS)
+    search = world.runtime.video_search
+    assert isinstance(search, FakeVideoSearch)
+    assert search.queries[-1].max_results == 50
+
+
 async def test_instructor_videos_are_candidates_even_if_the_search_fails(
     runtime: EvalRuntime, world: EvalWorld
 ) -> None:
@@ -340,6 +398,8 @@ async def test_without_key_and_without_list_the_topic_has_no_video(
     resource = VideoResource.model_validate(result.result)
     assert resource.origin == "none" and resource.candidates == []
     assert resource.selected_video_id is None
+    assert resource.search_summary is not None and resource.search_summary.found == 0
+    assert resource.search_summary.queries == []  # no YouTube key: nothing was searched
 
 
 async def test_video_rank_computes_missing_similarities(world: EvalWorld) -> None:

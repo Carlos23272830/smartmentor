@@ -14,6 +14,7 @@ from app.domains.content.service import (
     ItemService,
     ResourceService,
     VideoFeedbackService,
+    VideoSearchService,
     VideoService,
 )
 from app.domains.courses.repository_impl import (
@@ -62,4 +63,10 @@ def get_video_feedback_service(session: SessionDep) -> VideoFeedbackService:
         SqlAlchemyTopicRepository(session),
         SqlAlchemyEnrollmentLookup(session),
         SqlAlchemyUnitOfWork(session),
+    )
+
+
+def get_video_search_service(session: SessionDep, ai: AiServiceDep) -> VideoSearchService:
+    return VideoSearchService(
+        SqlAlchemyTopicRepository(session), SqlAlchemyCourseRepository(session), ai
     )

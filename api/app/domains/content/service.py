@@ -8,6 +8,7 @@ import hashlib
 import json
 import math
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 from app.common.constants import RoleCode
@@ -19,7 +20,8 @@ from app.common.exceptions import (
     NotFoundError,
 )
 from app.common.unit_of_work import UnitOfWork
-from app.domains.ai_gateway.entities import JobRef, JobRefs
+from app.domains.ai_gateway.entities import JobRef, JobRefs, JobStatus
+from app.domains.ai_gateway.exceptions import AiServiceUnavailableError
 from app.domains.ai_gateway.repository import AiServicePort
 from app.domains.content.constants import (
     MULTIPLE_CHOICE_OPTIONS,
@@ -633,3 +635,89 @@ class VideoFeedbackService:
         )
         await self._uow.commit()
         return updated or existing, False
+
+
+# --- Buscar videos de nuevo (B-064) ------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class VideoSearchInfo:
+    """La última búsqueda de videos del tema, para que D5e diga por qué hay pocos o ninguno."""
+
+    job_id: str
+    status: str
+    found: int | None = None
+    excluded: dict[str, int] | None = None
+    queries: list[str] | None = None
+    error_code: str | None = None
+    finished_at: datetime | None = None
+
+
+class VideoSearchService:
+    """Vuelve a lanzar `video.collect_candidates` para un tema y resume la última búsqueda.
+
+    Al publicar, `ai/` busca los videos de cada tema una sola vez. Si esa búsqueda no dejó
+    candidatos (cuota de YouTube, filtros o la regla del inglés anterior a R-001), el tema quedaba
+    vacío para siempre. El instructor ahora puede buscar de nuevo: los candidatos que ya existen
+    conservan su estado y sus juicios, y los nuevos se agregan.
+    """
+
+    def __init__(
+        self, topics: TopicRepository, courses: CourseRepository, ai: AiServicePort
+    ) -> None:
+        self._topics = topics
+        self._courses = courses
+        self._ai = ai
+
+    async def _jobs(self, topic: Topic) -> list[JobStatus]:
+        jobs = await self._ai.list_jobs(
+            job_type=ContentJobType.VIDEO_CANDIDATES, course_id=topic.course_id, limit=100
+        )
+        epoch = datetime.min.replace(tzinfo=UTC)
+        own = [j for j in jobs if j.refs.topic_id == require_id(topic)]
+        return sorted(own, key=lambda j: j.created_at or epoch)
+
+    async def search_again(self, user: CurrentUser, topic_id: int) -> JobRef:
+        topic = await load_topic(self._topics, self._courses, user, topic_id)
+        jobs = await self._jobs(topic)
+        running = next((j for j in reversed(jobs) if not j.is_finished), None)
+        if running is not None:
+            # Ya hay una búsqueda en curso para el tema: no se lanza otra.
+            return JobRef(running.job_id, running.job_type, running.status)
+        return await self._ai.submit_job(
+            ContentJobType.VIDEO_CANDIDATES,
+            {"topic_id": str(topic_id), "language": "es", "instructor_videos": []},
+            f"{ContentJobType.VIDEO_CANDIDATES}:topic:{topic_id}:r{len(jobs) + 1}",
+            JobRefs(course_id=topic.course_id, topic_id=topic_id),
+        )
+
+    async def last_search(self, user: CurrentUser, topic_id: int) -> VideoSearchInfo | None:
+        """La búsqueda más reciente del tema, o None si nunca hubo o `ai/` no responde."""
+        topic = await load_topic(self._topics, self._courses, user, topic_id)
+        try:
+            jobs = await self._jobs(topic)
+        except AiServiceUnavailableError:
+            return None
+        if not jobs:
+            return None
+        job = jobs[-1]
+        summary = (job.result or {}).get("search_summary") or {}
+        found = summary.get("found")
+        excluded = summary.get("excluded")
+        queries = summary.get("queries")
+        return VideoSearchInfo(
+            job_id=job.job_id,
+            status=job.status,
+            found=found if isinstance(found, int) else None,
+            excluded=_counts(excluded),
+            queries=[str(q) for q in queries] if isinstance(queries, list) else None,
+            error_code=job.error.code if job.error is not None else None,
+            finished_at=job.finished_at,
+        )
+
+
+def _counts(value: Any) -> dict[str, int] | None:
+    """`{motivo: cantidad}` del resumen de la búsqueda, o None si no viene o no tiene esa forma."""
+    if not isinstance(value, dict):
+        return None
+    return {str(k): int(v) for k, v in value.items() if isinstance(v, int)}

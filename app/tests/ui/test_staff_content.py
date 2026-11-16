@@ -265,3 +265,84 @@ def test_d5f_quality_table_and_decision() -> None:
     at.radio[0].set_value("Retirar el video del tema").run()
     at = click(at, "Guardar decisión")
     assert_no_exception(at)
+
+
+# --- B-064 · Buscar videos de nuevo ---------------------------------------------------------------
+
+
+def _without_videos(at: AppTest, search: dict[str, object] | None) -> list[str]:
+    """El tema queda sin candidatos y con esa última búsqueda; devuelve los ids buscados."""
+    from clients.models import JobAccepted
+    from clients.models_staff import TopicVideos, VideoSearch
+
+    client = at.session_state["app_session"].fixtures_client
+    searched: list[str] = []
+
+    def listed(topic_id: int) -> TopicVideos:
+        return TopicVideos(
+            topic_id=topic_id,
+            topic_name="Regresión logística",
+            candidates=[],
+            last_search=VideoSearch.model_validate(search) if search else None,
+        )
+
+    def search_again(topic_id: int, *, idempotency_key: str) -> JobAccepted:
+        assert topic_id == 103
+        searched.append(idempotency_key)
+        return JobAccepted(job_id="job-videos", status="queued", poll_url="/jobs/job-videos")
+
+    client.list_video_candidates = listed
+    client.search_video_candidates = search_again
+    return searched
+
+
+def test_d5e_without_videos_says_why_and_offers_to_search_again_b064() -> None:
+    at = staff_app()
+    _without_videos(
+        at,
+        {
+            "job_id": "j1",
+            "status": "succeeded",
+            "found": 14,
+            "excluded": {"duration_out_of_range": 12, "language_not_understood": 2},
+        },
+    )
+    with_state(at, course_id=1, topic_id=103, path_id=11).switch_page(VIDEOS).run()
+    assert_no_exception(at)
+    assert [e.value for e in at.info] == [
+        "YouTube devolvió 14 videos; quedaron fuera 12 por duración (muy cortos o muy largos) "
+        "y 2 por idioma."
+    ]
+    assert next(b for b in at.button if b.label == "Buscar videos de nuevo")
+
+
+def test_d5e_search_again_waits_for_the_job_b064() -> None:
+    at = staff_app()
+    searched = _without_videos(at, None)
+    with_state(at, course_id=1, topic_id=103, path_id=11).switch_page(VIDEOS).run()
+    assert [e.value for e in at.info] == [
+        "Este tema todavía no tiene una búsqueda de videos en YouTube."
+    ]
+    at = click(at, "Buscar videos de nuevo")
+    assert_no_exception(at)
+    assert len(searched) == 1
+    assert [e.value for e in at.info] == [
+        "Buscando videos en YouTube… Puede tardar hasta un minuto."
+    ]
+    assert not [b for b in at.button if b.label == "Buscar videos de nuevo"]
+
+
+def test_d5e_a_failed_search_explains_the_quota_b064() -> None:
+    at = staff_app()
+    _without_videos(
+        at, {"job_id": "j2", "status": "failed", "error_code": "VIDEO_SEARCH_UNAVAILABLE"}
+    )
+    with_state(at, course_id=1, topic_id=103, path_id=11).switch_page(VIDEOS).run()
+    assert_no_exception(at)
+    (note,) = [e.value for e in at.info]
+    assert note.startswith("La última búsqueda falló: YouTube no respondió.")
+
+
+def test_d5e_with_enough_videos_does_not_offer_to_search_b064() -> None:
+    at = _open(VIDEOS)
+    assert not [b for b in at.button if b.label == "Buscar videos de nuevo"]

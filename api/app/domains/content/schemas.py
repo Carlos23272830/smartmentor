@@ -106,11 +106,25 @@ class VideoResponse(BaseModel):
     relevance_judgment: bool | None
 
 
+class VideoSearchResponse(BaseModel):
+    """La última búsqueda de videos del tema (B-064): cuántos devolvió YouTube y por qué quedaron
+    fuera. `found` y `excluded` son nulos si la búsqueda es anterior a B-064 o falló."""
+
+    job_id: str
+    status: str
+    found: int | None = None
+    excluded: dict[str, int] | None = None
+    queries: list[str] | None = None
+    error_code: str | None = None
+    finished_at: UtcDatetime | None = None
+
+
 class VideoListResponse(BaseModel):
     topic_id: int
     topic_name: str
     has_backup: bool
     candidates: list[VideoResponse]
+    last_search: VideoSearchResponse | None = None
 
 
 class VideoQualityItem(BaseModel):

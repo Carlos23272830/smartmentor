@@ -424,6 +424,34 @@
           }
         },
         {
+          "name": "POST /api/v1/topics/{topic_id}/video-candidates/search",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/topics/{{topic_id}}/video-candidates/search",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "topics",
+                "{{topic_id}}",
+                "video-candidates",
+                "search"
+              ],
+              "query": []
+            },
+            "description": "Search Video Candidates\n\nVuelve a buscar los videos del tema en YouTube (B-064); los candidatos llegan como nuevos.\n\nSi ya hay una búsqueda en curso para el tema, devuelve esa misma."
+          }
+        },
+        {
           "name": "PATCH /api/v1/video-candidates/{video_id}",
           "request": {
             "method": "PATCH",
@@ -676,6 +704,50 @@
                 }
               }
             }
+          }
+        },
+        {
+          "name": "GET /api/v1/courses/{course_id}/materials",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/{{course_id}}/materials",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "courses",
+                "{{course_id}}",
+                "materials"
+              ],
+              "query": []
+            },
+            "description": "List Materials\n\nApuntes activos del curso, del más antiguo al más nuevo (R-004)."
+          }
+        },
+        {
+          "name": "POST /api/v1/courses/{course_id}/materials",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/courses/{{course_id}}/materials",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "courses",
+                "{{course_id}}",
+                "materials"
+              ],
+              "query": []
+            },
+            "description": "Upload Material\n\nSube un apunte o lectura del curso (PDF, TXT o MD ≤ 10 MB) como fuente del RAG (R-004).\n\nResponde 201 con el apunte nuevo, o 200 con el que ya existía si el curso ya tenía ese mismo\narchivo. Se usa al explicar los temas; no cambia la extracción del syllabus."
           }
         },
         {
@@ -2098,7 +2170,7 @@
               ],
               "query": []
             },
-            "description": "Step Content\n\nExplicación aprobada, video en uso (o respaldo), reglas del quiz e intentos (E6)."
+            "description": "Step Content\n\nExplicación aprobada, video en uso (o respaldo), reglas del quiz e intentos (E6).\n\nUn tema aprobado u omitido llega con `mode: \"review\"` (repaso, sin quiz)."
           }
         },
         {

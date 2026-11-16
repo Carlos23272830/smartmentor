@@ -320,6 +320,42 @@ async def test_video_ingestion_keeps_the_curation_when_it_runs_again(
     assert after[0]["status"] == "rejected"
 
 
+async def test_the_instructor_searches_videos_again_and_sees_why_there_are_few_b064(
+    course: Course, ai: FakeAiService
+) -> None:
+    """B-064: un tema sin videos se puede buscar de nuevo y D5e dice qué devolvió la búsqueda."""
+    topic = course.topic_ids[0]
+    listing = f"{API}/topics/{topic}/video-candidates"
+    empty = (await course.owner.get(listing)).json()
+    assert empty["candidates"] == []
+    assert empty["last_search"] is None
+
+    search = f"{API}/topics/{topic}/video-candidates/search"
+    response = await course.owner.post(search, headers={"Idempotency-Key": str(uuid.uuid4())})
+    assert response.status_code == 202, response.text
+    assert (await course.owner.get(response.json()["poll_url"])).json()["ingested"] is True
+
+    listed = (await course.owner.get(listing)).json()
+    assert [c["status"] for c in listed["candidates"]] == ["in_use", "backup", "backup"]
+    last = listed["last_search"]
+    assert last["job_id"] == response.json()["job_id"]
+    assert last["status"] == "succeeded"
+    assert last["found"] == 5
+    assert last["excluded"] == {"duration_out_of_range": 2}
+
+    # Buscar otra vez lanza un trabajo nuevo y conserva la curaduría del instructor.
+    first = listed["candidates"][0]
+    await course.owner.patch(f"{API}/video-candidates/{first['id']}", json={"is_relevant": True})
+    again = await course.owner.post(search, headers={"Idempotency-Key": str(uuid.uuid4())})
+    assert again.status_code == 202, again.text
+    assert again.json()["job_id"] != response.json()["job_id"]
+    assert (await course.owner.get(again.json()["poll_url"])).json()["ingested"] is True
+    relisted = (await course.owner.get(listing)).json()
+    assert [c["id"] for c in relisted["candidates"]] == [c["id"] for c in listed["candidates"]]
+    assert relisted["candidates"][0]["relevance_judgment"] is True
+    assert relisted["last_search"]["job_id"] == again.json()["job_id"]
+
+
 async def test_a_manual_video_is_a_backup_and_cannot_be_repeated(course: Course) -> None:
     topic = course.topic_ids[0]
     body = {"youtube_video_id": "EXAMPLE0004", "title": "Mi video"}
@@ -441,6 +477,12 @@ async def test_another_instructor_gets_404_on_every_content_route(
         headers={"Idempotency-Key": "b2b5b6a4-0b7e-4d57-8a6b-5b1c7f0a9c10"},
     )
     assert regenerate.status_code == 404
+    searched = await stranger.post(
+        f"{API}/topics/{topic}/video-candidates/search",
+        headers={"Idempotency-Key": "9d7c1a52-3f1e-4b8a-9e2c-6a0b4d1f7e21"},
+    )
+    assert searched.status_code == 404
+    assert searched.json()["code"] == "TOPIC_NOT_FOUND"
 
 
 async def test_a_learner_cannot_use_the_instructor_routes_and_the_admin_can(

@@ -138,6 +138,17 @@ async def drain(container: Container) -> None:
         pass
 
 
+async def test_the_catalog_reads_the_course_name_of_each_topic(
+    engines: tuple[AsyncEngine, AsyncEngine],
+) -> None:
+    """B-064: the fallback video search adds the course name to the topic name."""
+    ai, owner = engines
+    ids = await seed(owner)
+    [topic] = await PostgresCatalogReader(ai).topics([str(ids["topic_id"])])
+    assert topic.name == "Regresión lineal"
+    assert topic.course_name == "Fundamentos de ML"
+
+
 async def test_syllabus_job_succeeds_and_is_logged(
     engines: tuple[AsyncEngine, AsyncEngine],
 ) -> None:

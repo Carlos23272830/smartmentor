@@ -96,6 +96,11 @@ class Settings(BaseSettings):
     # (plan 4.3). El español se prefiere siempre; con AI_VIDEO_ENGLISH_FALLBACK=false se descarta.
     ai_video_english_fallback: bool = True
     ai_video_english_score: float = Field(default=0.3, ge=0, le=1)
+    # B-064: resultados que se piden a YouTube por búsqueda. La cuota se cobra por búsqueda, no
+    # por resultado (hasta 50 por página), así que pedir 50 cuesta lo mismo que pedir 15.
+    ai_video_search_results: int = Field(default=50, ge=1, le=50)
+    # B-064: duración máxima de un video, en minutos (regla del primer corte: 40 o menos).
+    ai_video_max_minutes: int = Field(default=40, ge=5, le=180)
 
     # 1 = the evaluation harness may call the real LLM (never in CI).
     ai_eval_live: bool = False

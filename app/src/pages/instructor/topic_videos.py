@@ -3,6 +3,9 @@
 El instructor ve los candidatos de YouTube ordenados por similitud, marca si cada uno es pertinente
 (con eso se calculan Precision@3 y nDCG@3), elige cuál se usa y cura los videos de respaldo. La
 relevancia solo la ve el instructor (C-08). Cada cambio es una llamada a la API.
+
+B-064: si el tema tiene pocos candidatos, la página dice qué devolvió la última búsqueda y por qué
+quedaron fuera, y permite buscar de nuevo en YouTube.
 """
 
 import re
@@ -11,13 +14,27 @@ from collections.abc import Callable
 import streamlit as st
 
 from clients.base import ApiError
+from clients.jobs import is_done
 from clients.models_staff import TopicVideos, VideoCandidate
 from components.formatting import percent
 from components.layout import render_page_header
 from core.container import get_client
+from core.polling import poll_job_or_rerun
 from core.staff_errors import show_staff_error
-from core.staff_state import CONTENT_REVIEW, VIDEO_QUALITY, get_staff_state
-from services.staff_content import video_link_markdown, video_minutes, video_thumbnail_markdown
+from core.staff_state import (
+    CONTENT_REVIEW,
+    VIDEO_QUALITY,
+    forget_key,
+    get_staff_state,
+    idempotency_key,
+)
+from services.staff_content import (
+    FEW_CANDIDATES,
+    video_link_markdown,
+    video_minutes,
+    video_search_text,
+    video_thumbnail_markdown,
+)
 from services.staff_courses import course_for
 
 YOUTUBE_ID = re.compile(r"(?:v=|youtu\.be/|embed/)?([A-Za-z0-9_-]{11})(?:[&?#].*)?$")
@@ -70,8 +87,54 @@ render_page_header(
 
 candidates = [c for c in videos.candidates if c.status in ("candidate", "in_use")]
 backups = [c for c in videos.candidates if c.status == "backup"]
-if not candidates:
-    st.info("Todavía no hay candidatos de YouTube para este tema.")
+current_topic: int = topic_id
+search_job_key = f"vid-search-job-{current_topic}"
+
+
+def _search_again() -> None:
+    """Vuelve a buscar en YouTube (B-064); la página espera el trabajo y luego lista lo nuevo."""
+    operation = f"vid-search-{current_topic}"
+    try:
+        accepted = client.search_video_candidates(
+            current_topic, idempotency_key=idempotency_key(operation)
+        )
+    except ApiError as error:
+        show_staff_error(error)
+        return
+    forget_key(operation)
+    st.session_state[search_job_key] = accepted.job_id
+    st.rerun()
+
+
+@st.fragment(run_every="2s")
+def _poll_search() -> None:
+    """Consulta el trabajo cada 2 s; al terminar, la API ya guardó los candidatos nuevos."""
+    job_id = st.session_state.get(search_job_key)
+    if job_id is None:
+        return
+    job = poll_job_or_rerun(lambda: client.poll_job(job_id))
+    if job is not None and is_done(job):
+        st.session_state.pop(search_job_key, None)
+        st.rerun()
+
+
+searching = st.session_state.get(search_job_key) is not None
+search_note = (
+    "Buscando videos en YouTube… Puede tardar hasta un minuto."
+    if searching
+    else video_search_text(videos.last_search, len(candidates) + len(backups))
+)
+if search_note is not None or len(candidates) + len(backups) < FEW_CANDIDATES:
+    with st.container(key="video-search", horizontal=True, vertical_alignment="center"):
+        st.info(search_note or "Todavía no hay candidatos de YouTube para este tema.")
+        if not searching and st.button(
+            "Buscar videos de nuevo",
+            type="primary" if not candidates else "secondary",
+            key="vid-search-again",
+        ):
+            _search_again()
+    if searching:
+        _poll_search()
 
 
 def _meta(video: VideoCandidate) -> str:

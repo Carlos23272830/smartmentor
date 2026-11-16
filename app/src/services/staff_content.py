@@ -7,7 +7,7 @@ import re
 from copy import deepcopy
 from typing import Any
 
-from clients.models_staff import Resource
+from clients.models_staff import Resource, VideoSearch
 from components.formatting import decimal, percent
 
 
@@ -85,3 +85,62 @@ def video_thumbnail_markdown(video_id: str) -> str | None:
     if url is None or thumbnail is None:
         return None
     return f"[![Portada del video en YouTube]({thumbnail})]({url})"
+
+
+# --- B-064 · Por qué un tema tiene pocos videos -------------------------------------------------
+
+FEW_CANDIDATES = 3
+"""Con menos de 3 candidatos no hay video en uso más dos de respaldo, ni se puede medir P@3."""
+
+_EXCLUSION_TEXT = {
+    "duration_out_of_range": "{n} por duración (muy cortos o muy largos)",
+    "language_not_understood": "{n} por idioma",
+}
+
+
+def _plural(count: int, one: str, many: str) -> str:
+    return f"{count} {one if count == 1 else many}"
+
+
+def video_search_text(search: VideoSearch | None, candidates: int) -> str | None:
+    """Explica la última búsqueda de videos del tema, o None si no hace falta decir nada.
+
+    Solo habla cuando hay menos de 3 candidatos o la búsqueda está en curso o falló: con 3 o más
+    el tema ya tiene un video en uso y dos de respaldo.
+    """
+    if search is None:
+        if candidates >= FEW_CANDIDATES:
+            return None
+        return "Este tema todavía no tiene una búsqueda de videos en YouTube."
+    if search.status in ("queued", "running"):
+        return "Buscando videos en YouTube…"
+    if search.status == "failed":
+        if search.error_code == "VIDEO_SEARCH_UNAVAILABLE":
+            return (
+                "La última búsqueda falló: YouTube no respondió. Puede ser la cuota diaria de "
+                "búsquedas o la clave de YouTube. Intenta de nuevo más tarde."
+            )
+        return f"La última búsqueda falló ({search.error_code or 'sin código'})."
+    if candidates >= FEW_CANDIDATES:
+        return None
+    if search.found is None:
+        return (
+            "La última búsqueda es anterior a este resumen. Busca de nuevo para ver cuántos videos "
+            "devolvió YouTube y por qué quedaron fuera."
+        )
+    if search.found == 0 and search.queries == []:
+        return (
+            "No se buscó en YouTube: el servicio de IA no tiene la clave de YouTube "
+            "(YOUTUBE_API_KEY). Puedes agregar un video a mano."
+        )
+    if search.found == 0:
+        return "YouTube no devolvió videos para este tema. Puedes agregar uno a mano."
+    reasons = [
+        _EXCLUSION_TEXT.get(reason, "{n} por " + reason).format(n=count)
+        for reason, count in sorted((search.excluded or {}).items())
+        if count > 0
+    ]
+    found = _plural(search.found, "video", "videos")
+    if not reasons:
+        return f"YouTube solo devolvió {found} para este tema."
+    return f"YouTube devolvió {found}; quedaron fuera " + " y ".join(reasons) + "."

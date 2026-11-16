@@ -102,7 +102,8 @@ def test_language_and_duration_scores() -> None:
     assert language_score("en", RankingPreferences(english_allowed=True)) == 0.3
     assert duration_score(600, PREFS) == 1.0
     assert duration_score(240, PREFS) == 0.0
-    assert duration_score(1800, PREFS) == 0.0
+    assert duration_score(2400, PREFS) == 0.0  # 40 min, the limit (B-064)
+    assert duration_score(1800, PREFS) == 0.5  # 30 min, halfway from the ideal 20 to 40
     assert 0 < duration_score(360, PREFS) < 1
     assert duration_score(None, PREFS) == 0.5
 
@@ -177,3 +178,9 @@ def test_plural_and_accents_still_match() -> None:
 
 def test_nothing_covered_gives_an_empty_list() -> None:
     assert covered_subtopics(["Fuga de datos"], "Receta de cocina rápida") == []
+
+
+def test_a_35_minute_video_now_passes_the_duration_filter_b064() -> None:
+    """The first deliverable fixed 40 minutes as the limit; the notebook used 30."""
+    assert exclusion_reason(video("a", 0.5, seconds=35 * 60), PREFS) is None
+    assert exclusion_reason(video("a", 0.5, seconds=41 * 60), PREFS) == "duration_out_of_range"

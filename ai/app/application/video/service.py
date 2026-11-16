@@ -10,6 +10,7 @@ no instructor list the resource has ``origin = none`` (L-08) and the instructor 
 from __future__ import annotations
 
 import logging
+from collections import Counter
 from collections.abc import Sequence
 from typing import Any, Literal
 
@@ -18,9 +19,15 @@ from pydantic import BaseModel, Field
 from app.application.content.context import TaskContext, TaskResult, load_topic
 from app.application.llm_runner import CallContext, EmbeddingRunner
 from app.application.video.characterize import covered_subtopics, video_embedding_text
-from app.domain.contracts.video import CharacterizationSource, VideoCandidate, VideoResource
+from app.domain.contracts.video import (
+    CharacterizationSource,
+    VideoCandidate,
+    VideoResource,
+    VideoSearchSummary,
+)
 from app.domain.errors import TaskError
 from app.domain.video_ranking import (
+    MAX_DURATION_SECONDS,
     Rankable,
     Ranked,
     RankingPreferences,
@@ -42,8 +49,11 @@ logger = logging.getLogger("app.video")
 VIDEO_CONTRACT = "video_resource.v1"
 WATCH_URL = "https://www.youtube.com/watch?v={video_id}"
 SIMILARITY_PURPOSE: EmbeddingPurpose = "similarity"
-SEARCH_RESULTS = 15
+SEARCH_RESULTS = 50  # B-064: the quota is per search call, not per result (up to 50)
 QUERY_SUBTOPICS = 2
+# B-064: with the topic name and two subtopics YouTube often returns nothing (0 for «Fundamentos de
+# MLOps» on 2026-11-16). Below this many results a second, broader search is made.
+FALLBACK_BELOW = 5
 
 
 class InstructorVideo(BaseModel):
@@ -60,7 +70,7 @@ class CollectInput(BaseModel):
 class PreferencesInput(BaseModel):
     language: str = Field(default="es", pattern=r"^[a-z]{2}$")
     min_duration_seconds: int = Field(default=240, ge=1)
-    max_duration_seconds: int = Field(default=1800, ge=1)
+    max_duration_seconds: int = Field(default=MAX_DURATION_SECONDS, ge=1)
     english_allowed: bool = False
 
     def to_domain(self) -> RankingPreferences:
@@ -98,6 +108,24 @@ def _search_text(topic: TopicRecord) -> str:
     return " ".join([topic.name, *topic.subtopics[:QUERY_SUBTOPICS]])
 
 
+def _fallback_text(topic: TopicRecord) -> str:
+    """The topic name with the course as context (B-064).
+
+    A generic topic name («Fundamentos e instalación») needs its course («Curso de Claude Code»)
+    to find relevant videos. The course name is cut at « - » (subtitles like the group) and left
+    out if the topic name already contains it.
+    """
+    course = topic.course_name.split(" - ")[0].strip()
+    if not course or course.lower() in topic.name.lower():
+        return topic.name
+    return f"{topic.name} {course}"
+
+
+def search_texts(topic: TopicRecord) -> list[str]:
+    """The precise query first and the broad one as fallback, without repeating a query."""
+    return list(dict.fromkeys([_search_text(topic), _fallback_text(topic)]))
+
+
 class VideoRecommender:
     def __init__(
         self,
@@ -108,10 +136,14 @@ class VideoRecommender:
         embeddings: EmbeddingRunner,
         english_fallback: bool = True,
         english_score: float = 0.3,
+        search_results: int = SEARCH_RESULTS,
+        max_duration_seconds: int = MAX_DURATION_SECONDS,
     ) -> None:
         # La colecta es por tema (la comparte todo el curso): el inglés es respaldo, no descarte.
         self._english_fallback = english_fallback
         self._english_score = english_score
+        self._search_results = search_results
+        self._max_duration_seconds = max_duration_seconds
         self._catalog = catalog
         self._search = search
         self._transcripts = transcripts
@@ -119,26 +151,43 @@ class VideoRecommender:
 
     # ---------- video.collect_candidates ----------
 
-    async def _hits(self, topic: TopicRecord, data: CollectInput) -> list[VideoSearchHit]:
+    async def _hits(
+        self, topic: TopicRecord, data: CollectInput
+    ) -> tuple[list[VideoSearchHit], list[str]]:
+        """YouTube results and the queries made (none without a key).
+
+        The precise query goes first; if it returns fewer than ``FALLBACK_BELOW`` videos, the
+        broad one adds its results after them (without repeating videos).
+        """
         if self._search is None:
-            return []
-        query = VideoSearchQuery(
-            text=_search_text(topic),
-            language=data.language,
-            max_results=SEARCH_RESULTS,
-            embeddable_only=True,
-        )
-        try:
-            return await self._search.search(query)
-        except VideoSearchUnavailableError as exc:
-            if not data.instructor_videos:
+            return [], []
+        hits: list[VideoSearchHit] = []
+        queries: list[str] = []
+        for text in search_texts(topic):
+            if queries and len(hits) >= FALLBACK_BELOW:
+                break
+            query = VideoSearchQuery(
+                text=text,
+                language=data.language,
+                max_results=self._search_results,
+                embeddable_only=True,
+            )
+            try:
+                found = await self._search.search(query)
+            except VideoSearchUnavailableError as exc:
+                if hits or data.instructor_videos:
+                    logger.warning("video search unavailable; keeping what was found")
+                    break
                 raise TaskError("VIDEO_SEARCH_UNAVAILABLE", "the video search failed") from exc
-            logger.warning("video search unavailable; using the instructor's list only")
-            return []
+            queries.append(text)
+            seen = {h.youtube_video_id for h in hits}
+            hits += [h for h in found if h.youtube_video_id not in seen]
+        return hits, queries
 
     def _collect_prefs(self, data: CollectInput) -> RankingPreferences:
         return RankingPreferences(
             language=data.language,
+            max_duration_seconds=self._max_duration_seconds,
             english_allowed=self._english_fallback,
             english_score=self._english_score,
         )
@@ -146,9 +195,9 @@ class VideoRecommender:
     async def collect(self, data: CollectInput, ctx: CallContext) -> VideoResource:
         topic = await load_topic(self._catalog, data.topic_id)
         instructor_ids = {v.youtube_video_id for v in data.instructor_videos}
-        hits = [
-            h for h in await self._hits(topic, data) if h.youtube_video_id not in instructor_ids
-        ]
+        searched, queries = await self._hits(topic, data)
+        hits = [h for h in searched if h.youtube_video_id not in instructor_ids]
+        found = len(hits)
         hits += [
             VideoSearchHit(
                 youtube_video_id=v.youtube_video_id,
@@ -161,7 +210,13 @@ class VideoRecommender:
             for v in data.instructor_videos
         ]
         if not hits:
-            return self._resource(topic.id, [], [], self._collect_prefs(data))
+            return self._resource(
+                topic.id,
+                [],
+                [],
+                self._collect_prefs(data),
+                VideoSearchSummary(found=0, queries=queries),
+            )
 
         texts: list[str] = []
         covered_by_id: dict[str, list[str]] = {}
@@ -212,7 +267,10 @@ class VideoRecommender:
             )
             for rank, r in enumerate(ranked, start=1)
         ]
-        return self._resource(topic.id, candidates, ranked, prefs)
+        summary = VideoSearchSummary(
+            found=found, excluded=dict(Counter(excluded.values())), queries=queries
+        )
+        return self._resource(topic.id, candidates, ranked, prefs, summary)
 
     # ---------- video.rank ----------
 
@@ -272,6 +330,7 @@ class VideoRecommender:
         candidates: list[VideoCandidate],
         ranked: Sequence[Ranked],
         prefs: RankingPreferences,
+        summary: VideoSearchSummary | None = None,
     ) -> VideoResource:
         if not candidates:
             return VideoResource(
@@ -279,6 +338,7 @@ class VideoRecommender:
                 origin="none",
                 embedding_model=self._embeddings.model,
                 candidates=[],
+                search_summary=summary,
             )
         selected, backups = select_with_backups(ranked, prefs.backup_count)
         origin = next(c.origin for c in candidates if c.youtube_video_id == selected)
@@ -289,6 +349,7 @@ class VideoRecommender:
             candidates=candidates,
             selected_video_id=selected,
             backup_video_ids=backups,
+            search_summary=summary,
         )
 
 

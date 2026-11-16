@@ -396,10 +396,22 @@ class VideoCandidate(ApiModel):
     origin: Literal["youtube", "instructor"] = "youtube"
 
 
+class VideoSearch(ApiModel):
+    """La última búsqueda de videos del tema (B-064). `found` y `excluded` faltan si es anterior."""
+
+    job_id: str
+    status: str
+    found: int | None = None
+    excluded: dict[str, int] | None = None
+    queries: list[str] | None = None
+    error_code: str | None = None
+
+
 class TopicVideos(ApiModel):
     topic_id: int
     topic_name: str
     candidates: list[VideoCandidate]
+    last_search: VideoSearch | None = None
 
 
 QualityStatus = Literal["recommended", "observation", "under_review", "measuring"]

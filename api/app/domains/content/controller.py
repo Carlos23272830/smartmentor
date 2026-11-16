@@ -20,6 +20,7 @@ from app.domains.content.dependencies import (
     get_item_service,
     get_resource_service,
     get_video_feedback_service,
+    get_video_search_service,
     get_video_service,
 )
 from app.domains.content.entities import AssessmentItem, Resource
@@ -37,12 +38,15 @@ from app.domains.content.schemas import (
     VideoQualityItem,
     VideoQualityResponse,
     VideoResponse,
+    VideoSearchResponse,
 )
 from app.domains.content.service import (
     ItemChanges,
     ItemService,
     ResourceService,
     VideoFeedbackService,
+    VideoSearchInfo,
+    VideoSearchService,
     VideoService,
     VideoView,
     version_label,
@@ -54,6 +58,7 @@ LearnerUser = Annotated[CurrentUser, Depends(require_roles(*LEARNER))]
 ResourceServiceDep = Annotated[ResourceService, Depends(get_resource_service)]
 ItemServiceDep = Annotated[ItemService, Depends(get_item_service)]
 VideoServiceDep = Annotated[VideoService, Depends(get_video_service)]
+VideoSearchServiceDep = Annotated[VideoSearchService, Depends(get_video_search_service)]
 FeedbackServiceDep = Annotated[VideoFeedbackService, Depends(get_video_feedback_service)]
 
 
@@ -229,9 +234,23 @@ async def update_item(
     return _item(await service.update(user, item_id, changes))
 
 
+def _search(info: VideoSearchInfo | None) -> VideoSearchResponse | None:
+    if info is None:
+        return None
+    return VideoSearchResponse(
+        job_id=info.job_id,
+        status=info.status,
+        found=info.found,
+        excluded=info.excluded,
+        queries=info.queries,
+        error_code=info.error_code,
+        finished_at=info.finished_at,
+    )
+
+
 @router.get("/topics/{topic_id}/video-candidates", response_model=VideoListResponse)
 async def list_video_candidates(
-    topic_id: int, user: StaffUser, service: VideoServiceDep
+    topic_id: int, user: StaffUser, service: VideoServiceDep, search: VideoSearchServiceDep
 ) -> VideoListResponse:
     views = await service.list_for_topic(user, topic_id)
     return VideoListResponse(
@@ -239,6 +258,34 @@ async def list_video_candidates(
         topic_name=await service.topic_name(user, topic_id),
         has_backup=any(v.video.status == "backup" for v in views),
         candidates=[_video(v) for v in views],
+        last_search=_search(await search.last_search(user, topic_id)),
+    )
+
+
+@router.post(
+    "/topics/{topic_id}/video-candidates/search", response_model=JobAccepted, status_code=202
+)
+async def search_video_candidates(
+    topic_id: int,
+    request: Request,
+    user: StaffUser,
+    search: VideoSearchServiceDep,
+    idempotency: IdempotencyDep,
+) -> JSONResponse:
+    """Vuelve a buscar los videos del tema en YouTube (B-064); los candidatos llegan como nuevos.
+
+    Si ya hay una búsqueda en curso para el tema, devuelve esa misma.
+    """
+
+    async def action() -> JobAccepted:
+        return _accepted(await search.search_again(user, topic_id))
+
+    return await idempotency.run(
+        user_id=user.id,
+        request=request,
+        body=str(topic_id).encode(),
+        action=action,
+        location=lambda accepted: accepted.poll_url if isinstance(accepted, JobAccepted) else None,
     )
 
 
