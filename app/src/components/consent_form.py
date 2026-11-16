@@ -6,6 +6,7 @@ parámetro (`ORGANIZATION_NAME` y `PILOT_WINDOW_TEXT`), no se escriben aquí.
 """
 
 from dataclasses import dataclass
+from typing import Any
 
 import streamlit as st
 
@@ -69,13 +70,29 @@ def pilot_description(pilot_window: str) -> str:
     )
 
 
+PARTICIPATE_LABEL = "Acepto participar en el piloto y el uso anónimo de mis datos"
+DECLINE_LABEL = "Quiero usar la plataforma sin participar en el piloto"
+
+
+def informed_consent_state(*, key: str, participate_default: bool) -> dict[str, Any]:
+    """Valor inicial de la decisión de A3b, para ponerlo en `st.session_state`.
+
+    El radio no lleva `index=`: la decisión entra solo por el estado de sesión y no choca con un
+    borrador restaurado (B-040, B-054). La página lo aplica con `seed_defaults`.
+    """
+    return {f"{key}-decision": PARTICIPATE_LABEL if participate_default else DECLINE_LABEL}
+
+
 def render_informed_consent(
     *,
     key: str,
     pilot_window: str,
-    participate_default: bool = False,
 ) -> InformedConsentResult:
-    """A3b: consentimiento informado para el piloto, con la decisión de participar o no."""
+    """A3b: consentimiento informado para el piloto, con la decisión de participar o no.
+
+    La decisión inicial la pone la página con `informed_consent_state` (el componente no toca
+    `st.session_state`).
+    """
     render_page_header(
         "Consentimiento informado para el piloto",
         breadcrumb="Crear cuenta › Consentimiento",
@@ -124,11 +141,8 @@ def render_informed_consent(
             st.markdown("**Tu decisión**")
             choice = st.radio(
                 "Tu decisión",
-                (
-                    "Acepto participar en el piloto y el uso anónimo de mis datos",
-                    "Quiero usar la plataforma sin participar en el piloto",
-                ),
-                index=0 if participate_default else 1,
+                (PARTICIPATE_LABEL, DECLINE_LABEL),
+                index=None,
                 label_visibility="collapsed",
                 key=f"{key}-decision",
             )

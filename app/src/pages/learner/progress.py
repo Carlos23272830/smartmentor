@@ -19,6 +19,7 @@ from core.errors import show_action_error
 from core.identity import current_me, label_for, refresh_me
 from core.learner_flow import current_enrollment, go_to_action
 from core.session import get_session
+from core.widget_state import seed_defaults
 from services.learning import savings_label, step_name
 
 DATA_RIGHTS_PAGE = "pages/common/data_rights.py"
@@ -57,13 +58,15 @@ if len(enrollments) > 1:
     # B-037: con varias rutas se elige cuál mostrar. La clave lleva el id para que el selector
     # parta de la ruta vigente aunque otra pantalla (Logros) haya cambiado la elegida.
     names = {e.id: e.learning_path.name for e in enrollments}
+    route_key = f"progress-route-{enrollment.id}"
+    # Sin `index=`: la ruta vigente entra por el estado de sesión y no pisa un borrador (B-054).
+    seed_defaults({route_key: enrollment.id if enrollment.id in names else next(iter(names))})
     chosen = st.selectbox(
         "Ruta",
         list(names),
-        index=list(names).index(enrollment.id) if enrollment.id in names else 0,
         format_func=names.__getitem__,
         label_visibility="collapsed",
-        key=f"progress-route-{enrollment.id}",
+        key=route_key,
     )
     if chosen != enrollment.id:
         get_session().selected_enrollment_id = chosen
@@ -146,6 +149,12 @@ def _goals(current: StudyGoals, *, new: bool) -> tuple[int | None, int | None]:
         st.caption("Todavía no tienes metas. Elige una para hoy y otra para este mes.")
     else:
         st.badge(f"Racha de {plural(current.streak_days, 'día', 'días')}", color="gray")
+    if not new:
+        # Sin `default=`: las metas guardadas entran por el estado de sesión y no pisan un
+        # borrador restaurado (B-054). Con `new` no hay preselección.
+        seed_defaults(
+            {"goal-daily": current.daily_minutes_goal, "goal-monthly": current.monthly_topics_goal}
+        )
     today, month = st.columns(2)
     missing = max(current.daily_minutes_goal - current.daily_minutes_done, 0)
     left = max(current.monthly_topics_goal - current.monthly_topics_done, 0)
@@ -163,7 +172,6 @@ def _goals(current: StudyGoals, *, new: bool) -> tuple[int | None, int | None]:
         daily = st.segmented_control(
             "Meta:",
             current.daily_options,
-            default=None if new else current.daily_minutes_goal,
             format_func=lambda minutes: f"{minutes} min",
             key="goal-daily",
         )
@@ -181,7 +189,6 @@ def _goals(current: StudyGoals, *, new: bool) -> tuple[int | None, int | None]:
         monthly = st.segmented_control(
             "Meta:",
             current.monthly_options,
-            default=None if new else current.monthly_topics_goal,
             format_func=str,
             key="goal-monthly",
         )

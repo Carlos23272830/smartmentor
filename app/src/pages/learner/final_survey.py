@@ -8,11 +8,18 @@ import streamlit as st
 
 from clients.base import ApiError
 from components.layout import render_page_header
-from components.likert_scale import EXPERIENCE_ITEMS, SCALE_HINT, SUS_ITEMS, render_likert
+from components.likert_scale import (
+    EXPERIENCE_ITEMS,
+    SCALE_HINT,
+    SUS_ITEMS,
+    likert_state,
+    render_likert,
+)
 from core.container import get_client
 from core.errors import show_action_error
 from core.learner_flow import current_enrollment
 from core.session import get_session
+from core.widget_state import seed_defaults
 
 BADGE_PAGE = "pages/learner/badge.py"
 
@@ -24,9 +31,9 @@ step = state.survey_step if state.survey_step in (1, 2) else 1
 
 def _scale(index: int) -> None:
     """Pregunta SUS número `index` (1 a 10); conserva la respuesta en la sesión."""
-    value = render_likert(
-        f"{index}. {SUS_ITEMS[index - 1]}", key=f"sus-{index}", value=state.survey_sus.get(index)
-    )
+    # El valor inicial entra por el estado de sesión y no pisa un borrador restaurado (B-054).
+    seed_defaults(likert_state(key=f"sus-{index}", value=state.survey_sus.get(index)))
+    value = render_likert(f"{index}. {SUS_ITEMS[index - 1]}", key=f"sus-{index}")
     if value is not None:
         state.survey_sus[index] = value
 
@@ -62,7 +69,8 @@ if step == 1:
     st.subheader("Tu experiencia", anchor=False)
     st.caption(SCALE_HINT)
     for code, statement in EXPERIENCE_ITEMS:
-        value = render_likert(statement, key=code, value=state.survey_likert.get(code))
+        seed_defaults(likert_state(key=code, value=state.survey_likert.get(code)))
+        value = render_likert(statement, key=code)
         if value is not None:
             state.survey_likert[code] = value
     st.subheader("Usabilidad (SUS · ítems 1 a 5)", anchor=False)
@@ -88,9 +96,9 @@ else:
     for index in range(6, 11):
         _scale(index)
     st.markdown("**Comentario (opcional)**")
+    seed_defaults({"survey-comment": state.survey_comment})
     state.survey_comment = st.text_area(
         "¿Qué mejorarías?",
-        value=state.survey_comment,
         max_chars=500,
         placeholder="¿Qué mejorarías?",
         key="survey-comment",

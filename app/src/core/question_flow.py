@@ -15,9 +15,10 @@ from streamlit.errors import StreamlitInvalidLayoutContextError
 from clients.base import ApiError
 from clients.models import AssessmentItem, LearnerAnswer
 from components.layout import render_action_row, render_notice
-from components.quiz_form import render_options, render_stem
+from components.quiz_form import options_state, render_options, render_stem
 from core.errors import defer_to_main, is_global, show_action_error
 from core.learner_state import AnswerSheet
+from core.widget_state import seed_defaults
 
 DONT_KNOW_LABEL = "No lo sé"
 SHORT_ANSWER_LIMIT = 500
@@ -71,12 +72,15 @@ def _question(
     saved = sheet.answers.get(item.item_id)
     widget_key = f"{key}-{item.item_id}"
     if item.item_type == "multiple_choice":
-        choice = render_options(
-            stem=item.stem,
-            options=item.options,
-            key=widget_key,
-            selected=saved.selected_option if saved and not saved.dont_know else None,
+        # El valor inicial entra por el estado de sesión y no pisa un borrador restaurado (B-054).
+        seed_defaults(
+            options_state(
+                options=item.options,
+                key=widget_key,
+                selected=saved.selected_option if saved and not saved.dont_know else None,
+            )
         )
+        choice = render_options(stem=item.stem, options=item.options, key=widget_key)
         if choice is not None:
             sheet.answers[item.item_id] = LearnerAnswer(
                 item_id=item.item_id, selected_option=choice
@@ -85,9 +89,10 @@ def _question(
     render_stem(item.stem, key=widget_key)
     if hint:
         st.caption(hint)
+    if saved and saved.text_answer:
+        seed_defaults({f"answer-{widget_key}": saved.text_answer})
     text = st.text_area(
         "Tu respuesta",
-        value=(saved.text_answer or "") if saved else "",
         max_chars=SHORT_ANSWER_LIMIT,
         placeholder="Escribe tu respuesta…",
         label_visibility="collapsed",

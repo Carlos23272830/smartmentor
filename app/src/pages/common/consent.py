@@ -9,13 +9,18 @@ registra esta página y la de derechos (A3c). Registrar la autorización es una 
 import streamlit as st
 
 from clients.base import ApiError
-from components.consent_form import render_consent_form, render_informed_consent
+from components.consent_form import (
+    informed_consent_state,
+    render_consent_form,
+    render_informed_consent,
+)
 from core.config import get_settings
 from core.container import get_client
 from core.errors import show_action_error
 from core.identity import current_me, refresh_me
 from core.navigation import DATA_RIGHTS, home_for
 from core.session import get_session
+from core.widget_state import seed_defaults
 
 DOCUMENT_VERSION = "1.0"
 
@@ -41,10 +46,12 @@ if not me.requires_consent:
     st.stop()
 
 if session.consent_step == "informed":
+    # La decisión inicial entra por el estado de sesión y no pisa un borrador restaurado (B-054).
+    seed_defaults(
+        informed_consent_state(key="consent-informed", participate_default=session.accept_pilot)
+    )
     result = render_informed_consent(
-        key="consent-informed",
-        pilot_window=settings.pilot_window_text,
-        participate_default=session.accept_pilot,
+        key="consent-informed", pilot_window=settings.pilot_window_text
     )
     session.accept_pilot = result.participate
     if result.show_rights:
