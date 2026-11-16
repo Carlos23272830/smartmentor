@@ -96,6 +96,7 @@ class CandidateInput(BaseModel):
     characterization: str | None = None
     characterization_source: CharacterizationSource | None = None
     similarity: float | None = Field(default=None, ge=-1, le=1)
+    search_position: int | None = Field(default=None, ge=1)
 
 
 class RankInput(BaseModel):
@@ -198,6 +199,8 @@ class VideoRecommender:
         searched, queries = await self._hits(topic, data)
         hits = [h for h in searched if h.youtube_video_id not in instructor_ids]
         found = len(hits)
+        # E6: posición en los resultados de YouTube (1 = el primero), la línea base del ranking.
+        positions = {h.youtube_video_id: n for n, h in enumerate(hits, start=1)}
         hits += [
             VideoSearchHit(
                 youtube_video_id=v.youtube_video_id,
@@ -264,6 +267,7 @@ class VideoRecommender:
                 characterization_source=sources[r.video_id],
                 similarity=round(max(-1.0, min(1.0, r.similarity)), 4),
                 rank=rank,
+                search_position=positions.get(r.video_id),
             )
             for rank, r in enumerate(ranked, start=1)
         ]
@@ -317,6 +321,7 @@ class VideoRecommender:
                 characterization_source=by_id[r.video_id].characterization_source,
                 similarity=round(max(-1.0, min(1.0, r.similarity)), 4),
                 rank=rank,
+                search_position=by_id[r.video_id].search_position,
             )
             for rank, r in enumerate(ranked, start=1)
         ]

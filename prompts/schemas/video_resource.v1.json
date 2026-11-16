@@ -122,6 +122,20 @@
           "title": "Rank",
           "type": "integer"
         },
+        "search_position": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Position in the YouTube search results (1 = first); E6 baseline. None for the instructor's videos",
+          "title": "Search Position"
+        },
         "relevance_judgment": {
           "anyOf": [
             {

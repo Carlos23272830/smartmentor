@@ -463,6 +463,7 @@ class VideoIngestor(_ContentIngestor):
                 "characterization_source": candidate.characterization_source,
                 "similarity": candidate.similarity,
                 "rank": candidate.rank,
+                "search_position": candidate.search_position,
             }
             known = await self._videos.get_by_youtube(topic_id, candidate.youtube_video_id)
             if known is not None:
