@@ -8,7 +8,7 @@ primer intento). El resto (AUC, RAGAS, dificultad y discriminación) lo publica 
 from dataclasses import dataclass, field
 from typing import Protocol
 
-from app.common.constants import RoleCode
+from app.common.constants import CourseStatus, RoleCode
 from app.common.exceptions import NotFoundError
 from app.domains.courses.service import ExtractionMetrics
 from app.domains.identity.authentication import CurrentUser
@@ -195,8 +195,14 @@ class MetricsService:
         scope = await self._scope(user, learning_path_id)
         courses = sorted({s.course_id for s in scope})
         paths = [s.learning_path_id for s in scope]
+        # El F1 compara la salida del LLM con lo que dejó el instructor: solo es definitivo cuando
+        # el curso ya se publicó. Uno en revisión (o en borrador) todavía se está corrigiendo y
+        # contarlo en `n` mezclaba cursos sin evaluar con los evaluados (B-057).
+        published = sorted(
+            {s.course_id for s in scope if s.course_status == CourseStatus.PUBLISHED}
+        )
         extraction: list[CourseExtraction] = []
-        for course_id in courses:
+        for course_id in published:
             found = await self._extraction.metrics(user, course_id)
             extraction.append(
                 CourseExtraction(

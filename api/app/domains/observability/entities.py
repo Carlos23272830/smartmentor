@@ -63,6 +63,8 @@ class LogSummary:
 class PathScope:
     learning_path_id: int
     course_id: int
+    course_status: str
+    """Estado del curso: el F1 de la extracción solo cuenta los publicados (AD3)."""
 
 
 @dataclass(frozen=True)
