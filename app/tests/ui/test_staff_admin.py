@@ -9,6 +9,8 @@ from staff_support import (
     staff_text_reader,  # noqa: F401
 )
 
+from core.styles import STYLES_DIR
+
 USERS = "pages/admin/users.py"
 LOGS = "pages/admin/llm_logs.py"
 METRICS = "pages/admin/metrics.py"
@@ -25,8 +27,16 @@ def test_ad1_matches_figma() -> None:
     assert_matches_figma(
         at,
         "AD1",
-        # Las acciones de cada fila son botones separados («Cambiar rol» y «Desactivar»).
-        accepted=("Cambiar rol · Desactivar", "Cambiar rol · Desactivar"),
+        # Las acciones de cada fila son botones separados («Cambiar rol» y «Desactivar»). Los
+        # correos de Figma usan @universidad.edu.co; los datos de ejemplo usan un dominio neutro.
+        accepted=(
+            "elena.ramirez@universidad.edu.co",
+            "Cambiar rol · Desactivar",
+            "laura.martinez@universidad.edu.co",
+            "Cambiar rol · Desactivar",
+            "julian.perez@universidad.edu.co",
+            "admin@universidad.edu.co",
+        ),
     )
 
 
@@ -66,7 +76,7 @@ def test_ad1_create_user() -> None:
     at = click(at, "Crear usuario")
     assert next(b for b in at.button if b.label == "Crear").disabled
     at.text_input(key="u-new-name").set_value("Nuevo").run()
-    at.text_input(key="u-new-email").set_value("nuevo@universidad.edu.co").run()
+    at.text_input(key="u-new-email").set_value("nuevo@organizacion.example").run()
     at = click(at, "Crear")
     assert_no_exception(at)
     assert not at.error
@@ -107,6 +117,19 @@ def test_ad2_kpis() -> None:
         "Latencia p95": "11,8 s",
         "JSON inválido": "0,9 %",
     }
+
+
+def test_ad2_catalog_link_is_a_text_button_in_blue_underlined() -> None:
+    """V-017: el enlace al catálogo es un botón de texto (`tertiary`) que el CSS pinta azul y
+    subrayado, como en Figma."""
+    at = staff_app("admin", page=LOGS)
+    link = at.button(key="ll-catalog")
+    assert link.label == "Ver el catálogo de prompts y versiones (documentación del equipo)"
+    assert link.proto.type == "tertiary"
+    css = (STYLES_DIR / "components" / "llm_logs.css").read_text(encoding="utf-8")
+    assert ".st-key-ll-catalog button" in css
+    assert "text-decoration: underline" in css
+    assert "color: var(--learner-text)" in css
 
 
 def test_ad2_empty_forbidden() -> None:

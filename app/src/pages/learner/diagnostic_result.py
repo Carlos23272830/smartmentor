@@ -16,12 +16,17 @@ from clients.base import ApiError
 from clients.models import DiagnosticResult, Objective
 from components.layout import eyebrow, render_action_row, render_page_header
 from components.levels import LevelRow, render_levels
-from components.objective_editor import ObjectiveDraft, render_objective_editor
+from components.objective_editor import (
+    ObjectiveDraft,
+    objective_editor_state,
+    render_objective_editor,
+)
 from core.container import get_client
 from core.errors import show_action_error
 from core.learner_flow import current_enrollment, go_to_action, redirect_unless, remember
 from core.navigation import page_for_next_action
 from core.session import get_session
+from core.widget_state import seed_defaults
 
 PAGE = "pages/learner/diagnostic_result.py"
 PATH_PAGE = "pages/learner/path.py"
@@ -113,6 +118,8 @@ def _edit_dialog() -> None:
         if base
         else ObjectiveDraft("", "", "")
     )
+    # El valor inicial entra por el estado de sesión y no pisa un borrador restaurado (B-054).
+    seed_defaults(objective_editor_state(draft, key="objective"))
     editor = render_objective_editor(
         draft,
         key="objective",

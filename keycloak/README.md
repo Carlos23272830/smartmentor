@@ -148,6 +148,24 @@ Para ver cómo se comporta la aplicación sin datos hay dos usuarios de desarrol
 
 Si la variable está vacía, el usuario se omite sin error. Como con los demás, en producción déjalas vacías.
 
+### Usuarios para los recorridos de prueba
+
+Para los recorridos manuales hay cuatro usuarios de desarrollo más, que `scripts/dev-seed-recorrido-users.sh` crea con la contraseña `SEED_USERS_PASSWORD`, correo verificado y sin OTP:
+
+| Nombre visible | Rol | Variable de correo (valor de `.env.example`) |
+| --- | --- | --- |
+| Aprendiz A3b | `learner` | `SEED_A3B_LEARNER_EMAIL` (`aprendiz.a3b.smartmentor@yopmail.com`) |
+| Aprendiz Intentos quiz | `learner` | `SEED_QUIZ_ATTEMPTS_LEARNER_EMAIL` (`aprendiz.intentos-quiz.smartmentor@yopmail.com`) |
+| Aprendiz Intentos final | `learner` | `SEED_FINAL_ATTEMPTS_LEARNER_EMAIL` (`aprendiz.intentos-final.smartmentor@yopmail.com`) |
+| Instructor Evaluador | `instructor` | `SEED_EVALUATOR_INSTRUCTOR_EMAIL` (`instructor.evaluador.smartmentor@yopmail.com`) |
+
+```bash
+scripts/dev-seed-recorrido-users.sh               # crea lo que falte y verifica con GET /me
+scripts/dev-seed-recorrido-users.sh --no-verify   # sin la verificación (GET /me enlaza el `sub` en el primer acceso)
+```
+
+Crea el usuario en Keycloak (rol de realm correspondiente) y, en la base de la aplicación, solo por la API con el token del administrador sembrado (`POST /users` y `PUT /users/{id}/roles`; no escribe SQL). Es idempotente: lo que ya existe no se toca. No imprime contraseñas ni tokens. Necesita el stack encendido con `--with-admin` y `REQUIRE_SECOND_FACTOR=false` (el token se pide con `smartmentor-dev-tools`, sin OTP). **Solo desarrollo.**
+
 ### Segundo instructor como evaluador (DEF-24, B-036)
 
 Para anotar preguntas y calificar respuestas cortas hace falta ser evaluador del curso. El instructor dueño ya es evaluador de sí mismo: la API lo asigna al publicar el curso (B-036), así que con el instructor sembrado alcanza para probar esas pantallas. Este paso es opcional y sirve para probar la asignación de **otro** instructor: `scripts/dev-seed-evaluator.sh` lo crea en Keycloak y en la base (con rol `instructor`, contraseña `SEED_USERS_PASSWORD`) y lo asigna con `POST /courses/{id}/evaluators` usando el token del administrador sembrado:
