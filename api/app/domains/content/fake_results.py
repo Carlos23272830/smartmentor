@@ -207,6 +207,7 @@ def fake_video_candidates(input_: dict[str, Any]) -> dict[str, Any]:
                 "characterization_source": "metadata",
                 "similarity": round(0.9 - n * 0.1, 2),
                 "rank": n + 1,
+                "search_position": 3 - n,  # E6: YouTube los devolvió en el orden inverso
             }
             for n, vid in enumerate(VIDEO_IDS)
         ],

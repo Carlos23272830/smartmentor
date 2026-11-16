@@ -356,6 +356,27 @@ async def test_the_instructor_searches_videos_again_and_sees_why_there_are_few_b
     assert relisted["last_search"]["job_id"] == again.json()["job_id"]
 
 
+async def test_each_candidate_stores_its_youtube_position_for_e6(
+    course: Course, ai: FakeAiService, engine: AsyncEngine
+) -> None:
+    """E6: `video_candidates.search_position` guarda la posición en la búsqueda de YouTube."""
+    from sqlalchemy import text
+
+    topic = course.topic_ids[0]
+    await ingest_videos(ai, course, topic)
+    async with engine.connect() as conn:
+        rows = (
+            await conn.execute(
+                text(
+                    "SELECT youtube_video_id, rank, search_position FROM video_candidates "
+                    "WHERE topic_id = :t ORDER BY rank"
+                ),
+                {"t": topic},
+            )
+        ).all()
+    assert [(r.rank, r.search_position) for r in rows] == [(1, 3), (2, 2), (3, 1)]
+
+
 async def test_a_manual_video_is_a_backup_and_cannot_be_repeated(course: Course) -> None:
     topic = course.topic_ids[0]
     body = {"youtube_video_id": "EXAMPLE0004", "title": "Mi video"}

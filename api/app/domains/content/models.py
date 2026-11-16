@@ -80,6 +80,7 @@ class VideoCandidateModel(PublicTableModel):
     characterization_source: Mapped[str | None] = mapped_column(String(30))
     similarity: Mapped[Decimal | None] = mapped_column(Numeric(6, 5))
     rank: Mapped[int | None] = mapped_column(SmallInteger)
+    search_position: Mapped[int | None] = mapped_column(SmallInteger)
     status: Mapped[str] = mapped_column(String(15), server_default="candidate")
     origin: Mapped[str] = mapped_column(String(15), server_default="youtube_api")
 

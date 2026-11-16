@@ -61,6 +61,7 @@ class VideoCandidate(BaseEntity):
     characterization_source: str | None = None
     similarity: float | None = None
     rank: int | None = None
+    search_position: int | None = None
     status: str = "candidate"
     origin: str = "youtube_api"
     updated_at: datetime | None = None

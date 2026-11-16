@@ -358,6 +358,27 @@ async def test_collect_candidates_asks_youtube_for_50_results(world: EvalWorld) 
     assert search.queries[-1].max_results == 50
 
 
+async def test_each_candidate_keeps_its_youtube_position_for_e6(
+    runtime: EvalRuntime, world: EvalWorld
+) -> None:
+    """E6: the position in the YouTube results is the «YouTube order» baseline of the ranking."""
+    payload = {
+        "topic_id": "3",
+        "instructor_videos": [{"youtube_video_id": "abcdefghijk", "title": "Video del docente"}],
+    }
+    result = await world.call("video.collect_candidates", payload, REFS)
+    resource = VideoResource.model_validate(result.result)
+    youtube = [c for c in resource.candidates if c.origin == "youtube_api"]
+    positions = [c.search_position for c in youtube]
+    assert all(p is not None and 1 <= p <= 6 for p in positions)
+    assert len(set(positions)) == len(positions)
+    # The fake search returns the good explanation first: it keeps position 1.
+    first = next(c for c in youtube if "paso a paso" in c.title)
+    assert first.search_position == 1
+    (instructor,) = [c for c in resource.candidates if c.origin == "instructor"]
+    assert instructor.search_position is None
+
+
 async def test_instructor_videos_are_candidates_even_if_the_search_fails(
     runtime: EvalRuntime, world: EvalWorld
 ) -> None:

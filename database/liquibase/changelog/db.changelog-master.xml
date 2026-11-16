@@ -47,4 +47,7 @@
     <!-- v2.0.1-008: apuntes y lecturas del curso como fuentes del RAG (R-004), con sus permisos. -->
     <include file="v2.0.1/008-create-table-course_materials.xml" relativeToChangelogFile="true"/>
 
+    <!-- v2.0.1-009: posición del video en la búsqueda de YouTube, línea base del experimento E6. -->
+    <include file="v2.0.1/009-video-candidates-search-position.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>
