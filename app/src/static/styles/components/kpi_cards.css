@@ -12,3 +12,22 @@
   margin: 0 auto;
   padding: var(--space-8) var(--space-16);
 }
+
+/* AD2 y D3: el número grande va arriba y la etiqueta debajo, como en Figma (V-099). `st.metric`
+   dibuja la etiqueta primero; se invierte el orden solo en pantalla (`column-reverse`), así el
+   lector de pantalla sigue leyendo «etiqueta, valor». El `data-testid` es el de Streamlit y no
+   tiene clase propia. */
+[class*="st-key-kpi-"] [data-testid="stMetric"] > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-4);
+}
+
+[class*="st-key-kpi-"] [data-testid="stMetricLabel"] {
+  color: var(--text-secondary);
+}
+
+[class*="st-key-kpi-"] [data-testid="stMetricValue"] {
+  font-size: var(--font-size-page-title);
+  font-weight: var(--font-weight-bold);
+}

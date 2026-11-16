@@ -76,7 +76,9 @@ def test_d1c_extraction_shows_progress_while_the_job_runs() -> None:
     assert_no_exception(at)
     texts = page_texts(at)
     assert any("Extrayendo temas del syllabus" in t for t in texts)
-    assert "Tiempo estimado: menos de 20 segundos" in texts
+    # Figma promete «menos de 20 segundos»; la extracción real tardó 39 s (B-057).
+    assert "Tiempo estimado: hasta 2 minutos" in texts
+    assert "Tiempo estimado: menos de 20 segundos" not in texts
     assert any("Listo" in t and "Leer el documento" in t for t in texts)
     assert any("En curso" in t and "Identificar temas" in t for t in texts)
     assert any("Pendiente" in t and "ciclos" in t for t in texts)

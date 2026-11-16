@@ -83,7 +83,7 @@ class FakeRepository:
         self.scope_calls.append((owner_user_id, learning_path_id))
         if learning_path_id not in (None, 1):
             return []
-        return [PathScope(1, 10)]
+        return [PathScope(1, 10, "published")]
 
     async def item_validity(self, course_ids: list[int]) -> list[ItemValidityRow]:
         return [
@@ -160,3 +160,37 @@ async def test_a_path_that_is_not_visible_is_a_404() -> None:
     service = MetricsService(FakeRepository(), FakeExtraction())  # type: ignore[arg-type]
     with pytest.raises(NotFoundError):
         await service.evaluation(current(2, "instructor"), 99)
+
+
+class MixedStatusRepository(FakeRepository):
+    """Tres cursos de la ruta: uno publicado, uno en revisión y uno en borrador."""
+
+    async def scope(
+        self, *, owner_user_id: int | None, learning_path_id: int | None
+    ) -> list[PathScope]:
+        return [
+            PathScope(1, 10, "published"),
+            PathScope(2, 20, "in_review"),
+            PathScope(3, 30, "draft"),
+        ]
+
+
+class RecordingExtraction(FakeExtraction):
+    def __init__(self) -> None:
+        self.asked: list[int] = []
+
+    async def metrics(self, user: CurrentUser, course_id: int) -> ExtractionMetrics:
+        self.asked.append(course_id)
+        return await super().metrics(user, course_id)
+
+
+async def test_the_extraction_f1_counts_only_published_courses() -> None:
+    extraction = RecordingExtraction()
+    service = MetricsService(MixedStatusRepository(), extraction)  # type: ignore[arg-type]
+    result = await service.evaluation(current(1, "admin"), None)
+    # El curso en revisión y el borrador no entran: su extracción todavía se está corrigiendo.
+    assert extraction.asked == [10]
+    assert [e.course_id for e in result.extraction] == [10]
+    # Las demás métricas siguen midiendo todo el alcance (las rutas no cambian).
+    assert result.learning_path_ids == [1, 2, 3]
+    assert result.llm is not None

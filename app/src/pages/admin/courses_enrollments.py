@@ -248,6 +248,7 @@ if panel is not None:
                 "Nueva ruta",
                 list(path_options),
                 format_func=lambda i: path_options[i],
+                placeholder="Elige una ruta",
                 key="ce-path",
             )
             if st.button("Mover", type="primary", key="ce-move-ok") and new_path is not None:
@@ -264,12 +265,14 @@ if panel is not None:
                 "Aprendiz",
                 list(learner_names),
                 format_func=lambda i: learner_names[i],
+                placeholder="Elige un aprendiz",
                 key="ce-learner",
             )
             path = st.selectbox(
                 "Ruta",
                 list(path_options),
                 format_func=lambda i: path_options[i],
+                placeholder="Elige una ruta",
                 key="ce-enroll-path",
             )
             if (

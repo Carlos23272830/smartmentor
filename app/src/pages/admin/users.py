@@ -100,6 +100,7 @@ def _roles_panel(user: AdminUser) -> None:
             list(ROLES),
             default=user.roles,
             format_func=lambda role: ROLE_TEXT[role],
+            placeholder="Elige los roles",
             key=f"u-roles-{user.id}",
         )
         st.caption("Un usuario puede tener varios roles. Debe quedar al menos un administrador.")
@@ -131,6 +132,7 @@ def _create_panel() -> None:
             list(ROLES),
             default=["learner"],
             format_func=lambda role: ROLE_TEXT[role],
+            placeholder="Elige los roles",
             key="u-new-roles",
         )
         with st.container(horizontal=True):

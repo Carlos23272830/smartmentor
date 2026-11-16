@@ -104,12 +104,13 @@ No hay transformación automática de `variables.json` a CSS: un valor nuevo de 
 | Tres botones primarios (azul, verde, violeta) | Un `type="primary"` cuyo color toma `roles.css` (`--accent`). **P1:** depende de selectores que pueden cambiar con la versión de Streamlit | `primaryColor` es uno para toda la app |
 | Botón secundario gris sin borde | Botón secundario blanco con borde | Estilo fijo de Streamlit |
 | Logo: cuadrado azul provisional | Ícono `:material/school:` | No hay logo todavía |
-| Avatar con iniciales | `st.popover` con las iniciales: nombre, correo, **roles del usuario («Cambiar de perfil», CU-35)** y salir | El cierre de sesión real redirige al `end_session_endpoint` de Keycloak |
+| Avatar con iniciales | `st.popover` con las iniciales en un círculo (CSS, `layout.css`): nombre, correo, **roles del usuario («Cambiar de perfil», CU-35)** y salir | El cierre de sesión real redirige al `end_session_endpoint` de Keycloak |
+| Caja punteada azul de carga (D1b) | El cargador estándar de Streamlit con borde punteado y fondo azul (CSS); su texto interno («Upload», «200MB per file») lo pone Streamlit en inglés y no se puede mover ni traducir | V-101 |
 | Opción elegida con fondo azul claro | `st.radio` o CSS del componente | Las opciones en tarjeta exigen CSS por `key` |
 | Insignia: círculo azul con estrella | Ícono `:material/workspace_premium:` | Sin CSS no hay círculos de color |
 | Recuadro negro del video | Recuadro con borde y los datos del video; con URL, `st.video` | El video viene de la API |
 | Espaciados exactos en píxeles | Orden de los elementos, `gap`, `st.space` | Streamlit no expone márgenes |
-| KPI con el valor arriba y la etiqueta abajo | `st.metric`: etiqueta arriba, valor abajo | Widget fijo |
+| KPI con el valor arriba y la etiqueta abajo | `st.metric` con CSS (`kpi_cards.css`, `column-reverse`): se ve como en Figma y el lector de pantalla sigue leyendo «etiqueta, valor» | V-099 |
 | Botones «(Demo del prototipo)» y avance automático a los 2 segundos | **No se construyen** | Los estados reales salen de la API; en `fixtures` se usan escenarios de datos |
 | Tamaños de letra en px (título 28, tarjeta 18, cuerpo 13) | Los tokens en `rem` salen un 12,5 % más pequeños (24,5, 15,75 y 11,4 px), porque la raíz de Streamlit es de 14 px | Decisión del dueño (2026-11-13, V-010): se deja así |
 

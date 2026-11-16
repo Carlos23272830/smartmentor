@@ -112,3 +112,28 @@
   color: var(--accent);
   font-weight: 700;
 }
+
+/* Avatar de la barra superior: círculo con las iniciales, como en Figma (V-101). Sigue siendo el
+   botón del menú de la cuenta (`st.popover`); la flecha se oculta porque el círculo ya se lee como
+   botón y el nombre accesible no cambia. */
+.st-key-app-avatar [data-testid="stPopoverButton"] {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-bold);
+  justify-content: center;
+}
+
+.st-key-app-avatar [data-testid="stPopoverButton"] > div {
+  justify-content: center;
+  width: 100%;
+}
+
+.st-key-app-avatar [data-testid="stPopoverButton"] [aria-hidden="true"] {
+  display: none;
+}

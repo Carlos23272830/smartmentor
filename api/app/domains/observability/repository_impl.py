@@ -136,14 +136,14 @@ class SqlAlchemyObservabilityRepository:
     ) -> list[PathScope]:
         rows = await self._session.execute(
             text(
-                "SELECT lp.id, lp.course_id FROM learning_paths lp "
+                "SELECT lp.id, lp.course_id, c.status FROM learning_paths lp "
                 "JOIN courses c ON c.id = lp.course_id WHERE lp.active AND c.active "
                 "AND (CAST(:owner AS bigint) IS NULL OR c.owner_user_id = :owner) "
                 "AND (CAST(:path AS bigint) IS NULL OR lp.id = :path) ORDER BY lp.id"
             ),
             {"owner": owner_user_id, "path": learning_path_id},
         )
-        return [PathScope(int(p), int(c)) for p, c in rows.all()]
+        return [PathScope(int(p), int(c), str(status)) for p, c, status in rows.all()]
 
     async def item_validity(self, course_ids: list[int]) -> list[ItemValidityRow]:
         if not course_ids:
