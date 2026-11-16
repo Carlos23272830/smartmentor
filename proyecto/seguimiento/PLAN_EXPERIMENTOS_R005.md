@@ -104,7 +104,9 @@ Los evaluadores existen como cuentas porque anotan por la aplicación (D5b y D5c
 - **Métrica:** precisión, recall y F1 de temas y de prerrequisitos (`set_f1`), por modelo.
 - **Resultado:** `e2-AAAA-MM-DD.md`.
 - **Costo de IA del sistema:** unas 12 extracciones, de US$ 0,10 a 0,15.
-- **Por verificar antes de gastar:** cómo elegir los dos modelos y repetir la extracción (`POST /courses/{id}/extractions`).
+- **Verificado (2026-11-16):** `POST /courses/{id}/extractions` **no deja elegir el modelo** y las repeticiones con el mismo texto salen de la caché (`ai_generation_cache`), así que no serían independientes. Además re-extraer reemplaza los temas del curso. Por eso **no se usa la API**: se escribe un script pequeño (`ai/eval/syllabus_experiment.py`, con rama y PR) que usa `EvalWorld.structure_syllabus`, que tiene caché nueva en cada proceso, y corre 6 procesos por syllabus. Los dos modelos son `gemini-3.8-flash` y `gemini-3.5-flash-lite` (los dos tienen precio en `ai/config/prices.yaml`), cambiando `AI_LLM_MODEL_DEFAULT` solo en el entorno del script. No toca la base, la API ni los contenedores.
+- **Emparejamiento:** el F1 del sistema compara ids `snake_case` inventados por el LLM, y un patrón de oro a ciegas casi nunca los repite. El agente-instructor escribe el oro como **nombres** de temas y prerrequisitos, y el emparejamiento con cada extracción se hace por nombre con un juez (Opus), antes de calcular `set_f1` (`ai/app/domain/metrics.py`). Se reporta cuántos emparejó.
+- **Syllabus:** son los dos PDF de `ai/docs/syllabus/` del equipo del dueño (carpeta ignorada por git; no están en `dev`).
 
 ### E7 · Juez del sistema frente a un juez de referencia
 
@@ -117,10 +119,11 @@ Los evaluadores existen como cuentas porque anotan por la aplicación (D5b y D5c
 ### E5 · Fidelidad y cobertura del RAG
 
 - **Entrada:** 5 o 6 temas de un curso publicado, en dos condiciones: **(A)** solo el syllabus y **(B)** syllabus más 2 o 3 lecturas aportadas por el dueño. R-010 permite agregar y quitar los apuntes en el mismo curso.
-- **Procedimiento:** generar las explicaciones en cada condición y medir fidelidad con RAGAS (corre aparte, necesita el LLM y la red). Los dos jueces valoran la cobertura de cada explicación a ciegas.
+- **Procedimiento:** subir las lecturas, regenerar los temas (`POST /resources/{id}/regenerate`) y medir; desactivar las lecturas (`PATCH …/materials/{id}/deactivate`), regenerar de nuevo y medir. La caché no estorba porque cambian los fragmentos. Se guarda el texto y la fidelidad de cada versión antes de la siguiente.
+- **Fidelidad:** **RAGAS no existe en el repositorio** (el cuaderno lanza `NotImplementedError`). Se usa la fidelidad del verificador propio (`resources.faithfulness`, ya medida) y, para no evaluarse con el mismo modelo, una **verificación independiente de los jueces-agente** sobre una muestra de afirmaciones frente a sus fragmentos. Los dos valores se reportan por separado. La cobertura la valoran los dos jueces a ciegas.
 - **Métrica:** fidelidad (meta ≥ 0,8), cobertura por condición.
 - **Resultado:** `e5-AAAA-MM-DD.md`.
-- **Por verificar antes de gastar:** el costo de RAGAS y de regenerar las explicaciones.
+- **Costo estimado:** unos US$ 0,10 por 12 textos (estimación, no medida).
 - **Puerta:** si las lecturas no llegan, E5 se ejecuta solo con la condición A y se dice.
 
 ## 8. Orden y puertas
@@ -134,11 +137,11 @@ Los evaluadores existen como cuentas porque anotan por la aplicación (D5b y D5c
 | 4 | **E5** | Lecturas recibidas y costo medido |
 | 5 | Consolidar | Resultados en `PENDIENTES.md`, G-001 y la tabla de resultados |
 
-## 9. Por verificar antes de gastar dinero
+## 9. Verificación previa (2026-11-16, solo lectura)
 
-1. Cómo seleccionar los dos modelos de la extracción y repetirla (E2).
-2. Que la búsqueda de videos de nuevo (D5e) no agote la cuota de YouTube (E6).
-3. El costo de RAGAS y de regenerar las explicaciones (E5).
+1. **E2:** resuelto con un script propio (ver E2). Cuesta unos US$ 0,10 en `gemini-3.8-flash`; el modelo pequeño, menos.
+2. **E6:** la búsqueda de videos no tiene tope diario en el código. Buscar de nuevo los 17 temas gasta de 1.700 a 3.400 unidades de YouTube (100 por búsqueda), de las 10.000 diarias por defecto; hay que mirar en Google Cloud cuánta cuota queda, porque el repositorio no lo dice.
+3. **E5:** RAGAS no existe; se sustituye como se explica en E5. Regenerar un texto cuesta unos US$ 0,008 (estimado).
 
 ## 10. Después
 
