@@ -2,7 +2,7 @@
   "items": [
     {
       "id": 12,
-      "email": "elena.ramirez@universidad.edu.co",
+      "email": "elena.ramirez@organizacion.example",
       "full_name": "Elena Ramírez",
       "roles": [
         "instructor",
@@ -12,7 +12,7 @@
     },
     {
       "id": 301,
-      "email": "laura.martinez@universidad.edu.co",
+      "email": "laura.martinez@organizacion.example",
       "full_name": "Laura Martínez",
       "roles": [
         "learner"
@@ -21,7 +21,7 @@
     },
     {
       "id": 304,
-      "email": "julian.perez@universidad.edu.co",
+      "email": "julian.perez@organizacion.example",
       "full_name": "Julián Pérez",
       "roles": [
         "learner"
@@ -30,7 +30,7 @@
     },
     {
       "id": 1,
-      "email": "admin@universidad.edu.co",
+      "email": "admin@organizacion.example",
       "full_name": "Admin MSc",
       "roles": [
         "admin"
@@ -39,7 +39,7 @@
     },
     {
       "id": 13,
-      "email": "marta.gomez@universidad.edu.co",
+      "email": "marta.gomez@organizacion.example",
       "full_name": "Marta Gómez",
       "roles": [
         "instructor"
