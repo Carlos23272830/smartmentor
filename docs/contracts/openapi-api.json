@@ -1220,6 +1220,17 @@
             "title": "Status",
             "type": "string"
           },
+          "syllabus": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyllabusSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Syllabus vigente. Solo en `GET /courses/{id}`; `null` en la lista y si el curso no tiene syllabus"
+          },
           "topics_count": {
             "description": "Temas activos del curso",
             "title": "Topics Count",
@@ -6502,6 +6513,54 @@
           "sus_score"
         ],
         "title": "SurveyResponseBody",
+        "type": "object"
+      },
+      "SyllabusSummary": {
+        "description": "Syllabus vigente (el más reciente) del curso; sin el texto extraído.",
+        "properties": {
+          "characters": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Caracteres de texto extraídos",
+            "title": "Characters"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Nombre original del archivo, sin ruta; `null` si se pegó texto",
+            "title": "Filename"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Páginas del PDF; `null` si no aplica",
+            "title": "Pages"
+          }
+        },
+        "required": [
+          "filename",
+          "pages",
+          "characters"
+        ],
+        "title": "SyllabusSummary",
         "type": "object"
       },
       "TaskSummaryResponse": {

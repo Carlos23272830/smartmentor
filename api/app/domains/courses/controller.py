@@ -1,6 +1,7 @@
 """Endpoints de cursos, syllabus, temas y publicación (instructor y administrador)."""
 
 import json
+from pathlib import PureWindowsPath
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -30,7 +31,7 @@ from app.domains.courses.dependencies import (
     get_syllabus_service,
     get_topic_service,
 )
-from app.domains.courses.entities import CourseMaterial
+from app.domains.courses.entities import CourseMaterial, SyllabusDocument
 from app.domains.courses.materials_text import extract_material
 from app.domains.courses.materials_text import too_large as material_too_large
 from app.domains.courses.schemas import (
@@ -47,6 +48,7 @@ from app.domains.courses.schemas import (
     OutcomeResponse,
     ReviewCounts,
     ScoreResponse,
+    SyllabusSummary,
     SyllabusTextBody,
     TopicGraphResponse,
     TopicListResponse,
@@ -129,6 +131,18 @@ MATERIAL_REQUEST_BODY = {
 }
 
 
+def _syllabus_summary(document: SyllabusDocument | None) -> SyllabusSummary | None:
+    if document is None:
+        return None
+    # Solo el nombre base: si el campo trajera una ruta (POSIX o Windows) no se expone.
+    name = PureWindowsPath(document.file_name).name if document.file_name else ""
+    return SyllabusSummary(
+        filename=name or None,
+        pages=document.page_count,
+        characters=document.extracted_char_count,
+    )
+
+
 def _course_response(view: CourseView) -> CourseResponse:
     course, path = view.course, view.learning_path
     return CourseResponse(
@@ -151,6 +165,7 @@ def _course_response(view: CourseView) -> CourseResponse:
         ),
         topics_count=view.counts.topics,
         enrolled_count=view.counts.enrolled,
+        syllabus=_syllabus_summary(view.syllabus),
         created_at=course.created_at,
         updated_at=course.updated_at,
     )

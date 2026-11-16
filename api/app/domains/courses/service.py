@@ -113,6 +113,7 @@ class CourseView:
     learning_path: LearningPath | None
     extraction_job_id: str | None = None
     counts: CourseCounts = field(default_factory=CourseCounts)
+    syllabus: SyllabusDocument | None = None  # solo en el detalle; la lista no lo resuelve
 
 
 class CourseService:
@@ -124,6 +125,7 @@ class CourseService:
         ai: AiServicePort,
         uow: UnitOfWork,
         owner_evaluators: OwnerEvaluators | None = None,
+        syllabus: SyllabusRepository | None = None,
     ) -> None:
         self._courses = courses
         self._paths = paths
@@ -131,6 +133,7 @@ class CourseService:
         self._ai = ai
         self._uow = uow
         self._owner_evaluators = owner_evaluators
+        self._syllabus = syllabus
 
     async def create(
         self,
@@ -162,7 +165,8 @@ class CourseService:
         course = await load_course(self._courses, user, course_id)
         path = await self._paths.get_by_course(course_id)
         counts = (await self._courses.counts([course_id])).get(course_id, CourseCounts())
-        return CourseView(course, path, await self._running_job_id(course), counts)
+        document = await self._syllabus.latest_document(course_id) if self._syllabus else None
+        return CourseView(course, path, await self._running_job_id(course), counts, document)
 
     async def _running_job_id(self, course: Course) -> str | None:
         """El trabajo en curso, para que la pantalla de carga lo consulte (mejor esfuerzo)."""
