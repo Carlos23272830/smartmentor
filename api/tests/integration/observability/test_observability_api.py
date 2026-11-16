@@ -177,6 +177,14 @@ async def test_the_metrics_come_out_of_the_views_and_respect_ownership(
             f"{API}/video-candidates/{video['id']}", json={"is_relevant": relevant}
         )
 
+    # El F1 de la extracción solo cuenta los cursos publicados (B-057): en borrador no hay fila.
+    draft = (await course.owner.get(f"{API}/metrics/evaluation")).json()
+    assert draft["extraction"] == []
+    async with engine.begin() as conn:
+        await conn.execute(
+            text("UPDATE courses SET status = 'published' WHERE id = :c"), {"c": course.id}
+        )
+
     metrics = (await course.owner.get(f"{API}/metrics/evaluation")).json()
     assert metrics["learning_path_ids"] == [course.path_id]
     assert metrics["extraction"][0]["course_id"] == course.id
