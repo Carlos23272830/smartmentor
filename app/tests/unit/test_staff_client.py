@@ -90,7 +90,11 @@ def _base_name(stem: str) -> str:
 def test_every_staff_fixture_validates_against_the_models(path: Any) -> None:
     data = json.loads(path.read_text(encoding="utf-8"))
     name = _base_name(path.stem)
-    list_models: dict[str, Any] = {"resources": Resource, "course_evaluators": CourseEvaluator}
+    list_models: dict[str, Any] = {
+        "resources": Resource,
+        "course_evaluators": CourseEvaluator,
+        "materials": CourseMaterial,
+    }
     if name in list_models:
         assert isinstance(data, list)
         for item in data:
@@ -142,6 +146,29 @@ def test_fixtures_echo_the_uploaded_materials_of_each_course() -> None:
     assert first.source_type == "pdf"
     assert [m.file_name for m in client.list_materials(7)] == ["u1.pdf"]
     assert client.list_materials(8)[0].source_type == "text"
+
+
+def test_fixtures_deactivate_a_material_and_hide_it() -> None:
+    client = FixturesClient("instructor")
+    first, second = client.list_materials(1)
+    removed = client.deactivate_material(1, first.id)
+    assert not removed.active
+    assert [m.id for m in client.list_materials(1)] == [second.id]
+    with pytest.raises(ApiError) as error:
+        client.deactivate_material(2, second.id)
+    assert error.value.code == "MATERIAL_NOT_FOUND"
+
+
+@respx.mock
+def test_api_client_deactivates_a_material() -> None:
+    base = "http://api.test"
+    client = ApiClient(base, lambda: "test-only-not-a-secret", http=httpx.Client(base_url=base))
+    material = json.loads((STAFF_DIR / "material.json").read_text("utf-8"))
+    route = respx.patch(f"{base}/api/v1/courses/7/materials/1/deactivate").mock(
+        return_value=httpx.Response(200, json={**material, "active": False})
+    )
+    assert not client.deactivate_material(7, 1).active
+    assert route.called
 
 
 @respx.mock

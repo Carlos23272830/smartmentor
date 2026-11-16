@@ -91,6 +91,7 @@ Extensiones permitidas (solo las de la columna «Extensiones»): `errors` (lista
 | `MATERIAL_TOO_LARGE` | 413 | El apunte supera 10 MB | API | D1b (R-004) |
 | `MATERIAL_UNSUPPORTED_TYPE` | 415 | El apunte no es PDF, TXT ni MD, o el texto no es UTF-8 | API | D1b (R-004) |
 | `MATERIAL_LIMIT_REACHED` | 422 | El curso ya tiene 20 apuntes activos | API | D1b (R-004) |
+| `MATERIAL_NOT_FOUND` | 404 | El apunte no existe o no es de ese curso | API | D2 (R-010) |
 | `MATERIAL_DUPLICATE` | 409 | El curso ya tiene ese mismo archivo entre sus apuntes activos (carrera entre dos subidas) | API | D1b (R-004) |
 | `EXTRACTION_IN_PROGRESS` | 409 | Ya hay una extracción en curso para el curso | API | D1c, D2c |
 | `TOPIC_NOT_FOUND` | 404 | El tema no existe | API | D2b |

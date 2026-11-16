@@ -86,6 +86,8 @@ class CourseMaterial(ApiModel):
     byte_size: int | None = None
     page_count: int | None = None
     extracted_char_count: int | None = None
+    active: bool = True
+    """`false`: el instructor lo quitó y ya no alimenta el RAG (R-010)."""
     created_at: datetime | None = None
 
 

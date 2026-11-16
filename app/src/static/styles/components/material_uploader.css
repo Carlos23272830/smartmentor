@@ -1,0 +1,9 @@
+/* Apuntes y lecturas (R-004 en D1b, R-010 en D2): cada apunte en una fila gris, como el archivo
+   del syllabus en D1b. */
+[class*="st-key-material-row-"],
+[class*="st-key-material-item-"] {
+  background: var(--bg-neutral);
+  border-radius: var(--radius-row);
+  padding: var(--space-8) var(--space-12);
+  align-items: center;
+}

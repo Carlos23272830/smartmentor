@@ -297,3 +297,38 @@ def test_d1d_error_box_names_the_file_and_swaps_the_buttons() -> None:
     kinds = {b.label: b.proto.type for b in at.button}
     assert kinds["Subir otro archivo"] == "primary"
     assert kinds["Pegar el texto"] == "secondary"
+
+
+def test_d2_lists_the_course_materials_and_removes_one() -> None:
+    """R-010: la sección de apuntes de D2 lista los del curso y «Quitar» saca uno."""
+    at = staff_app(page=SYLLABUS)
+    assert_no_exception(at)
+    texts = page_texts(at)
+    assert "Apuntes y lecturas" in texts
+    assert any("apuntes_u1_supervisado.pdf" in t and "Apuntes propios" in t for t in texts)
+    assert any("ISLR_cap3_regresion.md" in t and "Libro o material abierto" in t for t in texts)
+    at = click(at, "Quitar apunte")
+    assert_no_exception(at)
+    texts = page_texts(at)
+    assert not any("apuntes_u1_supervisado.pdf" in t for t in texts)
+    assert any("ISLR_cap3_regresion.md" in t for t in texts)
+
+
+def test_d2_add_materials_opens_the_uploader_window() -> None:
+    at = staff_app(page=SYLLABUS)
+    at = click(at, "Agregar apuntes")
+    assert_no_exception(at)
+    labels = [b.label for b in at.button]
+    assert "Subir apuntes" in labels
+    upload = next(b for b in at.button if b.label == "Subir apuntes")
+    assert upload.disabled  # sin archivos no hay nada que subir
+    at = click(at, "Cancelar")
+    assert "Subir apuntes" not in [b.label for b in at.button]
+
+
+def test_d2_warns_about_the_materials_that_could_not_be_used() -> None:
+    at = staff_app(page=SYLLABUS)
+    at.session_state["sr-materials-skipped"] = ["escaneado.pdf"]
+    at.run()
+    warnings = [w.value for w in at.warning]
+    assert any("«escaneado.pdf»" in w for w in warnings)

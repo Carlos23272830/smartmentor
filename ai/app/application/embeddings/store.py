@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
@@ -55,6 +55,15 @@ class KnowledgeStore(Protocol):
         model: str,
     ) -> int:
         """Store (or complete) a document with its fragments and vectors; returns its id."""
+        ...
+
+    async def retire_sources_except(self, course_id: int, keep_sha256: Collection[str]) -> int:
+        """Deactivate the active documents of the course whose hash is not in ``keep_sha256``.
+
+        The search only reads active documents, so a retired one (a deactivated note, a replaced
+        syllabus) stops grounding explanations. ``save_source`` reactivates it if it comes back.
+        Returns how many documents were retired.
+        """
         ...
 
     async def search(

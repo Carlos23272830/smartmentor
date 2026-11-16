@@ -360,6 +360,7 @@ def _material_response(material: CourseMaterial) -> MaterialResponse:
         byte_size=material.byte_size,
         page_count=material.page_count,
         extracted_char_count=material.extracted_char_count,
+        active=material.active,
         created_at=material.created_at,
     )
 
@@ -421,6 +422,19 @@ async def list_materials(
 ) -> list[MaterialResponse]:
     """Apuntes activos del curso, del más antiguo al más nuevo (R-004)."""
     return [_material_response(m) for m in await service.list_materials(user, course_id)]
+
+
+@router.patch(
+    "/courses/{course_id}/materials/{material_id}/deactivate", response_model=MaterialResponse
+)
+async def deactivate_material(
+    course_id: int, material_id: int, user: StaffUser, service: MaterialServiceDep
+) -> MaterialResponse:
+    """Quita un apunte del curso (R-010): deja de usarse en las próximas explicaciones.
+
+    Se desactiva, nunca se borra. Para volver a usarlo, se sube de nuevo el mismo archivo.
+    """
+    return _material_response(await service.deactivate(user, course_id, material_id))
 
 
 @router.post("/courses/{course_id}/extractions", response_model=JobAccepted, status_code=202)

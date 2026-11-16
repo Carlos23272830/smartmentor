@@ -233,6 +233,11 @@ class StaffApiOps:
             raise ApiError(502, "INVALID_RESPONSE", "CourseMaterial list")
         return [_parse(CourseMaterial, item) for item in data]
 
+    def deactivate_material(self, course_id: int, material_id: int) -> CourseMaterial:
+        """Quita el apunte del RAG (R-010); la API lo desactiva, no lo borra."""
+        path = f"/courses/{course_id}/materials/{material_id}/deactivate"
+        return self._send(CourseMaterial, "PATCH", path)
+
     def poll_job(self, job_id: str) -> Job:
         return self._get(Job, f"/jobs/{job_id}")
 
@@ -586,9 +591,9 @@ class StaffFixturesOps:
         return self._model(JobAccepted, "job_accepted")
 
     def _materials(self) -> list[CourseMaterial]:
-        """Eco mínimo de «Subir apuntes»: los apuntes subidos en esta sesión de fixtures."""
+        """Eco mínimo de los apuntes: los de `staff/materials.json` más los subidos en la sesión."""
         if not hasattr(self, "_uploaded_materials"):
-            self._uploaded_materials: list[CourseMaterial] = []
+            self._uploaded_materials: list[CourseMaterial] = self._list(CourseMaterial, "materials")
         return self._uploaded_materials
 
     def upload_material(
@@ -598,7 +603,7 @@ class StaffFixturesOps:
         if self.staff_scenario == "no_text":
             raise ApiError(422, "MATERIAL_NO_TEXT", "no selectable text")
         material = self._model(CourseMaterial, "material")
-        material.id = len(self._materials()) + 1
+        material.id = max((m.id for m in self._materials()), default=0) + 1
         material.course_id = course_id
         material.file_name = name
         material.origin = origin
@@ -608,7 +613,17 @@ class StaffFixturesOps:
         return material
 
     def list_materials(self, course_id: int) -> list[CourseMaterial]:
-        return [m for m in self._materials() if m.course_id == course_id]
+        return [m for m in self._materials() if m.course_id == course_id and m.active]
+
+    def deactivate_material(self, course_id: int, material_id: int) -> CourseMaterial:
+        found = next(
+            (m for m in self._materials() if m.id == material_id and m.course_id == course_id),
+            None,
+        )
+        if found is None:
+            raise ApiError(404, "MATERIAL_NOT_FOUND", "material not found")
+        found.active = False
+        return found
 
     def poll_job(self, job_id: str) -> Job:
         """«loading»: siempre en curso; «failed»: falla; si no, en curso la primera vez."""

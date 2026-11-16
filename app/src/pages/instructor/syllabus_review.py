@@ -3,6 +3,10 @@
 El instructor revisa los temas que extrajo la IA, los corrige, valida el grafo y publica. Las
 correcciones, los ciclos y el estado del curso los valida la API; la página solo muestra su
 respuesta. Las ventanas de Figma (D2b, D2c) son ventanas modales (`st.dialog`).
+
+La sección «Apuntes y lecturas» (R-010) no está en Figma: lista los apuntes del curso, agrega más
+con el mismo cargador de D1b (en una ventana) y quita los que sobran. Quitar uno lo saca de las
+próximas explicaciones; las ya generadas no cambian.
 """
 
 from typing import Any
@@ -13,10 +17,17 @@ import streamlit as st
 from clients.base import ApiError
 from clients.models import BloomLevel
 from clients.models_staff import Course, CourseTopic, LearningOutcomeWrite, TopicWrite
+from components.formatting import file_size
 from components.layout import (
     render_notice,
     render_page_header,
     render_page_header_with_actions,
+)
+from components.material_uploader import (
+    MATERIAL_ORIGINS,
+    SKIPPABLE_MATERIAL_ERRORS,
+    escape_markdown,
+    render_material_uploader,
 )
 from components.staff_theme import BLOOM_COLOR, BLOOM_LABEL, COURSE_BADGE, TOPIC_REVIEW_BADGE
 from components.table import Row, render_table
@@ -46,6 +57,9 @@ NOTICE = (
     "Tu rol: Instructor · Validar el syllabus es obligatorio antes de publicar. Los aprendices "
     "no ven el curso hasta que lo publiques."
 )
+MAX_MATERIAL_FILES = 5
+MAX_MATERIAL_BYTES = 10 * 1024 * 1024
+MATERIALS_SKIPPED = "sr-materials-skipped"
 BLOOM_BY_LABEL: dict[str, BloomLevel] = {label: level for level, label in BLOOM_LABEL.items()}
 NEW = -1
 
@@ -260,6 +274,88 @@ def _close_reextract() -> None:
     st.session_state["sr-reextract"] = False
 
 
+def _materials_panel() -> None:
+    """Ventana «Agregar apuntes» (R-010): el mismo cargador de D1b."""
+    files, too_many = render_material_uploader(
+        "sr-materials-upload", max_files=MAX_MATERIAL_FILES, max_bytes=MAX_MATERIAL_BYTES
+    )
+    if too_many:
+        st.error(f"Puedes subir hasta {MAX_MATERIAL_FILES} apuntes a la vez. Quita los que sobran.")
+    with st.container(horizontal=True):
+        st.space("stretch")
+        if st.button("Cancelar", key="sr-materials-cancel"):
+            st.session_state["sr-materials"] = False
+            st.rerun()
+        upload = st.button(
+            "Subir apuntes",
+            type="primary",
+            key="sr-materials-save",
+            disabled=not files or too_many,
+        )
+    if not upload:
+        return
+    skipped: list[str] = []
+    try:
+        for name, content, origin in files:
+            try:
+                client.upload_material(course.id, file=(name, content), origin=origin)
+            except ApiError as error:
+                if error.code not in SKIPPABLE_MATERIAL_ERRORS:
+                    raise
+                skipped.append(name)
+    except ApiError as error:
+        show_staff_error(error)
+        return
+    st.session_state[MATERIALS_SKIPPED] = skipped
+    st.session_state["sr-materials"] = False
+    st.rerun()
+
+
+def _close_materials() -> None:
+    """Cierra la ventana «Agregar apuntes» (también con la «x» o Esc)."""
+    st.session_state["sr-materials"] = False
+
+
+def _materials_section() -> None:
+    """Apuntes y lecturas del curso (R-010): fuentes del RAG además del syllabus."""
+    with st.container(border=True, key="card-course-materials"):
+        st.subheader("Apuntes y lecturas", anchor=False)
+        st.caption(
+            "La IA redacta la explicación de cada tema a partir del syllabus y de estos "
+            "documentos. Si quitas uno, deja de usarse en las próximas explicaciones; las que ya "
+            "se generaron no cambian."
+        )
+        try:
+            materials = client.list_materials(course.id)
+        except ApiError as error:
+            show_staff_error(error)
+            materials = []
+        if skipped := st.session_state.pop(MATERIALS_SKIPPED, None):
+            names_text = ", ".join(f"«{escape_markdown(n)}»" for n in skipped)
+            st.warning(
+                f"No pudimos usar estos apuntes: {names_text}. No tienen texto que la IA pueda "
+                "leer o no se admiten. Los demás quedaron guardados."
+            )
+        if not materials:
+            st.caption("Todavía no hay apuntes: las explicaciones usan solo el syllabus.")
+        for material in materials:
+            with st.container(horizontal=True, key=f"material-item-{material.id}"):
+                size = f" · {file_size(material.byte_size)}" if material.byte_size else ""
+                name = escape_markdown(material.file_name or f"Apunte {material.id}")
+                st.markdown(f"{name}{size} · {MATERIAL_ORIGINS[material.origin]}")
+                st.space("stretch")
+                if st.button("Quitar apunte", key=f"sr-material-rm-{material.id}", type="tertiary"):
+                    try:
+                        client.deactivate_material(course.id, material.id)
+                    except ApiError as error:
+                        show_staff_error(error)
+                    else:
+                        st.rerun()
+        if st.button("Agregar apuntes", key="sr-materials-add"):
+            st.session_state["sr-materials"] = True
+            st.rerun()
+
+
 def _table_view() -> None:
     render_notice(NOTICE)
     status_text = COURSE_BADGE[course.status][0].upper()
@@ -338,6 +434,7 @@ def _table_view() -> None:
             ):
                 st.session_state["sr-reextract"] = True
                 st.rerun()
+    _materials_section()
     if st.button("Ver los temas como grafo", key="sr-graph", type="tertiary"):
         st.session_state["sr-mode"] = "graph"
         st.rerun()
@@ -350,6 +447,10 @@ def _table_view() -> None:
     if st.session_state.get("sr-reextract"):
         st.dialog("¿Volver a extraer los temas?", width="small", on_dismiss=_close_reextract)(
             _reextract_panel
+        )()
+    if st.session_state.get("sr-materials"):
+        st.dialog("Agregar apuntes", width="medium", on_dismiss=_close_materials)(
+            _materials_panel
         )()
 
 
