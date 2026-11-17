@@ -45,15 +45,14 @@ La entrega final pide «un recorrido integral por el proceso, observando los res
 
 Todo lo que falta o está en marcha: ☐ pendiente, ◐ en curso, ⛔ bloqueado y 🔼 con PR abierto. Ordenado por peso en la entrega final. La sección [General · G-001](#g-001--revisar-cada-pantalla-de-figma-frente-al-flujo-implementado) (revisión de las 96 pantallas) y la [deuda técnica](#deuda-técnica-sin-tarea) siguen abajo.
 
-**Faltan 5 de 98 puntos** (☐ pendientes 3 · ◐ en curso 1 · ⛔ bloqueados 0 · 🔼 con PR abierto 1); 84 ya están en «Realizado» y 9 pasaron a «Migrados a la siguiente fase». La columna `#` se renumera cada vez que se mueve una fila.
+**Faltan 4 de 98 puntos** (☐ pendientes 3 · ◐ en curso 1 · ⛔ bloqueados 0 · 🔼 con PR abierto 0); 85 ya están en «Realizado» y 9 pasaron a «Migrados a la siguiente fase». La columna `#` se renumera cada vez que se mueve una fila.
 
 | # | ID | Área | Pendiente | Funcionalidades | Estado | Responsable | Depende de | Peso | Recomendación (propuesta práctica) |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | B-049 | Producto | E7b no puede mostrar «Otra forma de verlo» porque el backend no genera la explicación alterna | • La tarjeta `card-alt-view` ya existe, pero la API nunca crea un recurso `remedial`: `remedial_resource_id` llega siempre `null` y `grading.feedback` tampoco se rellena<br>• Falta que `api/` y `ai/` generen la explicación alterna (prompt `explicacion_alterna`) al reprobar un quiz<br>• Pantallas: E7b | ☐ Pendiente 👤 Decide el dueño | — | Dueño | Medio: E7b y la remediación | Es una función nueva (prompt, tarea de `ai/` y endpoint); recomiendo hacerla después del experimento E3, si el piloto necesita la remediación |
-| 2 | B-062 | Producto | Calidad del banco de preguntas | • Confirmado en la app real (E6c, tema 3, pregunta 5): `**` literales en un enunciado de respuesta corta, y líneas de un `robots.txt` pegadas<br>• Antes: tildes faltantes y la respuesta correcta casi siempre en la primera opción<br>• Pantallas: E6c, E8 | 🔼 PR 89 fusionado (formato y mezcla en código, `topic_quiz` v2; E3b: válidos 32,5 % a 60,0 %) y PR 92 abierto 2026-11-16: `diagnostic_generation` v2, `final_assessment` v2 y `topic_quiz` v3 (válidos 26,7 % a 30,0 % con jueces calibrados, dentro del ruido; claves erróneas de 4/4 a 0/1) con E3c. **La meta de ≥ 80 % no se cumple;** lo que queda es Bloom sobredeclarado y distractores débiles, y medir diagnóstico y final con jueces. Los porcentajes de E3, E3b y E3c no son comparables (la calibración endureció a los jueces). Al fusionar, hay que recompilar para que los bancos nuevos usen las versiones nuevas | Eduar Troyano | E3 ✔ | Medio | Limpiar el formato y mezclar las opciones en código (afecta solo a bancos nuevos y toca `ai/`, así que cambia la línea base de E3) |
-| 3 | T-057 | Evaluación | Datos que faltan para calcular las métricas con la base real | • `topics.estimated_minutes` es nulo en los 17 temas activos (minutos ahorrados)<br>• `interaction_events` solo trae eventos de inscripciones con `analysis_included = false` (m27)<br>• `item_annotations` vacía y ningún ítem con 10 respuestas (calidad y psicometría)<br>• `pilot_arm` vacío (d de Cohen)<br>• El rol `smartmentor_metrics` no tiene `SELECT` sobre `assessment_items` (equivalencia de ítems)<br>• **Avance 2026-11-16:** `item_annotations` ya no está vacía (80 ítems con dos evaluadores, E3) y habrá calificaciones nuevas de D5c (E7); siguen sin resolver `estimated_minutes`, `analysis_included` y `pilot_arm` | ☐ Pendiente 👤 Decide el dueño | — | Dueño | Medio | Pedir `estimated_minutes` en la extracción del syllabus (D2b no tiene el campo hoy: ver B-057); marcar `analysis_included` según el consentimiento; dar `SELECT` sobre `assessment_items` a métricas con un changeset |
-| 4 | T-051 | Hito y cierre | Brief v2 | • Redactarlo a partir de las bitácoras F00 a F09 | ◐ En curso | Carlos Villada | — | Medio | — |
-| 5 | T-052 | Hito y cierre | Release | • Etiqueta `v1.0-cohorte1` y notas de la versión | ☐ | — | T-051 | Medio | — |
+| 2 | T-057 | Evaluación | Datos que faltan para calcular las métricas con la base real | • `topics.estimated_minutes` es nulo en los 17 temas activos (minutos ahorrados)<br>• `interaction_events` solo trae eventos de inscripciones con `analysis_included = false` (m27)<br>• `item_annotations` vacía y ningún ítem con 10 respuestas (calidad y psicometría)<br>• `pilot_arm` vacío (d de Cohen)<br>• El rol `smartmentor_metrics` no tiene `SELECT` sobre `assessment_items` (equivalencia de ítems)<br>• **Avance 2026-11-16:** `item_annotations` ya no está vacía (80 ítems con dos evaluadores, E3) y habrá calificaciones nuevas de D5c (E7); siguen sin resolver `estimated_minutes`, `analysis_included` y `pilot_arm` | ☐ Pendiente 👤 Decide el dueño | — | Dueño | Medio | Pedir `estimated_minutes` en la extracción del syllabus (D2b no tiene el campo hoy: ver B-057); marcar `analysis_included` según el consentimiento; dar `SELECT` sobre `assessment_items` a métricas con un changeset |
+| 3 | T-051 | Hito y cierre | Brief v2 | • Redactarlo a partir de las bitácoras F00 a F09 | ◐ En curso | Carlos Villada | — | Medio | — |
+| 4 | T-052 | Hito y cierre | Release | • Etiqueta `v1.0-cohorte1` y notas de la versión | ☐ | — | T-051 | Medio | — |
 
 ## Migrados a la siguiente fase
 
@@ -77,7 +76,7 @@ Pendientes que **no se alcanzan en esta fase** y pasan a la siguiente: el piloto
 
 Lo que ya está en `dev` (✔) o se cerró sin hacer (✖, con el motivo). Corte: `dev` en `cbeb97f` (PR 48 a 75 fusionados) y Neon al día (62 changesets) el 2026-11-15.
 
-**Realizados: 84 de 98 puntos.** La columna `#` se renumera cada vez que se mueve una fila.
+**Realizados: 85 de 98 puntos.** La columna `#` se renumera cada vez que se mueve una fila.
 
 | # | ID | Área | Pendiente | Qué se hizo | Estado | Responsable |
 | ---: | --- | --- | --- | --- | --- | --- |
@@ -300,6 +299,7 @@ Recorrer las 96 pantallas de Figma v3 (incluidas las variantes por curso) y comp
 | ---: | --- | --- | --- | --- | --- | --- |
 | 1 | Biblioteca | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=24-2) (`24:2`) | Componentes · Biblioteca | N/A | N/A · Referencia de componentes, no es una pantalla |  |
 | 2 | Matriz | [Abrir](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/?node-id=2-3) (`2:3`) | Matriz de permisos | N/A | N/A · Referencia de permisos, no es una pantalla |  |
+| 3 | B-062 | Producto | Calidad del banco de preguntas | Formato y mezcla de opciones en código, `topic_quiz` v2 y v3, `diagnostic_generation` v2 y `final_assessment` v2; medición E3b y E3c con jueces-agente | ✔ Finalizado hasta donde se puede · `dev` ([PR 89](https://github.com/armandoordonez/smartmentor/pull/89) y [PR 92](https://github.com/armandoordonez/smartmentor/pull/92), 2026-11-16): válidos con ambos jueces de 32,5 % a 60,0 % (E3b) y 26,7 % a 30,0 % de v2 a v3 con jueces calibrados (E3c); claves erróneas de 4/4 a 0/1; respuesta correcta repartida en las cuatro posiciones. **La meta de ≥ 80 % no se cumple.** Queda con el dueño: Bloom sobredeclarado, distractores débiles y medir diagnóstico y final con jueces. Los bancos publicados no se tocaron: los bancos nuevos usan las versiones nuevas tras recompilar | Eduar Troyano |
 
 ## Notas de activación para QA y producción
 
