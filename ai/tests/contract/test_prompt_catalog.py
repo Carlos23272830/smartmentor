@@ -102,3 +102,27 @@ def test_placeholders_are_declared_and_user_data_is_delimited(prompt_id: str) ->
 def test_prompt_text_uses_learner_and_instructor_vocabulary(prompt_id: str) -> None:
     prompt = _current(prompt_id)
     assert FORBIDDEN_WORDS.findall(prompt.system + "\n" + prompt.user) == []
+
+
+ITEM_GENERATION_PROMPTS = ("diagnostic_generation", "topic_quiz", "final_assessment")
+
+
+@pytest.mark.parametrize("prompt_id", ITEM_GENERATION_PROMPTS)
+def test_item_generation_prompts_carry_the_quality_rules(prompt_id: str) -> None:
+    """B-062: plausible distractors, coherent Bloom level and plain text in every bank prompt.
+
+    The options are shuffled in code (``items/polish.py``), so the rationale must name them by
+    their content and never by position.
+    """
+    assert ENTRIES[prompt_id]["current_version"] >= 2
+    text = _current(prompt_id).user
+    for rule in (
+        "error conceptual típico",
+        "misma longitud",
+        "«todas las anteriores»",
+        "«costo cero»",
+        "Nivel de Bloom coherente",
+        "sin Markdown",
+        "nunca por número, letra ni posición",
+    ):
+        assert rule in text, rule
