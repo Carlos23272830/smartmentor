@@ -83,10 +83,11 @@ PROMPTS: tuple[PromptEntry, ...] = (
     ),
     PromptEntry(
         "topic_quiz",
-        1,
+        2,
         "Banco del quiz del tema",
         "E6b, E6c, U1b, D5",
-        "Genera ítems nuevos de opción múltiple y respuesta corta para el banco del quiz",
+        "Genera ítems nuevos de opción múltiple y respuesta corta para el banco del quiz, con "
+        "distractores plausibles y el nivel de Bloom que el ítem exige",
     ),
     PromptEntry(
         "short_answer_grading",

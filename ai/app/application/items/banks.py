@@ -21,6 +21,7 @@ from app.application.content.context import (
     topic_payload,
 )
 from app.application.items.checks import check_final_bank, check_quiz_bank, final_source
+from app.application.items.polish import polish_items
 from app.application.items.review import BANK_CONTRACT, ItemReviewer, build_bank
 from app.application.llm_runner import LlmRunner
 from app.domain.contracts.assessment import AssessmentItemsLLM
@@ -99,6 +100,7 @@ class QuizBankTask:
                 previous_stems=data.previous_stems,
             ),
         )
+        batch = polish_items(batch)
         reviews = await self._reviewer.review(batch.items, _outcome_text([topic]), call)
         sources: Mapping[str, ItemSource] = {i.id: "topic_quiz" for i in batch.items}
         bank = build_bank(batch.items, sources, reviews, meta, topic_id=topic.id)
@@ -140,6 +142,7 @@ class FinalBankTask:
                 previous_stems=data.previous_stems,
             ),
         )
+        batch = polish_items(batch)
         reviews = await self._reviewer.review(batch.items, _outcome_text(topics), call)
         sources = {i.id: final_source(i.id) for i in batch.items}
         bank = build_bank(batch.items, sources, reviews, meta, topic_id=None)

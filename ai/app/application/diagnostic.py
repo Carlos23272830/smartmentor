@@ -10,6 +10,7 @@ from typing import Literal, Self
 from pydantic import Field, model_validator
 
 from app.application.items import ReviewItem, review_items
+from app.application.items.polish import polish_items
 from app.application.jobs import JobContext, JobHandler
 from app.application.llm_runner import CallContext, EmbeddingRunner, LlmRunner
 from app.domain.contracts.assessment import (
@@ -86,7 +87,7 @@ class DiagnosticGenerateHandler(JobHandler[DiagnosticGenerateInput]):
                 + check_diagnostic_coverage(items, topic_ids)
             ),
         )
-        items = [item_from_llm(i, "diagnostic") for i in generated.items]
+        items = [item_from_llm(i, "diagnostic") for i in polish_items(generated).items]
         to_review = [
             ReviewItem(
                 item_id=i.id,
