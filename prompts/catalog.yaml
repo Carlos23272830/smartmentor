@@ -34,7 +34,7 @@ prompts:
       1: cb1a09b430e706ece71613c2077bd58ff13a1ffc3b548e7ee6ed384917a918a2
 
   - id: diagnostic_generation
-    current_version: 1
+    current_version: 2
     name_es: Generación del diagnóstico
     task: diagnostic.generate_items
     scope: por curso
@@ -45,6 +45,7 @@ prompts:
     screens: [E3]
     versions:
       1: 7e8ed0b9bb5fccd23dd39011db732fdac155ce8f97c4c3a7a74a11ec14004705
+      2: b4a7df20c923779cba9d06e4a5700c3ff3b219eead975ec21bdd7370ae431efe  # distractores plausibles, Bloom coherente y texto plano (B-062)
 
   - id: item_review
     current_version: 1
@@ -138,7 +139,7 @@ prompts:
       1: 02c6d63659d4d739e8396a4989ae84709fbec39b7da15e673d9090ccd12a0b1e
 
   - id: topic_quiz
-    current_version: 2
+    current_version: 3
     name_es: Banco del quiz del tema
     task: items.generate_quiz_bank
     scope: por tema (banco; bajo demanda si se agota)
@@ -150,6 +151,7 @@ prompts:
     versions:
       1: bc3a912e313000cd5ad2a0a20aff49d0898e77a5ea1bf4e327515792b1f4b189
       2: 6ca3e06d77c4d2ba25a4ffc9f87c73015efc86c0510aa8ae7be8b38348fc7982  # distractores plausibles, Bloom coherente y texto plano (B-062)
+      3: 032c993c0e2b68b23c60407bf3f319aabec4ef0bf41abcd0921a30ccec9233c7  # afina Bloom, distractores y precisión técnica (B-062, E3c)
 
   - id: short_answer_grading
     current_version: 2
@@ -166,7 +168,7 @@ prompts:
       2: a2ec66b372191929c90a6b3186e13b4f3b70380031d5a1ab4083357f66ccf5f1  # agrega reason (B-038)
 
   - id: final_assessment
-    current_version: 1
+    current_version: 2
     name_es: Banco de la evaluación final
     task: items.generate_final_bank
     scope: por ruta (ítems final y retention con equivalence_group)
@@ -177,6 +179,7 @@ prompts:
     screens: [E8, E14]
     versions:
       1: 09f41e0921c42a0e02cf694c718a91cdbccb4aebd1e26cb2300e6a991c0dd621
+      2: d8039287572f25b7112d72422c89605836210a449dc4d85d65c58017433033e8  # distractores plausibles, Bloom coherente y texto plano (B-062)
 
   - id: badge_text
     current_version: 1

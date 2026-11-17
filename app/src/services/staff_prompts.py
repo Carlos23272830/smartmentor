@@ -27,10 +27,11 @@ PROMPTS: tuple[PromptEntry, ...] = (
     ),
     PromptEntry(
         "diagnostic_generation",
-        1,
+        2,
         "Generación del diagnóstico",
         "E3",
-        "Genera 3 preguntas por tema (recordar, aplicar y analizar) para estimar el nivel previo",
+        "Genera 3 preguntas por tema (recordar, aplicar y analizar) para estimar el nivel previo, "
+        "con distractores plausibles",
     ),
     PromptEntry(
         "item_review",
@@ -83,7 +84,7 @@ PROMPTS: tuple[PromptEntry, ...] = (
     ),
     PromptEntry(
         "topic_quiz",
-        2,
+        3,
         "Banco del quiz del tema",
         "E6b, E6c, U1b, D5",
         "Genera ítems nuevos de opción múltiple y respuesta corta para el banco del quiz, con "
@@ -99,10 +100,11 @@ PROMPTS: tuple[PromptEntry, ...] = (
     ),
     PromptEntry(
         "final_assessment",
-        1,
+        2,
         "Banco de la evaluación final",
         "E8, E14",
-        "Banco de la evaluación final y de retención, con versiones equivalentes de cada ítem",
+        "Banco de la evaluación final y de retención, con versiones equivalentes de cada ítem y "
+        "distractores plausibles",
     ),
     PromptEntry(
         "badge_text",
