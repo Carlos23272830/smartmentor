@@ -139,7 +139,7 @@ prompts:
       1: 02c6d63659d4d739e8396a4989ae84709fbec39b7da15e673d9090ccd12a0b1e
 
   - id: topic_quiz
-    current_version: 2
+    current_version: 3
     name_es: Banco del quiz del tema
     task: items.generate_quiz_bank
     scope: por tema (banco; bajo demanda si se agota)
@@ -151,6 +151,7 @@ prompts:
     versions:
       1: bc3a912e313000cd5ad2a0a20aff49d0898e77a5ea1bf4e327515792b1f4b189
       2: 6ca3e06d77c4d2ba25a4ffc9f87c73015efc86c0510aa8ae7be8b38348fc7982  # distractores plausibles, Bloom coherente y texto plano (B-062)
+      3: 032c993c0e2b68b23c60407bf3f319aabec4ef0bf41abcd0921a30ccec9233c7  # afina Bloom, distractores y precisión técnica (B-062, E3c)
 
   - id: short_answer_grading
     current_version: 2
