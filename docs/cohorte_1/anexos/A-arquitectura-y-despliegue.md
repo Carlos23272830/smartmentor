@@ -1,6 +1,6 @@
 # Anexo A. Arquitectura y despliegue
 
-Documento de la cohorte 1 · Estado a 2026-11-18 · Se lee junto con el [brief de la cohorte](../../../proyecto/cohorte_1/brief.md), el [Anexo B (modelo de datos)](B-modelo-de-datos.md) y el [Anexo C (agentes, prompts y modelos)](C-agentes-prompts-y-modelos.md). La trazabilidad de requisitos está en [TRAZABILIDAD](../trazabilidad/TRAZABILIDAD.md) y el estado del trabajo en la [HOJA_DE_RUTA](../trazabilidad/HOJA_DE_RUTA.md). El procedimiento paso a paso está en el [runbook](../../deploy/runbook.md).
+Documento de la cohorte 1 · Estado a 2026-11-18 · Se lee junto con el [brief de la cohorte](../../../proyecto/cohorte_1/brief.md), el [Anexo B (modelo de datos)](B-modelo-de-datos.md) y el [Anexo C (agentes, prompts y modelos)](C-agentes-prompts-y-modelos.md). La trazabilidad de requisitos está en [TRAZABILIDAD](../trazabilidad/TRAZABILIDAD.md) y el estado del trabajo en la [HOJA_DE_RUTA](../trazabilidad/HOJA_DE_RUTA.md). El procedimiento paso a paso está en el [runbook](../runbook-despliegue.md).
 
 **Convención de este anexo.** Cada dato sale del código o de un documento del repositorio y lleva su fuente entre paréntesis (ruta desde la raíz del repositorio). Lo que no existe o no se pudo verificar se dice así: «no existe», «pendiente» o «no medido». No se reproduce ningún valor del `.env`: solo los nombres de las variables.
 
@@ -370,7 +370,7 @@ Con `DATABASE_HOST` distinto de `postgres`, el script no levanta el PostgreSQL l
 | Usuarios de base de mínimo privilegio | **Cumplido** en el esquema y el bootstrap (ADR 0019; `database/README.md`). |
 | Respaldos de las dos bases | **Existe el mecanismo manual** (`backup.sh`); no hay programación automática ni destino fuera de la máquina (sección 9.3). |
 
-Además faltan: quién opera el servidor (P-18) y la elección del destino (DEF-16). El runbook que prometía el ADR está en [`docs/deploy/runbook.md`](../../deploy/runbook.md) y cubre el despliegue local y con Neon; **no** cubre un servidor del piloto, porque ese destino no está decidido.
+Además faltan: quién opera el servidor (P-18) y la elección del destino (DEF-16). El runbook que prometía el ADR está en [`docs/cohorte_1/runbook-despliegue.md`](../runbook-despliegue.md) y cubre el despliegue local y con Neon; **no** cubre un servidor del piloto, porque ese destino no está decidido.
 
 ## 9. Base de datos en el despliegue
 

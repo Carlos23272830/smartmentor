@@ -175,7 +175,7 @@ Una aprobación al primer intento por encima de 85 % indica quizzes demasiado f�
 | Campo | Detalle |
 | --- | --- |
 | Función | `time_on_task(events, cap_seconds=3600)` |
-| Tabla | `interaction_events` de inscripciones con `analysis_included` (`active`), solo los tipos de tramo. Tipos y campos: [contrato, 4.2](../contracts/api-v2.md#42-eventos-de-uso-post-meevents) |
+| Tabla | `interaction_events` de inscripciones con `analysis_included` (`active`), solo los tipos de tramo. Tipos y campos: [contrato, 4.2](../../contracts/api-v2.md#42-eventos-de-uso-post-meevents) |
 | Tramo cerrado | Cada cierre (`path.close`, `topic.close`, `quiz.pause`, `quiz.submit`, `final.pause`, `final.submit`) aporta `payload.seconds`. Un cierre repetido (misma inscripción, tipo de visita y `payload.started_at`) cuenta una vez: el endpoint no es idempotente |
 | Tramo abierto | Apertura sin cierre (pestaña cerrada): `path.view` o `topic.open` sin un cierre cuyo `started_at` sea su `occurred_at`; `quiz.start` o `final.start` sin ningún cierre de su `attempt_id`. Se imputa `min(mediana, hasta el siguiente evento, 3600 s)`: la mediana de los tramos cerrados y no recortados del mismo tipo de visita en la cohorte, sin pasar del siguiente evento de tramo de la misma inscripción (los tramos no se solapan). Sin tramos de referencia se imputa 0 |
 | Tramo `capped` | Cuenta 3600 s (cota inferior del tramo real) y queda fuera de la mediana de referencia |

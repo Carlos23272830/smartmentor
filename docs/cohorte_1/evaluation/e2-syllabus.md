@@ -62,7 +62,7 @@ La hoja trae, por extracción, los temas extraídos (`id` y nombre), los nombres
 python -m eval.syllabus_experiment match --gold ~/e2/oro.csv --run-dir ~/e2/runs --mapping ~/e2/emparejar.json --out ~/e2/resultado.md
 ```
 
-Cada tema extraído se lleva a su nombre de oro y se comparan los conjuntos de temas y de pares `(prerrequisito, tema)`. El informe da precisión, recall y F1 por repetición, la media y el rango por curso y modelo, el total por modelo, los temas sin emparejar, el costo y la latencia. Publicar el resultado en `docs/evaluation/results/e2-<fecha>.md`.
+Cada tema extraído se lleva a su nombre de oro y se comparan los conjuntos de temas y de pares `(prerrequisito, tema)`. El informe da precisión, recall y F1 por repetición, la media y el rango por curso y modelo, el total por modelo, los temas sin emparejar, el costo y la latencia. Publicar el resultado en `docs/cohorte_1/evaluation/results/e2-<fecha>.md`.
 
 ## Lo que el experimento no dice
 

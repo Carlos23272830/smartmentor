@@ -18,7 +18,7 @@ El brief sugiere Supabase, Render, Railway o Hugging Face Spaces. El ADR 0001 ex
 2. **Si no se puede**, un **servicio gestionado con PostgreSQL 17 + pgvector 0.8.x**, verificado antes de elegirlo (paridad del ADR 0001).
 3. **Liquibase corre con la misma imagen** del repositorio, en el despliegue o en CI/CD.
 4. **Condiciones para cualquier destino:** HTTPS en Keycloak y en la app; `ai` sin puerto público; secretos solo en variables de entorno, rotados respecto a lo que estuvo en git; usuarios de base de mínimo privilegio ([ADR 0019](0019-least-privilege-db-users.md)); respaldos de las dos bases.
-5. **Las pruebas de despliegue y el runbook** (`docs/deploy/runbook.md`) se hacen en la Fase 10.
+5. **Las pruebas de despliegue y el runbook** (`docs/cohorte_1/runbook-despliegue.md`) se hacen en la Fase 10.
 
 ## 3. Alternativas descartadas
 

@@ -181,7 +181,7 @@ flowchart LR
 - **CI** en GitHub Actions (`ci.yml`, 11 trabajos; `audit` e `images` son informativos y los demás bloquean): Ruff, mypy y pytest en los tres servicios, Liquibase, realm de Keycloak, prompts, documentación, gitleaks y Trivy. **No existe despliegue continuo ni un archivo de producción del compose.**
 - **Destino del piloto:** sin decidir. El [ADR 0020](../../docs/adr/0020-deployment-target.md) propone primero la red de la organización responsable con el mismo compose.
 
-Detalle de contenedores, puertos, autenticación, directorios y despliegue: [anexo A](../../docs/cohorte_1/anexos/A-arquitectura-y-despliegue.md) y [runbook](../../docs/deploy/runbook.md).
+Detalle de contenedores, puertos, autenticación, directorios y despliegue: [anexo A](../../docs/cohorte_1/anexos/A-arquitectura-y-despliegue.md) y [runbook](../../docs/cohorte_1/runbook-despliegue.md).
 
 ## 9. Modelo de datos
 
@@ -197,26 +197,26 @@ Mapa de las entidades originales a las tablas actuales, diagramas por dominio y 
 
 ## 10. Evaluación: métricas y resultados
 
-Todos los resultados usan **jueces-agente** (Claude Opus y Sonnet) a ciegas sobre datos de prueba. Índice y detalle: [anexo D](../../docs/cohorte_1/anexos/D-experimentos.md) y [resumen de R-005](../../docs/evaluation/results/resumen-r005-2026-11-16.md).
+Todos los resultados usan **jueces-agente** (Claude Opus y Sonnet) a ciegas sobre datos de prueba. Índice y detalle: [anexo D](../../docs/cohorte_1/anexos/D-experimentos.md) y [resumen de R-005](../../docs/cohorte_1/evaluation/results/resumen-r005-2026-11-16.md).
 
 ### 10.1 Métricas del sistema
 
 | Experimento | Métrica | Meta | Resultado | Cumple |
 | --- | --- | --- | --- | --- |
-| [E2](../../docs/evaluation/results/e2-2026-11-16.md) · Estructuración del syllabus | F1 de temas y prerrequisitos | ≥ 0,85 | Temas 1,000; prerrequisitos 0,694 (`flash-lite`) y 0,578 (`flash`) | ✔ temas · ✖ prerrequisitos |
-| [E3](../../docs/evaluation/results/e3-2026-11-16.md) · Preguntas válidas | % válidas y κ | ≥ 80 % y κ ≥ 0,6 | 28,8 % con ambos jueces; κ 0,704 | ✖ calidad · ✔ acuerdo |
-| [E3b](../../docs/evaluation/results/e3b-2026-11-16.md) · Tras mejorar el prompt y el código | Igual | Igual | De 32,5 % a 60,0 % (`topic_quiz` v2, limpieza de formato y mezcla de opciones); κ 0,264 | ✖ (mejora) |
-| [E3c](../../docs/evaluation/results/e3c-2026-11-16.md) · Prompt v3 con jueces calibrados | Igual | Igual | De 26,7 % a 30,0 %; las claves erróneas bajan de 4 y 4 a 0 y 1 | ✖ (dentro del ruido) |
-| [E5](../../docs/evaluation/results/e5-2026-11-16.md) y [E5b](../../docs/evaluation/results/e5b-2026-11-16.md) · Fidelidad del RAG | Fidelidad a las fuentes | ≥ 0,8 | Media 0,889 (un tema en 0,667). Con `TOP_K` = 10 entran fragmentos de las lecturas, sin concluir si mejoran | ✔ media |
-| [E6](../../docs/evaluation/results/e6-2026-11-16.md) · Videos por tema | Precision@3 | ≥ 0,7 | 0,718; κ 0,766 | ✔ |
-| [E7](../../docs/evaluation/results/e7-2026-11-16.md) · Calificación automática | QWK | ≥ 0,6 | 0,998 con muestra polarizada | ✔ con salvedad |
-| [E8](../../docs/evaluation/results/e8-2026-11-15.md) · Desempeño técnico | Latencia p95 y JSON inválido | p95 < 20 s y JSON < 2 % | p95 de generación 120,1 s ✖; calificación 2,1 s y cierre del diagnóstico 9,2 s ✔; JSON inválido 0,8 % ✔ | ✖ generación · ✔ camino del aprendiz |
+| [E2](../../docs/cohorte_1/evaluation/results/e2-2026-11-16.md) · Estructuración del syllabus | F1 de temas y prerrequisitos | ≥ 0,85 | Temas 1,000; prerrequisitos 0,694 (`flash-lite`) y 0,578 (`flash`) | ✔ temas · ✖ prerrequisitos |
+| [E3](../../docs/cohorte_1/evaluation/results/e3-2026-11-16.md) · Preguntas válidas | % válidas y κ | ≥ 80 % y κ ≥ 0,6 | 28,8 % con ambos jueces; κ 0,704 | ✖ calidad · ✔ acuerdo |
+| [E3b](../../docs/cohorte_1/evaluation/results/e3b-2026-11-16.md) · Tras mejorar el prompt y el código | Igual | Igual | De 32,5 % a 60,0 % (`topic_quiz` v2, limpieza de formato y mezcla de opciones); κ 0,264 | ✖ (mejora) |
+| [E3c](../../docs/cohorte_1/evaluation/results/e3c-2026-11-16.md) · Prompt v3 con jueces calibrados | Igual | Igual | De 26,7 % a 30,0 %; las claves erróneas bajan de 4 y 4 a 0 y 1 | ✖ (dentro del ruido) |
+| [E5](../../docs/cohorte_1/evaluation/results/e5-2026-11-16.md) y [E5b](../../docs/cohorte_1/evaluation/results/e5b-2026-11-16.md) · Fidelidad del RAG | Fidelidad a las fuentes | ≥ 0,8 | Media 0,889 (un tema en 0,667). Con `TOP_K` = 10 entran fragmentos de las lecturas, sin concluir si mejoran | ✔ media |
+| [E6](../../docs/cohorte_1/evaluation/results/e6-2026-11-16.md) · Videos por tema | Precision@3 | ≥ 0,7 | 0,718; κ 0,766 | ✔ |
+| [E7](../../docs/cohorte_1/evaluation/results/e7-2026-11-16.md) · Calificación automática | QWK | ≥ 0,6 | 0,998 con muestra polarizada | ✔ con salvedad |
+| [E8](../../docs/cohorte_1/evaluation/results/e8-2026-11-15.md) · Desempeño técnico | Latencia p95 y JSON inválido | p95 < 20 s y JSON < 2 % | p95 de generación 120,1 s ✖; calificación 2,1 s y cierre del diagnóstico 9,2 s ✔; JSON inválido 0,8 % ✔ | ✖ generación · ✔ camino del aprendiz |
 
 **Costo:** el log completo suma US$ 1,85 en 372 llamadas (US$ 0,040 por inscripción) y los experimentos unos US$ 0,16 de un tope de US$ 3. El 68 % del costo son los bancos de preguntas, que se pagan una vez al publicar el curso, no por aprendiz.
 
 ### 10.2 Métricas de los aprendices (cohorte de desarrollo)
 
-El [cuaderno de métricas](../../docs/evaluation/results/metrics-cohort1-2026-11-15.md) corre contra la base real con un usuario de solo lectura, pero la cohorte es de desarrollo: 9 inscripciones de **3 personas** más aprendices simulados. Sirve para comprobar el cálculo, **no para afirmar efectos**.
+El [cuaderno de métricas](../../docs/cohorte_1/evaluation/results/metrics-cohort1-2026-11-15.md) corre contra la base real con un usuario de solo lectura, pero la cohorte es de desarrollo: 9 inscripciones de **3 personas** más aprendices simulados. Sirve para comprobar el cálculo, **no para afirmar efectos**.
 
 | Métrica | Valor | Meta |
 | --- | --- | --- |
@@ -251,7 +251,7 @@ El brief base planeaba 8 semanas. La cohorte avanzó por fases técnicas, del 20
 | F9 | Herramientas de evaluación y experimentos | ✔ herramientas · ◐ experimentos con jueces-agente · ⏭ piloto |
 | F10 y F11 | Revisión final, brief y traspaso | ◐ Este documento |
 
-**Fase 10 sin cumplir:** el plan v3 prometía una revisión final con `docs/revision-final.md`, prueba de carga ligera con 20 usuarios y recorrido caso por caso de los casos de uso. No hay registro de ellas en el repositorio. Sí hay evidencia de despliegue en **Windows y Linux** por parte del equipo y, desde esta entrega, el [runbook](../../docs/deploy/runbook.md).
+**Fase 10 sin cumplir:** el plan v3 prometía una revisión final con `docs/revision-final.md`, prueba de carga ligera con 20 usuarios y recorrido caso por caso de los casos de uso. No hay registro de ellas en el repositorio. Sí hay evidencia de despliegue en **Windows y Linux** por parte del equipo y, desde esta entrega, el [runbook](../../docs/cohorte_1/runbook-despliegue.md).
 
 **Desvío principal:** el hito de la semana 4 («flujo completo») se cumplió más tarde de lo planeado y el piloto no alcanzó a ejecutarse. Siguiendo la regla del brief base («recortar alcance antes que mover el piloto sin datos»), la cohorte cerró con experimentos sobre datos de prueba y dejó el piloto preparado para la siguiente. Los detalles de cada fase están en las [bitácoras](../../docs/cohorte_1/bitacora/) y la [hoja de ruta](../../docs/cohorte_1/trazabilidad/HOJA_DE_RUTA.md).
 
@@ -270,7 +270,7 @@ El brief base planeaba 8 semanas. La cohorte avanzó por fases técnicas, del 20
 - Repositorio único en GitHub, con ramas `feature/*`, `fix/*` y `docs/*` hacia `dev`; `stage` y `main` se promueven por el dueño del repositorio.
 - Cada cambio llega por pull request revisado y con CI en verde (98 fusionados al cierre).
 - Cada tarea se registra con ID, responsable y estado en la [trazabilidad](../../docs/cohorte_1/trazabilidad/TRAZABILIDAD.md); el seguimiento cierra con 98 puntos: 85 realizados, 9 migrados a la siguiente fase y 4 abiertos.
-- Estándares: Conventional Commits con coautoría del equipo, [definición de terminado](../../docs/standards/definition-of-done.md) y [estrategia de versionado](../../GIT_VERSIONING_STRATEGY.md).
+- Estándares: Conventional Commits con coautoría del equipo, [definición de terminado](../../docs/cohorte_1/definicion-de-terminado.md) y [estrategia de versionado](../../GIT_VERSIONING_STRATEGY.md).
 
 ## 13. Pendientes y siguiente fase
 
@@ -341,7 +341,7 @@ El brief base planeaba 8 semanas. La cohorte avanzó por fases técnicas, del 20
 | Documento | Contenido |
 | --- | --- |
 | [Anexo A · Arquitectura y despliegue](../../docs/cohorte_1/anexos/A-arquitectura-y-despliegue.md) | Contenedores, puertos, autenticación, directorios, CI y modos de despliegue |
-| [Runbook de despliegue](../../docs/deploy/runbook.md) | Pasos operativos: arranque, base remota, respaldo y restauración, diagnóstico |
+| [Runbook de despliegue](../../docs/cohorte_1/runbook-despliegue.md) | Pasos operativos: arranque, base remota, respaldo y restauración, diagnóstico |
 | [Anexo B · Modelo de datos](../../docs/cohorte_1/anexos/B-modelo-de-datos.md) | Mapa entidad a tabla, diagramas por dominio, auditoría, permisos y evolución |
 | [Anexo C · Agentes, prompts y modelos](../../docs/cohorte_1/anexos/C-agentes-prompts-y-modelos.md) | Tareas de IA, prompts versionados, modelos, presupuestos y jueces-agente |
 | [Anexo D · Experimentos](../../docs/cohorte_1/anexos/D-experimentos.md) | Índice de experimentos hechos y no alcanzados, con sus resultados |

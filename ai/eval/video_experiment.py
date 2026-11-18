@@ -3,7 +3,7 @@
 Two steps, both from files (no database access and no personal data):
 
 1. ``export``: from the candidates of every topic (a CSV exported from ``video_candidates``,
-   see ``docs/evaluation/e6-videos.md``) it writes one sheet per judge, with the videos of each
+   see ``docs/cohorte_1/evaluation/e6-videos.md``) it writes one sheet per judge, with the videos of each
    topic in a random order (a different one per judge, fixed seed) and **without** their rank,
    score or YouTube position, plus a key file with that information. The judges only fill
    ``is_relevant`` with ``true`` or ``false``.

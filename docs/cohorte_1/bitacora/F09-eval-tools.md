@@ -18,7 +18,7 @@ Rama `feature/evaluation-pilot`, creada desde `origin/dev` (commit `8bb1828`).
 - `notebooks/metrics_cohort1.ipynb` (32 celdas, 14 gráficos, 29 métricas en el tablero final),
   `notebooks/metrics_data.py` (consultas de solo lectura), `notebooks/synthetic_data.py` (semilla
   `20260507`), `notebooks/requirements.txt` (versiones fijas) y `notebooks/README.md`.
-- `docs/evaluation/metrics.md`: función, fórmula, tabla, meta e interpretación de cada métrica.
+- `docs/cohorte_1/evaluation/metrics.md`: función, fórmula, tabla, meta e interpretación de cada métrica.
 - `data/eval/README.md`, `data/eval/gold/README.md` y plantillas CSV vacías (solo encabezados) para
   syllabus, anotación de ítems, calificación humana y pertinencia de videos.
 

@@ -7,7 +7,7 @@ Dónde está cada cosa:
 - Tareas con fecha y hora, bugs, huecos de Figma y subidas: [`docs/cohorte_1/trazabilidad/`](docs/cohorte_1/trazabilidad/TRAZABILIDAD.md#cómo-se-lleva-este-registro), empezando por la [hoja de ruta](docs/cohorte_1/trazabilidad/HOJA_DE_RUTA.md).
 - Avance frente al brief y responsables: [brief de la cohorte 1](proyecto/cohorte_1/brief.md#12-gestión-del-proyecto) y la [trazabilidad](docs/cohorte_1/trazabilidad/TRAZABILIDAD.md).
 - Fases y decisiones: el [plan v3](PLAN_IMPLEMENTACION_V3.md).
-- Lo planteado frente a lo logrado: el [brief de la cohorte 1](proyecto/cohorte_1/brief.md). Resultados de los experimentos: [`docs/evaluation/results/`](docs/evaluation/results/resumen-r005-2026-11-16.md). Notas de la versión: [`CHANGELOG.md`](CHANGELOG.md) y [`docs/cohorte_1/release.md`](docs/cohorte_1/release.md).
+- Lo planteado frente a lo logrado: el [brief de la cohorte 1](proyecto/cohorte_1/brief.md). Resultados de los experimentos: [`docs/cohorte_1/evaluation/results/`](docs/cohorte_1/evaluation/results/resumen-r005-2026-11-16.md). Notas de la versión: [`CHANGELOG.md`](CHANGELOG.md) y [`docs/cohorte_1/release.md`](docs/cohorte_1/release.md).
 
 ## Qué funciona
 
@@ -60,7 +60,7 @@ Dónde está cada cosa:
 ## Próximos pasos sugeridos
 
 1. Publicar el release `v1.0-cohorte1` (dueño del repositorio, T-052).
-2. Escribir el documento final con los resultados de `docs/evaluation/results/` y el brief de la cohorte 1.
+2. Escribir el documento final con los resultados de `docs/cohorte_1/evaluation/results/` y el brief de la cohorte 1.
 3. Calibrar los jueces-agente con una persona en E3, E6 y E7.
 4. Para la siguiente fase: endurecimiento (T-050), textos legales, despliegue y el piloto con 15 a 30 aprendices (E4, E9 y E10).
 5. Mejorar la calidad de las preguntas (B-062) y construir la explicación alterna de E7b (B-049).

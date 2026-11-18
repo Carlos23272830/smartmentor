@@ -23,7 +23,7 @@ Esta versión cierra la cohorte 1. El flujo completo funciona de punta a punta c
 
 ## Métricas
 
-Los experimentos se hicieron con **jueces-agente** (Claude Opus y Sonnet), a ciegas y sobre datos de prueba. **Los jueces no son expertos humanos: los resultados son indicativos.** Resumen en [`resumen-r005-2026-11-16.md`](../evaluation/results/resumen-r005-2026-11-16.md).
+Los experimentos se hicieron con **jueces-agente** (Claude Opus y Sonnet), a ciegas y sobre datos de prueba. **Los jueces no son expertos humanos: los resultados son indicativos.** Resumen en [`resumen-r005-2026-11-16.md`](evaluation/results/resumen-r005-2026-11-16.md).
 
 | Experimento | Resultado | Meta | Cumple |
 | --- | --- | --- | --- |
@@ -46,8 +46,8 @@ Los experimentos se hicieron con **jueces-agente** (Claude Opus y Sonnet), a cie
 
 ## Informe
 
-- Resultados de los experimentos: [`docs/evaluation/results/`](../evaluation/results/resumen-r005-2026-11-16.md).
-- Métricas de la cohorte 1 con la base real: [`metrics-cohort1-2026-11-15.md`](../evaluation/results/metrics-cohort1-2026-11-15.md) y el cuaderno [`notebooks/metrics_cohort1.ipynb`](../../notebooks/metrics_cohort1.ipynb).
+- Resultados de los experimentos: [`docs/cohorte_1/evaluation/results/`](evaluation/results/resumen-r005-2026-11-16.md).
+- Métricas de la cohorte 1 con la base real: [`metrics-cohort1-2026-11-15.md`](evaluation/results/metrics-cohort1-2026-11-15.md) y el cuaderno [`notebooks/metrics_cohort1.ipynb`](../../notebooks/metrics_cohort1.ipynb).
 - Brief de la cohorte 1: [`proyecto/cohorte_1/brief.md`](../../proyecto/cohorte_1/brief.md).
 - Seguimiento: [`docs/cohorte_1/trazabilidad/TRAZABILIDAD.md`](trazabilidad/TRAZABILIDAD.md).
 

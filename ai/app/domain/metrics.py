@@ -583,7 +583,7 @@ def time_on_task(
 
     Cada fila trae ``event_type``, ``enrollment_id``, ``topic_id``, ``payload`` (objeto o texto
     JSON) y ``occurred_at`` (``datetime`` con zona u ISO 8601). Regla de m27
-    (``docs/evaluation/metrics.md``):
+    (``docs/cohorte_1/evaluation/metrics.md``):
 
     1. **Tramo cerrado**: cada evento de cierre (``path.close``, ``topic.close``, ``quiz.pause``,
        ``quiz.submit``, ``final.pause``, ``final.submit``) aporta ``payload.seconds``, recortado a

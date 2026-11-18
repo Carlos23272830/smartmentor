@@ -61,7 +61,7 @@ El informe trae el κ, P@3 y nDCG@3 de las cuatro ordenaciones con el número de
 - Si (c) iguala a (d), se simplifica el puntaje.
 - La personalización por aprendiz (H3) solo se construye si el ranking por tema llega a 0,7.
 
-Publicar el resultado en `docs/evaluation/results/e6-<fecha>.md`. Las hojas de los jueces solo tienen ids de YouTube y ranuras, sin datos personales; si se versionan, van en `data/eval/gold/video_relevance/`.
+Publicar el resultado en `docs/cohorte_1/evaluation/results/e6-<fecha>.md`. Las hojas de los jueces solo tienen ids de YouTube y ranuras, sin datos personales; si se versionan, van en `data/eval/gold/video_relevance/`.
 
 ## Lo que el experimento no dice
 

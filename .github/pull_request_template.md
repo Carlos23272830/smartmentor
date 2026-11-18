@@ -12,7 +12,7 @@
 
 ## Lista de verificación
 
-Detalle en [`docs/standards/definition-of-done.md`](../docs/standards/definition-of-done.md).
+Detalle en [`docs/cohorte_1/definicion-de-terminado.md`](../docs/cohorte_1/definicion-de-terminado.md).
 
 - [ ] Ruff (`check` y `format --check`), mypy y pytest en verde en los servicios tocados
 - [ ] `liquibase validate` en verde si hay changesets (y ninguno aplicado fue modificado)

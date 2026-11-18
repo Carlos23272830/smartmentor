@@ -193,7 +193,7 @@ Sin correr (no autorizado). 7 pruebas nuevas en `app/tests/unit/test_admin_adapt
 
 ### 2026-11-12 14:3x (aprox.) · NOTA · —
 
-A pedido del dueño se revisa `docs/`. Hasta ahora solo se habían usado `docs/contracts/openapi-api.json` y `api-v2.md`. Se leen la Definition of Done, los ADR 0016 y 0017 y `docs/evaluation/metrics.md`. T-012 a T-015 coinciden con ellos, salvo B-007 y F-014.
+A pedido del dueño se revisa `docs/`. Hasta ahora solo se habían usado `docs/contracts/openapi-api.json` y `api-v2.md`. Se leen la Definition of Done, los ADR 0016 y 0017 y `docs/cohorte_1/evaluation/metrics.md`. T-012 a T-015 coinciden con ellos, salvo B-007 y F-014.
 
 ### 2026-11-12 14:3x (aprox.) · BUG · B-007 · FIGMA · F-014
 
@@ -236,7 +236,7 @@ Al dueño se le preguntó dónde van las metas y el estado. Respuesta: **en la A
 ### 2026-11-12 14:56 · CAMBIO · T-015c
 
 - API: `app/domains/observability/catalog.py` (nuevo).
-  - Tablas `SYSTEM`, `LEARNERS` y `OTHERS` con las 29 métricas de AD3 (código, nombre, prioridad, unidad, meta y comprobación); las metas salen de `docs/evaluation/metrics.md`.
+  - Tablas `SYSTEM`, `LEARNERS` y `OTHERS` con las 29 métricas de AD3 (código, nombre, prioridad, unidad, meta y comprobación); las metas salen de `docs/cohorte_1/evaluation/metrics.md`.
   - `measured()` saca de `EvaluationMetrics` el valor y la muestra de las 12 que ya se calculan: F1, % válidas, κ, fidelidad, P@3, QWK, latencia p95, JSON inválido, costo, aprobación al primer intento, intentos y nDCG@3.
   - Las demás salen `no_data` con «Todavía no se calcula en la API (notebook o piloto)».
 - `GET /metrics/evaluation` suma `groups` a lo que ya devolvía (aditivo). La respuesta sigue siendo un `dict` sin esquema, así que `openapi-api.json` no cambia; `api-v2.md` sí.

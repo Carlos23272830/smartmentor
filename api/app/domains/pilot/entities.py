@@ -47,6 +47,6 @@ class ContentFacts:
     topics_without_backup: list[int] = field(default_factory=list)
     topics_without_equivalents: list[int] = field(default_factory=list)
     """Temas sin un `equivalence_group` con dos o más versiones paralelas (final y retención),
-    necesarias para comparar la ganancia de Hake (docs/evaluation/metrics.md)."""
+    necesarias para comparar la ganancia de Hake (docs/cohorte_1/evaluation/metrics.md)."""
     approved_diagnostic_items: int = 0
     approved_final_items: int = 0

@@ -4,7 +4,7 @@ Anexo del [brief de la cohorte 1](../../../proyecto/cohorte_1/brief.md). Describ
 
 Estado del anexo: 2026-11-18, sobre el código de la rama `docs/cohorte-1`. Cada dato lleva su ruta fuente entre paréntesis, relativa a la raíz del repositorio. Lo que no se pudo verificar en el código se marca como **no verificado** (sección 10).
 
-**Advertencia de lectura.** Todos los resultados de calidad son de la versión MVP, con datos de prueba y **jueces que son agentes de IA, no expertos humanos**. Son indicativos. El resumen de los experimentos está en [resumen-r005-2026-11-16.md](../../evaluation/results/resumen-r005-2026-11-16.md).
+**Advertencia de lectura.** Todos los resultados de calidad son de la versión MVP, con datos de prueba y **jueces que son agentes de IA, no expertos humanos**. Son indicativos. El resumen de los experimentos está en [resumen-r005-2026-11-16.md](../evaluation/results/resumen-r005-2026-11-16.md).
 
 ## 1. Qué hace la IA y qué no
 
@@ -24,7 +24,7 @@ Principio de diseño: **la IA propone y las personas validan**. Todo lo que deci
 | Explicar un tema | **IA** con RAG | El LLM redacta con citas `[n]` sobre fragmentos recuperados; un verificador mide la fidelidad | El instructor aprueba la versión (`pending_review` → aprobada) | `ai/app/application/content/explain.py` |
 | Buscar y ordenar videos | **Regla** + embeddings (sin LLM generativo) | YouTube Data API, filtros de duración e idioma, similitud coseno y ajustes lineales | El instructor decide en D5e (pertinente, usar este, respaldos) | `ai/app/application/video/service.py`, ADR 0016 |
 | Texto del badge | **IA** (solo redacta) | El LLM escribe nombre, descripción y criterios | La API arma la insignia (`ai/` solo escribe el texto) | `ai/app/application/badge/compose.py` |
-| Métricas del sistema y de los estudiantes | **Regla** | κ, QWK, F1, P@k, nDCG@k, Hake, SUS en funciones puras | Cuaderno reproducible | `ai/app/domain/metrics.py`, `docs/evaluation/metrics.md` |
+| Métricas del sistema y de los estudiantes | **Regla** | κ, QWK, F1, P@k, nDCG@k, Hake, SUS en funciones puras | Cuaderno reproducible | `ai/app/domain/metrics.py`, `docs/cohorte_1/evaluation/metrics.md` |
 
 Por qué se separó así: una nota o un umbral generados por un modelo no se pueden explicar a un aprendiz ni reproducir, y el brief pide justamente una secuenciación determinista y explicable («un enfoque con bandits o RL queda como trabajo futuro»). La IA se usa donde hace falta lenguaje (extraer, redactar, juzgar texto libre) y siempre con una salida estructurada que el código vuelve a validar.
 
@@ -105,8 +105,8 @@ Regla del catálogo: cambiar el texto de un prompt obliga a crear `<id>/v<n+1>.m
 | Prompt | Versión | Qué cambió | Medición |
 | --- | --- | --- | --- |
 | `topic_quiz` | v1 | Versión del notebook «Mago de Oz». Pedía variar la posición de la correcta y que `model_answer` justificara cada distractor | Línea base de E3 y brazo «antes» de E3b |
-| `topic_quiz` | v2 (B-062) | Cada distractor nace de un error conceptual típico; las cuatro opciones con la misma forma y longitud; prohibidas opciones absurdas, «todas/ninguna de las anteriores» y extremos («costo cero», «escala infinitamente», «siempre», «nunca»); `bloom_level` declara lo que el ítem exige de verdad; texto plano con tildes; las opciones se nombran por su contenido en `model_answer` porque el código las mezcla después | [E3b](../../evaluation/results/e3b-2026-11-16.md): ítems válidos con ambos jueces de 32,5 % a 60,0 %; distractores no plausibles del juez 1 de 24 a 7 de 40 |
-| `topic_quiz` | v3 (B-062, E3c) | Bloom más fino (elegir un comando o un flag es `remember` o `apply`; `analyze` solo si el enunciado trae evidencia; ante la duda, el nivel más bajo), distractores que el enunciado no descarte, y precisión técnica de la clave | [E3c](../../evaluation/results/e3c-2026-11-16.md): 26,7 % → 30,0 % válidas con ambos jueces (dentro del ruido); claves discutibles 4 y 4 → 0 y 1. Se publicó como vigente |
+| `topic_quiz` | v2 (B-062) | Cada distractor nace de un error conceptual típico; las cuatro opciones con la misma forma y longitud; prohibidas opciones absurdas, «todas/ninguna de las anteriores» y extremos («costo cero», «escala infinitamente», «siempre», «nunca»); `bloom_level` declara lo que el ítem exige de verdad; texto plano con tildes; las opciones se nombran por su contenido en `model_answer` porque el código las mezcla después | [E3b](../evaluation/results/e3b-2026-11-16.md): ítems válidos con ambos jueces de 32,5 % a 60,0 %; distractores no plausibles del juez 1 de 24 a 7 de 40 |
+| `topic_quiz` | v3 (B-062, E3c) | Bloom más fino (elegir un comando o un flag es `remember` o `apply`; `analyze` solo si el enunciado trae evidencia; ante la duda, el nivel más bajo), distractores que el enunciado no descarte, y precisión técnica de la clave | [E3c](../evaluation/results/e3c-2026-11-16.md): 26,7 % → 30,0 % válidas con ambos jueces (dentro del ruido); claves discutibles 4 y 4 → 0 y 1. Se publicó como vigente |
 | `diagnostic_generation` | v2 (B-062) | Mismas reglas de distractores, Bloom y texto plano; cada ítem debe exigir el nivel que declara (el diagnóstico pide remember, apply y analyze). Se quitó la instrucción de variar la posición de la correcta | **No medida con jueces** |
 | `final_assessment` | v2 (B-062) | Mismas reglas; además, cada versión paralela debe tener sus propios distractores plausibles; el ítem `analyze` trae evidencia que examinar | **No medida con jueces** |
 | `short_answer_grading` | v2 (B-038) | Agrega `reason` por criterio (una frase al aprendiz que no revela la respuesta esperada) y precisa `evidence` como cita literal breve | Sin medición v1 contra v2; E7 compara las calificaciones guardadas del sistema sin separarlas por versión |
@@ -117,14 +117,14 @@ Además de los prompts, B-062 agregó en código `ai/app/application/items/polis
 
 | Experimento | Tarea | Resultado | Meta | Documento |
 | --- | --- | --- | --- | --- |
-| E2 | `syllabus.structure` (2 modelos × 3 repeticiones × 2 syllabus) | F1 de temas 1,000; F1 de prerrequisitos 0,694 (`gemini-3.5-flash-lite`) y 0,578 (`gemini-3.8-flash`) | F1 ≥ 0,85 | `docs/evaluation/results/e2-2026-11-16.md` |
-| E3, E3b, E3c | Bancos de ítems | 28,8 % → 60,0 % (E3b) y 26,7 % → 30,0 % (E3c) de ítems válidos; κ 0,704, 0,264 y 0,452 | ≥ 80 % y κ ≥ 0,6 | `docs/evaluation/results/e3-2026-11-16.md`, `e3b-…`, `e3c-…` |
+| E2 | `syllabus.structure` (2 modelos × 3 repeticiones × 2 syllabus) | F1 de temas 1,000; F1 de prerrequisitos 0,694 (`gemini-3.5-flash-lite`) y 0,578 (`gemini-3.8-flash`) | F1 ≥ 0,85 | `docs/cohorte_1/evaluation/results/e2-2026-11-16.md` |
+| E3, E3b, E3c | Bancos de ítems | 28,8 % → 60,0 % (E3b) y 26,7 % → 30,0 % (E3c) de ítems válidos; κ 0,704, 0,264 y 0,452 | ≥ 80 % y κ ≥ 0,6 | `docs/cohorte_1/evaluation/results/e3-2026-11-16.md`, `e3b-…`, `e3c-…` |
 | E5, E5b | `content.explain_topic` | Fidelidad media 0,889 (E5) y 0,919 / 0,974 con `AI_RAG_TOP_K=10` (E5b); no concluyente | Fidelidad ≥ 0,8 | `e5-2026-11-16.md`, `e5b-2026-11-16.md` |
 | E6 | Videos | P@3 0,718; κ 0,766 | P@3 ≥ 0,7 | `e6-2026-11-16.md` |
 | E7 | `grading.short_answer` | QWK 0,998 (muestra polarizada) | QWK ≥ 0,6 | `e7-2026-11-16.md` |
 | E8 | Todas las tareas con llamadas registradas | Latencia, JSON inválido y costo por tarea (sección 8) | p95 < 20 s, JSON inválido < 2 % | `e8-2026-11-15.md` |
 
-Los documentos están en `docs/evaluation/results/`. El diagnóstico (AUC, E4), el efecto del brazo personalizado (E9) y la usabilidad (E10) pasaron a la siguiente fase junto con el piloto.
+Los documentos están en `docs/cohorte_1/evaluation/results/`. El diagnóstico (AUC, E4), el efecto del brazo personalizado (E9) y la usabilidad (E10) pasaron a la siguiente fase junto con el piloto.
 
 ## 3. RAG: explicaciones con fuentes
 
@@ -150,7 +150,7 @@ Las **lecturas** (libros abiertos y material aportado) entran como apuntes. Si e
 | --- | --- | --- |
 | E5 (`TOP_K` 4; 3 temas del curso 2; 5 lecturas) | Fidelidad media 0,889 en la base, en la condición A (solo syllabus) y en la B (con lecturas); el tema ETL/ELT queda en 0,667 | **No concluyente**: las lecturas se indexaron pero no entraron entre los 4 fragmentos, así que B dio exactamente lo mismo que A |
 | E5b (`TOP_K` 10; una generación por celda) | Media 0,919 (A) y 0,974 (B); 4 de 30 fragmentos fueron de lecturas (3 en el tema 2, 1 en el tema 3, 0 en el tema 1); el tema 2 pasó de 0,833 a 1,000 | **Sigue sin ser concluyente**: una regeneración con el mismo contexto no reproduce el texto, y el ruido entre generaciones es del orden del efecto buscado. Sí es concluyente que con `TOP_K` 4 la comparación era imposible y con 10 es posible |
-| Cohorte 1, 14 recursos | Fidelidad media 0,807; 7 de los 14 recursos bajo 0,8 (mínimo 0,5) | Cumple por 0,007; el margen no distingue cumplir de no cumplir (`docs/evaluation/results/metrics-cohort1-2026-11-15.md`) |
+| Cohorte 1, 14 recursos | Fidelidad media 0,807; 7 de los 14 recursos bajo 0,8 (mínimo 0,5) | Cumple por 0,007; el margen no distingue cumplir de no cumplir (`docs/cohorte_1/evaluation/results/metrics-cohort1-2026-11-15.md`) |
 
 Límites de la medición: la fidelidad la calcula **el mismo modelo que genera el texto** (se evalúa a sí mismo), no hay RAGAS en el repositorio ni verificación independiente, y no se evaluó la cobertura. Las regeneraciones de E5 y E5b dejaron versiones nuevas en `pending_review` (12 y 6) que el dueño decide si retira.
 
@@ -165,7 +165,7 @@ Cadena (ADR 0016; `ai/app/application/video/service.py`, `ai/app/domain/video_ra
 5. **Curaduría del instructor (ADR 0016, D5e):** juicio «Pertinente / No pertinente», «usar este», respaldos y videos agregados a mano (`origin = instructor`). La lista de respaldo del instructor es obligatoria para que ningún tema quede sin video. El índice de calidad no se muestra al aprendiz antes de que califique (sesgo de conformidad, C-08).
 6. **Por aprendiz:** al abrir un tema en inglés, si el aprendiz no declara inglés B1 o superior, la API llama a `video.rank` con `english_allowed: false` y muestra el video que resulte (`docs/contracts/ai-service-v1.md`, 4.3).
 
-**E6** (13 temas, 124 videos, dos jueces-agente a ciegas): κ 0,766, P@3 del puntaje vigente **0,718** (meta 0,7: cumple), nDCG@3 0,706. Comparación de ordenaciones: azar 0,473, orden de YouTube 0,564, **solo similitud 0,769** y puntaje vigente 0,718. Los bonos por idioma y duración no ayudaron en esta muestra (la diferencia no es concluyente con 13 temas). Cerca del 60 % de los candidatos no es pertinente: la búsqueda trae ruido y el recomendador lo filtra en parte (`docs/evaluation/results/e6-2026-11-16.md`).
+**E6** (13 temas, 124 videos, dos jueces-agente a ciegas): κ 0,766, P@3 del puntaje vigente **0,718** (meta 0,7: cumple), nDCG@3 0,706. Comparación de ordenaciones: azar 0,473, orden de YouTube 0,564, **solo similitud 0,769** y puntaje vigente 0,718. Los bonos por idioma y duración no ayudaron en esta muestra (la diferencia no es concluyente con 13 temas). Cerca del 60 % de los candidatos no es pertinente: la búsqueda trae ruido y el recomendador lo filtra en parte (`docs/cohorte_1/evaluation/results/e6-2026-11-16.md`).
 
 **Piezas del diseño que NO se construyeron (R-007)**, declaradas como trabajo futuro (`docs/cohorte_1/trazabilidad/TRAZABILIDAD.md`, fila R-007; `proyecto/cohorte_1/brief.md`):
 
@@ -189,13 +189,13 @@ Tampoco se usan los subtítulos ni los comentarios de YouTube (ADR 0016, secció
 
 **Cola de calificación humana (D5c).** Una persona califica una muestra desde la aplicación: `GET /evaluation/grading-queue` con `sample = random` (muestra aleatoria) o `learner_request` (el aprendiz pidió revisión), sin mostrar la nota del LLM, y `POST /attempt-answers/{id}/human-gradings` guarda la nota en `human_gradings` (`api/app/domains/evaluation/controller.py`). Esa tabla alimenta el QWK de la métrica.
 
-**E7** (`docs/evaluation/results/e7-2026-11-16.md`): 60 respuestas al azar de 145, de 34 ítems distintos, calificadas a ciegas por un juez de referencia (Claude Opus). **QWK 0,998** (meta ≥ 0,6). Esto **no** es «LLM contra humano»: es el juez del sistema (Gemini) contra un agente de IA de otra familia. La muestra es muy fácil y polarizada (58 de 60 respuestas valen 0 o 100; solo 2 son parciales), así que el 0,998 no mide el desempeño en los casos difíciles. Falta la calibración humana (15 a 20 respuestas, sobre todo parciales). En la cohorte, la muestra con calificación humana real era de 2 pares y el QWK de 0,923 «sin datos suficientes» (`metrics-cohort1-2026-11-15.md`).
+**E7** (`docs/cohorte_1/evaluation/results/e7-2026-11-16.md`): 60 respuestas al azar de 145, de 34 ítems distintos, calificadas a ciegas por un juez de referencia (Claude Opus). **QWK 0,998** (meta ≥ 0,6). Esto **no** es «LLM contra humano»: es el juez del sistema (Gemini) contra un agente de IA de otra familia. La muestra es muy fácil y polarizada (58 de 60 respuestas valen 0 o 100; solo 2 son parciales), así que el 0,998 no mide el desempeño en los casos difíciles. Falta la calibración humana (15 a 20 respuestas, sobre todo parciales). En la cohorte, la muestra con calificación humana real era de 2 pares y el QWK de 0,923 «sin datos suficientes» (`metrics-cohort1-2026-11-15.md`).
 
 Tiempo que espera el aprendiz: p95 de 2,1 s y 1,0 % de JSON inválido en 105 llamadas (E8).
 
 ## 6. Agentes de evaluación (jueces-agente)
 
-Para los experimentos de R-005 no hubo expertos humanos disponibles. El dueño decidió el 2026-11-16 que los jueces y anotadores serían **dos agentes de IA afinados como jueces** (`docs/cohorte_1/trazabilidad/PLAN_EXPERIMENTOS_R005.md`, sección 2).
+Para los experimentos de R-005 no hubo expertos humanos disponibles. El dueño decidió el 2026-11-16 que los jueces y anotadores serían **dos agentes de IA afinados como jueces** (`docs/cohorte_1/evaluation/plan-experimentos-r005.md`, sección 2).
 
 | Papel | Modelo | Qué hizo | Cuenta en la aplicación |
 | --- | --- | --- | --- |
@@ -211,7 +211,7 @@ El generador del contenido es Gemini; los jueces son de la familia Claude, para 
 **Protocolo** (plan, sección 5; resultados E3, E3b, E3c):
 
 - **A ciegas:** no ven el veredicto del sistema, el puesto ni el puntaje del recomendador, ni lo que anotó el otro juez. Cada uno trabaja en su propio contexto.
-- **Rúbrica:** la de `docs/evaluation/metrics.md`. Para ítems, cuatro criterios (`single_correct`, `clear_stem`, `bloom_ok`, `plausible_distractors`); el ítem es `valid` solo si los cuatro son verdaderos. Cada decisión lleva una frase de motivo.
+- **Rúbrica:** la de `docs/cohorte_1/evaluation/metrics.md`. Para ítems, cuatro criterios (`single_correct`, `clear_stem`, `bloom_ok`, `plausible_distractors`); el ítem es `valid` solo si los cuatro son verdaderos. Cada decisión lleva una frase de motivo.
 - **Afinado antes de contar:** 5 ítems de práctica que no cuentan y un 10 % de elementos repetidos, mezclados, para medir auto-consistencia (en E3, E3b y E3c: 8 de 8, 8 de 8 y 6 de 6 en ambos jueces).
 - **Aleatoriedad registrada:** semillas fijas (E3 `20261116`, E3b `20261117`, E3c `20261118`, E6 `42`).
 - **Entrada por la aplicación:** las anotaciones entran por la API (D5b, D5c y D5e), nunca por commit; los CSV con datos reales no se versionan (`data/eval/gold/README.md`). Los jueces no escriben datos personales.
@@ -241,7 +241,7 @@ El generador del contenido es Gemini; los jueces son de la familia Claude, para 
 
 **Costo.** Los agentes corren en Claude Code y su gasto **no se mide por llamada**: los resultados dan estimaciones con tarifas de lista, de unos US$ 0,6 a 1,0 (E3b) y 0,5 a 0,8 (E3c) para los dos jueces. El costo medido del servicio de IA en los experimentos fue de unos US$ 0,16 de los US$ 3 de tope en E2, E5, E6 y E7 (E2 US$ 0,114, búsqueda de videos US$ 0,03, E7 US$ 0,015, E5 US$ 0,008), más la generación de E3b (US$ 0,133 y 0,166), la de E3c (US$ 0,197) y E5b (US$ 0,128).
 
-**Dónde viven las evidencias:** `docs/evaluation/results/` (`e2`, `e3`, `e3b`, `e3c`, `e5`, `e5b`, `e6`, `e7`, `e8`, `metrics-cohort1` y `resumen-r005`). Los datos intermedios (colas ciegas, claves) quedaron fuera del repositorio. Las herramientas están en `ai/eval/` (`syllabus_experiment.py`, `video_experiment.py`, `llm_report.py`).
+**Dónde viven las evidencias:** `docs/cohorte_1/evaluation/results/` (`e2`, `e3`, `e3b`, `e3c`, `e5`, `e5b`, `e6`, `e7`, `e8`, `metrics-cohort1` y `resumen-r005`). Los datos intermedios (colas ciegas, claves) quedaron fuera del repositorio. Las herramientas están en `ai/eval/` (`syllabus_experiment.py`, `video_experiment.py`, `llm_report.py`).
 
 ## 7. Agentes de desarrollo (cómo se trabajó)
 

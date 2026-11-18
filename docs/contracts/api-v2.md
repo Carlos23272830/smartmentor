@@ -319,7 +319,7 @@ Los ítems de `Diagnostic` y `Attempt` traen además `topic_name`, `bloom_level`
 
 ### 4.2 Eventos de uso (`POST /me/events`)
 
-La app registra el uso para el tiempo en tarea (m27, [`metrics.md`](../evaluation/metrics.md#tiempo-en-tarea-m27)) en `interaction_events` (solo inserción). La API valida la forma (`event_type` con el patrón `^[a-z][a-z0-9_.]*$`, hasta 60 caracteres; `topic_id` opcional; `payload` objeto libre) y que cada `enrollment_id` sea del usuario; no valida el tipo ni el `payload`. Los tipos y campos los fija la app (`app/src/core/usage_events.py`):
+La app registra el uso para el tiempo en tarea (m27, [`metrics.md`](../cohorte_1/evaluation/metrics.md#tiempo-en-tarea-m27)) en `interaction_events` (solo inserción). La API valida la forma (`event_type` con el patrón `^[a-z][a-z0-9_.]*$`, hasta 60 caracteres; `topic_id` opcional; `payload` objeto libre) y que cada `enrollment_id` sea del usuario; no valida el tipo ni el `payload`. Los tipos y campos los fija la app (`app/src/core/usage_events.py`):
 
 | Pantalla | `event_type` | `topic_id` | `payload` |
 | --- | --- | --- | --- |
@@ -424,14 +424,14 @@ Con `PREREQUISITE_CYCLE`, el cuerpo de error trae `"cycle": [12, 11, 12]`.
 | `GET /pilots/{id}`, `PUT /pilots/{id}` | admin | `{"learning_path_id", "starts_on", "ends_on", "delayed_posttest_on", "random_seed"}` | `200 Pilot` con `arms` y `learning_path` (`id`, `name`, `group_label`) | `409 PILOT_ALREADY_STARTED` | AD4 |
 | `POST /pilots/{id}/randomize` | admin | — | `200 {"personalized": n, "fixed": m}` | `409 PILOT_ALREADY_STARTED`, `422 PILOT_CONSENT_REQUIRED` | AD4 |
 | `POST /pilots/{id}/start` | admin | — | `200 Pilot` (`running`) | `422 PILOT_NOT_READY` | AD4 |
-| `GET /pilots/{id}/readiness` | admin | — | `200 {"ready": false, "missing": ["min_consents", "item_bank"], "consents_accepted", "consents_total", "topics_total", "topics_with_items", "topics_with_equivalent_items"}` (temas con un `equivalence_group` de dos o más versiones, ver `docs/evaluation/metrics.md`) | — | AD4 |
+| `GET /pilots/{id}/readiness` | admin | — | `200 {"ready": false, "missing": ["min_consents", "item_bank"], "consents_accepted", "consents_total", "topics_total", "topics_with_items", "topics_with_equivalent_items"}` (temas con un `equivalence_group` de dos o más versiones, ver `docs/cohorte_1/evaluation/metrics.md`) | — | AD4 |
 | `GET /pilots/{id}/fixed-path-preview` | admin | — | `200 learning_path.v1` con `pilot_arm=fixed`, el `name` de cada paso y `final_pass_threshold` | — | AD4b |
 | `GET`, `POST /enrollments` | admin | `{"user_id", "learning_path_id"}` | `200`/`201` `AdminEnrollment`: la inscripción con `user_id`, `full_name` y `pilot_consent` (autorización `pilot_research` vigente) | `409 ENROLLMENT_ALREADY_EXISTS`, `403 CONSENT_REQUIRED` | AD5 |
 | `PATCH /enrollments/{id}/withdraw` | admin | `{"note": "…"}` | `200` (`withdrawn`, `analysis_included=false`) | `409 ENROLLMENT_CLOSED` | AD5 |
 | `PATCH /enrollments/{id}/move` | admin | `{"learning_path_id": 2}` | `200` (sale del análisis) | `409` | AD5 |
 | `GET /llm-call-logs?task=&model=&prompt_id=` | admin | — | `200` paginado | — | AD2 |
 | `GET /llm-call-logs/summary` | admin | — | `200 {"by_task": [{task, calls, invalid_json_rate, latency_p50_ms, latency_p95_ms, cost_usd}], "total_cost_usd"}` | — | AD2 |
-| `GET /metrics/evaluation?learning_path_id=` | admin (todo), instructor (sus rutas) | — | `200` (F1, κ, QWK, fidelidad, P@3, nDCG@3 que se calculan en SQL) y `groups`: el catálogo de AD3, con cada métrica, su meta (`docs/evaluation/metrics.md`) y su estado (`meets`, `not_met`, `report`, `no_data`), que decide la API | — | AD3 |
+| `GET /metrics/evaluation?learning_path_id=` | admin (todo), instructor (sus rutas) | — | `200` (F1, κ, QWK, fidelidad, P@3, nDCG@3 que se calculan en SQL) y `groups`: el catálogo de AD3, con cada métrica, su meta (`docs/cohorte_1/evaluation/metrics.md`) y su estado (`meets`, `not_met`, `report`, `no_data`), que decide la API | — | AD3 |
 
 ## 7. Trabajos y salud
 
