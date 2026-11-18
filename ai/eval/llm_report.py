@@ -31,7 +31,7 @@ from typing import Any
 
 # Moment B-013 was fixed (BUGS.md: 2026-11-13 10:31, America/Bogota = UTC-5).
 DEFAULT_CUTOFF = "2026-11-13T15:31:00Z"
-# E8 targets (docs/evaluation/metrics.md): p95 < 20 s and invalid JSON < 2 %.
+# E8 targets (docs/cohorte_1/evaluation/metrics.md): p95 < 20 s and invalid JSON < 2 %.
 P95_TARGET_MS = 20_000.0
 INVALID_TARGET_PCT = 2.0
 NO_COURSE = "sin curso"

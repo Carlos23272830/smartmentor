@@ -10,7 +10,7 @@ Análisis y cálculo de métricas, reproducibles por cada cohorte.
 | `requirements.txt` | Dependencias con versión fija (Python 3.12) |
 
 Las funciones de cálculo no viven aquí: están en `ai/app/domain/metrics.py` (solo biblioteca
-estándar, con pruebas). Cada métrica, su fórmula y su meta: `docs/evaluation/metrics.md`.
+estándar, con pruebas). Cada métrica, su fórmula y su meta: `docs/cohorte_1/evaluation/metrics.md`.
 
 ## Modo de demostración (sin base)
 

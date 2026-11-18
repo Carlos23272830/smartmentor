@@ -8,7 +8,7 @@ Cierre de la cohorte 1. Las notas del GitHub Release, con las métricas, están 
 
 ### Cierre de la cohorte 1 (2026-11-14 a 2026-11-17, PR 40 a 94)
 
-- **Experimentos de evaluación (R-005):** E2, E3, E5, E6 y E7 con jueces-agente a ciegas, más E8 (latencia y costo) con el log real. Resultados en [`docs/evaluation/results/`](docs/evaluation/results/resumen-r005-2026-11-16.md). Herramientas `eval.syllabus_experiment` y `eval.video_experiment`, y cuentas `experimento_` para los recorridos.
+- **Experimentos de evaluación (R-005):** E2, E3, E5, E6 y E7 con jueces-agente a ciegas, más E8 (latencia y costo) con el log real. Resultados en [`docs/cohorte_1/evaluation/results/`](docs/cohorte_1/evaluation/results/resumen-r005-2026-11-16.md). Herramientas `eval.syllabus_experiment` y `eval.video_experiment`, y cuentas `experimento_` para los recorridos.
 - **Calidad del banco de preguntas (B-062):** formato y mezcla de opciones en código, `topic_quiz` v2 y v3, `diagnostic_generation` v2 y `final_assessment` v2 (medidas con E3b y E3c).
 - **Apuntes y lecturas como fuentes del RAG (R-004 y R-010):** carga desde D1b y D2, retiro del RAG al quitarlos y top-k configurable (`AI_RAG_TOP_K`).
 - **Videos (B-064 y E6):** «Buscar videos de nuevo» en D5e, diagnóstico de por qué un tema tiene pocos videos y `search_position` de YouTube en cada candidato.

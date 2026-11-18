@@ -8,7 +8,7 @@ Rama `feature/repo-standards`, creada desde `feature/baseline-dev` (el worktree 
 
 - `.github/workflows/ci.yml`: trabajos `api`, `app` y `liquibase`. Se ejecuta en `push` a `feature/**` y `dev`, y en `pull_request` hacia `dev`. Usa `uv` 0.9.30 con `astral-sh/setup-uv` (no `dev.sh`).
 - `ruff.toml` común (E, F, I, B, UP, SIM, ASYNC, S, DTZ, C4, PT, RUF, ARG, T20; línea de 100; comillas dobles). `api/pyproject.toml` y `app/pyproject.toml` lo heredan con `extend` y solo declaran excepciones.
-- `.pre-commit-config.yaml`, `.editorconfig`, `.dockerignore` (raíz; se ampliaron los de `api/` y `app/`), `.github/pull_request_template.md`, `.github/dependabot.yml`, `CONTRIBUTING.md`, `docs/standards/definition-of-done.md`, `.python-version` (3.12).
+- `.pre-commit-config.yaml`, `.editorconfig`, `.dockerignore` (raíz; se ampliaron los de `api/` y `app/`), `.github/pull_request_template.md`, `.github/dependabot.yml`, `CONTRIBUTING.md`, `docs/cohorte_1/definicion-de-terminado.md`, `.python-version` (3.12).
 - Lint actual de `api` y `app` en verde con las reglas nuevas (ver Decisiones). Sin cambios de lógica de negocio.
 - Commits: ver `git log feature/repo-standards` (primer commit `ci: agrega CI mínima y Ruff común…`).
 
@@ -52,6 +52,6 @@ Ninguno. El brief no menciona herramientas de calidad. Para el brief v2, la secc
 ## Cambios pedidos a archivos compartidos
 
 - `.gitignore`: nada. `.env.example`, `docker-compose.yml`: nada.
-- `docs/adr/README.md` / índice: enlazar `docs/standards/definition-of-done.md` y `CONTRIBUTING.md` cuando se consolide.
+- `docs/adr/README.md` / índice: enlazar `docs/cohorte_1/definicion-de-terminado.md` y `CONTRIBUTING.md` cuando se consolide.
 - Cuando exista `ai/`: sumar su pyproject con `extend = "../ruff.toml"`, un trabajo `ai` en `ci.yml`, una entrada en `dependabot.yml` y su ruta en `files:` de Ruff en `.pre-commit-config.yaml`.
 - Checklist: marcar «CI mínima y estándares de repositorio» (`proyecto/cohorte_1/checklist.md`, a cargo del integrador).

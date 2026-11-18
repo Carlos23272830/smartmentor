@@ -76,4 +76,4 @@ Los ganchos corren Ruff (lint y formato), `check-yaml`, `check-json`, fin de arc
 
 ## 6. Pull requests
 
-Usa la plantilla de [`.github/pull_request_template.md`](.github/pull_request_template.md). Mantenlos pequeños y de un solo tema, y revisa la lista de [`docs/standards/definition-of-done.md`](docs/standards/definition-of-done.md). Las decisiones de arquitectura van como ADR en `docs/adr/`.
+Usa la plantilla de [`.github/pull_request_template.md`](.github/pull_request_template.md). Mantenlos pequeños y de un solo tema, y revisa la lista de [`docs/cohorte_1/definicion-de-terminado.md`](docs/cohorte_1/definicion-de-terminado.md). Las decisiones de arquitectura van como ADR en `docs/adr/`.
