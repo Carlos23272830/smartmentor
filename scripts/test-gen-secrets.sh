@@ -28,7 +28,7 @@ for pair in OWNER_DATABASE_PASSWORD:32 API_DATABASE_PASSWORD:32 AI_DATABASE_PASS
   [[ "$value" =~ ^[A-Za-z0-9]+$ ]] || fail "$name tiene caracteres no alfanuméricos"
   grep -qF -- "$value" "$WORK/salida.txt" && fail "la salida imprimió el valor de $name"
 done
-grep -q '^POSTGRES_USER=$' "$WORK/.env" || fail "rellenó un nombre de usuario, que debe definir el dueño"
+grep -q '^POSTGRES_USER=smartmentor$' "$WORK/.env" || fail "cambió el nombre de usuario que trae .env.example"
 [ "$(stat -c '%a' "$WORK/.env")" = "600" ] || fail "el archivo no quedó con permisos 600"
 
 before="$(sha256sum "$WORK/.env")"

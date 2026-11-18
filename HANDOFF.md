@@ -69,11 +69,19 @@ Dónde está cada cosa:
 
 Checklist del brief:
 
-- [ ] Versión etiquetada en Git y aplicación desplegada funcionando. Las notas de la versión están listas; faltan la etiqueta y el despliegue.
+- [ ] **Versión etiquetada en Git (`v1.0-cohorte1`, T-052).** Las notas están listas ([`release.md`](docs/cohorte_1/release.md) y [`CHANGELOG.md`](CHANGELOG.md)), pero **no hay etiqueta ni Release publicados**. Hoy `stage` y `main` siguen en `3dae23d`, 603 commits por detrás de `dev`. Las únicas etiquetas son internas: `schema-v1-final` (último estado de la base v1) y `b040` (local, sin valor). Lo hace el dueño del repositorio: promover `dev` a `stage` y `main`, etiquetar sobre `main` y publicar el Release.
+- [x] **Aplicación funcionando en local.** Todo el trabajo y las pruebas fueron locales, con Docker Compose en Linux y Windows con WSL2: ocho servicios y base local o compartida en Neon. Se levanta con `scripts/local-up.sh` y el [runbook](docs/cohorte_1/runbook-despliegue.md).
+- [ ] **Despliegue en un entorno web (QA o producción).** No existe: no hay servidor, hosting ni CD, y la base compartida de Neon es un plan gratuito de desarrollo. Pasa a la siguiente fase junto con el piloto: destino y operador ([ADR 0020](docs/adr/0020-deployment-target.md), T-043) y endurecimiento (T-050).
 - [x] Este `HANDOFF.md` actualizado (2026-11-17).
-- [ ] Notebook de métricas reproducible con los datos del piloto.
+- [x] **Notebook de métricas reproducible.** [`notebooks/metrics_cohort1.ipynb`](notebooks/README.md) se ejecuta de arriba abajo, con datos sintéticos (`synthetic_data.py`) o contra la base real en solo lectura. La evidencia que lo respalda: la prueba «Mago de Oz» ([`design/04-prueba-mago-de-oz/`](design/04-prueba-mago-de-oz/README.md)), los [experimentos E2 a E8](docs/cohorte_1/anexos/D-experimentos.md) con sus [resultados](docs/cohorte_1/evaluation/results/resumen-r005-2026-11-16.md) y el [cuaderno sobre la cohorte de desarrollo](docs/cohorte_1/evaluation/results/metrics-cohort1-2026-11-15.md). **Con datos del piloto no se pudo:** el piloto con usuarios reales pasa a la siguiente fase.
 - [ ] Datos anonimizados y anotaciones en `data/`.
-- [ ] Accesos transferidos (GitHub, despliegue, claves de API, Figma, Keycloak).
+- [x] **Accesos transferidos.** Qué se entrega y dónde está cada cosa:
+  - **GitHub:** el repositorio `armandoordonez/smartmentor`; el dueño administra los permisos y las promociones a `stage` y `main`.
+  - **Despliegue:** local con Docker Compose; no hay cuentas de hosting. La base compartida de Neon es un proyecto del plan gratuito, a nombre del dueño (sus contraseñas se piden por un canal privado).
+  - **Configuración (`.env`):** [`.env.example`](.env.example) trae los valores de desarrollo y de prueba (usuarios, modelos, topes de gasto, correos de prueba). Quedan vacíos, a propósito, las contraseñas, los secretos de Keycloak y de la base y las claves de API: `scripts/gen-secrets.sh` genera los secretos.
+  - **Claves de API:** `GEMINI_API_KEY` y `YOUTUBE_API_KEY` no se versionan. Quien continúe pone las suyas en el `.env`.
+  - **Figma:** archivo maestro v3 (`atp2fZdSolEoaww3n9jRLg`), con acceso desde la cuenta del dueño.
+  - **Keycloak:** el realm versionado no trae secretos ni usuarios; `scripts/local-up.sh` crea los usuarios de prueba y el administrador se crea con `--with-admin`.
 - [x] Brief actualizado con métricas y lecciones aprendidas ([brief de la cohorte 1](proyecto/cohorte_1/brief.md)).
 
 Para pasar los datos de un PC a otro: `database/scripts/backup.sh` en el origen, copiar los `.dump` y `restore.sh` en el destino (aplicación y Keycloak). El `.env` no viaja con git y tiene credenciales: cópialo por un canal seguro o regenéralo con `scripts/gen-secrets.sh`.
