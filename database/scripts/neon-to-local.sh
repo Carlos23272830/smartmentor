@@ -113,7 +113,7 @@ do_restore() {
   [[ -n "$KC_ROLE" ]] || die "Falta KEYCLOAK_DB_USER en .env."
   local dir="${DIR_ARG:-${PULL_DIR:-}}"
   if [[ -z "$dir" ]]; then
-    dir="$(ls -d "$BACKUP_ROOT"/neon_* 2>/dev/null | sort | tail -1 || true)"
+    dir="$(find "$BACKUP_ROOT" -maxdepth 1 -type d -name 'neon_*' 2>/dev/null | sort | tail -1 || true)"
     [[ -n "$dir" ]] || die "No hay respaldos de Neon en database/backups/. Ejecuta primero: $0 pull"
   fi
   [[ "$dir" = /* ]] || dir="$ROOT_DIR/$dir"
@@ -146,7 +146,13 @@ do_restore() {
   done
 
   say "4/5 Recreando bases, roles y pgvector, y restaurando"
-  "$ROOT_DIR/database/scripts/bootstrap.sh"
+  # bootstrap.sh actúa sobre una base REMOTA si ve ADMIN_DATABASE_URL: aquí debe actuar solo sobre la local,
+  # así que se le pasa un .env sin esa variable.
+  local boot_env
+  boot_env="$(mktemp)"
+  if [[ -f "$ENV_FILE" ]]; then grep -v '^ADMIN_DATABASE_URL=' "$ENV_FILE" > "$boot_env"; fi
+  ADMIN_DATABASE_URL="" ENV_FILE="$boot_env" "$ROOT_DIR/database/scripts/bootstrap.sh" || { rm -f "$boot_env"; die "Falló bootstrap.sh en la base local."; }
+  rm -f "$boot_env"
   for pair in "$app_dump:$APP_DB:$OWNER_ROLE" "$kc_dump:$KC_DB:$KC_ROLE"; do
     IFS=: read -r dump db role <<< "$pair"
     echo "  restaurando '$db' (dueño: $role)"
