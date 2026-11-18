@@ -211,6 +211,22 @@ database/scripts/remote-sync.sh push         # exporta las dos bases locales y l
 
 `remote-sync.sh` también tiene `export` (solo genera los archivos en `database/backups/remote_<fecha>/`) e `import [CARPETA]`. Se niega a escribir sobre una base remota que ya tiene tablas; para reemplazarla: `import --replace --yes`. No ejecutes Liquibase antes del `push`: el volcado trae el esquema y `databasechangelog`, y los `liquibase update` posteriores siguen funcionando. Los volcados de Keycloak contienen hashes de contraseñas y llaves: son secretos (`database/backups/` está ignorado por git).
 
+### Bajar Neon a la base local (compartir un respaldo con el equipo)
+
+`database/scripts/neon-to-local.sh` es el camino inverso de `remote-sync.sh`: respalda las dos bases de Neon y las sube a la base local, **barriendo antes la que haya**.
+
+```bash
+docker compose up -d postgres
+database/scripts/neon-to-local.sh pull                      # genera database/backups/neon_<fecha>/ (solo lee Neon)
+database/scripts/neon-to-local.sh restore [CARPETA] [--yes] # copia la base local, la borra y sube el respaldo
+database/scripts/neon-to-local.sh sync                      # pull + restore
+```
+
+`restore` hace antes una copia de la base local con `backup.sh`, detiene `api`, `ai`, `ai-worker` y `keycloak`, recrea las bases con `bootstrap.sh` y restaura con los dueños de siempre. No levanta los servicios: apunta el `.env` a la base local (`DATABASE_HOST=postgres`, `DATABASE_SSL=false`, `DATABASE_JDBC_PARAMS` vacío y `KC_DB_URL` local) y ejecuta `docker compose up -d`.
+
+**Cómo montarlo cada integrante:** quien genera el respaldo empaqueta la carpeta (`tar czf neon_<fecha>.tar.gz -C database/backups neon_<fecha>` y `sha256sum`) y la comparte por un canal privado del equipo (unidad compartida, no el repositorio). Cada integrante verifica el `sha256`, la extrae en `database/backups/` y ejecuta `database/scripts/neon-to-local.sh restore database/backups/neon_<fecha>`. El volcado de Keycloak trae hashes de contraseñas y llaves: **nunca lo subas al repositorio** (es público; `database/backups/` está ignorado por git).
+
+
 **Cada integrante, después:** copia el `.env` compartido por un canal privado y ejecuta `scripts/local-up.sh`. Primera conexión tras una suspensión del cómputo gratuito de Neon: puede tardar unos segundos.
 
 **Límites a tener en cuenta:** varios Keycloak sobre la misma base no son un clúster; si alguien cambia roles o clientes desde la consola, los demás pueden tardar en verlo (reinicia su contenedor). Los cambios de configuración deben hacerlos una sola persona. Las pruebas de integración usan una base propia local (`smartmentor_test`); no las apuntes a la base compartida.
