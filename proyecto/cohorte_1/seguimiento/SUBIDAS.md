@@ -193,12 +193,12 @@ Revisión con `gh` y `git` del estado real de `dev`, sin subir nada.
 
 - **Fusiones (el dueño):** PR 27 (`1acb4df`) y PR 28 (`2cb6009`) el 2026-11-15 08:59, PR 30 (`ec7ac6e`) a las 09:02 y PR 29 (`8852c1d`) a las 09:10
 - **PR 31** (`fix/ci-liquibase-reintentos`): CI en verde. La imagen de Liquibase reintenta y vacía la caché de BuildKit si la descarga del driver llega dañada (el diagnóstico en el runner mostró que Maven Central sirve el jar correcto y que el fallo es intermitente)
-- **Esta entrada:** rama `feature/recomendaciones-dueno`, con la columna «Recomendación (propuesta práctica)» en `PENDIENTES.md`
+- **Esta entrada:** rama `feature/recomendaciones-dueno`, con la columna «Recomendación (propuesta práctica)» en `TRAZABILIDAD.md`
 - **Quién aprobó:** el dueño, en el chat
 
 ### S-016 · 2026-11-17 22:40 · PR 93 a PR 96 fusionados en `dev`
 
-Las subidas de los PR 31 a 92 (2026-11-15 y 16) quedaron registradas en [`PENDIENTES.md`](PENDIENTES.md), con su PR y su commit en cada fila.
+Las subidas de los PR 31 a 92 (2026-11-15 y 16) quedaron registradas en [`TRAZABILIDAD.md`](TRAZABILIDAD.md), con su PR y su commit en cada fila.
 
 - **Asignación:** `e0c72e5` en `dev`, «Alexander Amador toma T-057»
 - **[PR 93](https://github.com/armandoordonez/smartmentor/pull/93)** (`feature/t-057-metricas`, T-057): fusionado el 2026-11-17 21:57 (`292bfde`), CI en verde (15 trabajos)

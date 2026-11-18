@@ -69,7 +69,7 @@ Comprobado con un Keycloak desechable (`check-realm-import.sh --functional`): el
 > - Comprobar que el realm vivo tiene `browserFlow` en `browser-role-otp` (consola: *Authentication → Flows*, o `GET /admin/realms/smartmentor`).
 > - Activar `REQUIRE_SECOND_FACTOR=true` en la API solo después de verificar que el token del instructor trae `amr` con OTP; si no, la API rechaza a todo el personal.
 >
-> Tarea de seguimiento: T-050 en [`PENDIENTES.md`](../proyecto/seguimiento/PENDIENTES.md).
+> Tarea de seguimiento: T-050 en [`TRAZABILIDAD.md`](../proyecto/cohorte_1/seguimiento/TRAZABILIDAD.md).
 
 ### Clientes
 
@@ -320,7 +320,7 @@ Streamlit ──(1) inicio de sesión OIDC (smartmentor-ui)──► Keycloak
                                                └──(5) client credentials (smartmentor-api-service)──► ai/ (aud smartmentor-ai)
 ```
 
-Con Streamlit se usa `st.login()` con `expose_tokens` para obtener el access token en el servidor. El detalle está en [D-03](../proyecto/decisiones-pendientes.md) y el [ADR 0004](../docs/adr/0004-authentication-keycloak-bearer.md).
+Con Streamlit se usa `st.login()` con `expose_tokens` para obtener el access token en el servidor. El detalle está en [D-03](../proyecto/cohorte_1/decisiones.md) y el [ADR 0004](../docs/adr/0004-authentication-keycloak-bearer.md).
 
 ## Variables
 

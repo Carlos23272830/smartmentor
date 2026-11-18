@@ -1,18 +1,18 @@
 # Figma: huecos y contradicciones
 
-El [archivo de Figma v3](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/SmartMentor-%C2%B7-Prototipo-Fase-0-v3-4) es el **prototipo para ver cómo luce** cada pantalla. Las reglas y los datos salen de la API y de los casos de uso ([`design/01-flujo-y-casos-de-uso/`](../../design/01-flujo-y-casos-de-uso/)). Cuando Figma no dibuja algo que el código necesita, o se contradice, se anota aquí y **se avisa al dueño antes de inventar el diseño**.
+El [archivo de Figma v3](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/SmartMentor-%C2%B7-Prototipo-Fase-0-v3-4) es el **prototipo para ver cómo luce** cada pantalla. Las reglas y los datos salen de la API y de los casos de uso ([`design/01-flujo-y-casos-de-uso/`](../../../design/01-flujo-y-casos-de-uso/)). Cuando Figma no dibuja algo que el código necesita, o se contradice, se anota aquí y **se avisa al dueño antes de inventar el diseño**.
 
 ## Estado del archivo en vivo (revisado el 2026-11-12 13:55)
 
 - Una página, «SmartMentor v2», con 96 pantallas, la matriz de permisos y la biblioteca de componentes.
-- Los nombres de todas las pantallas coinciden con la copia del repo en [`design/03-prototipo-alta-fidelidad/v3/estructura-pantallas.json`](../../design/03-prototipo-alta-fidelidad/v3/estructura-pantallas.json). No apareció ninguna pantalla nueva ni faltó ninguna. Solo se compararon los nombres, no el contenido de cada una (eso deja abierta en parte la P-14 del plan).
-- Todas las pantallas que le tocan a la app tienen página en `app/src/pages/` ([`navigation.py`](../../app/src/core/navigation.py)). A2, A4 y A5 son de Keycloak y no se construyen.
+- Los nombres de todas las pantallas coinciden con la copia del repo en [`design/03-prototipo-alta-fidelidad/v3/estructura-pantallas.json`](../../../design/03-prototipo-alta-fidelidad/v3/estructura-pantallas.json). No apareció ninguna pantalla nueva ni faltó ninguna. Solo se compararon los nombres, no el contenido de cada una (eso deja abierta en parte la P-14 del plan).
+- Todas las pantallas que le tocan a la app tienen página en `app/src/pages/` ([`navigation.py`](../../../app/src/core/navigation.py)). A2, A4 y A5 son de Keycloak y no se construyen.
 
 ## Huecos (Figma no lo dibuja)
 
 | ID | Registrado | Qué falta | Dónde se necesita | Mientras tanto | Estado |
 | --- | --- | --- | --- | --- | --- |
-| F-001 | 2026-11-12 13:55 | Estado de **error de un trabajo de IA** en las pantallas de carga (U1a–U1d, D1c) | Diagnóstico, quiz, final y extracción del syllabus | El código lo resuelve con `ai_jobs.status` ([`flujos.md`](../../design/01-flujo-y-casos-de-uso/flujos.md#casos-de-error-de-las-pantallas-de-carga-u1x)) | ✔ Aprobado por el dueño (2026-11-13 10:46): error con «Reintentar» y «Volver», avance guardado |
+| F-001 | 2026-11-12 13:55 | Estado de **error de un trabajo de IA** en las pantallas de carga (U1a–U1d, D1c) | Diagnóstico, quiz, final y extracción del syllabus | El código lo resuelve con `ai_jobs.status` ([`flujos.md`](../../../design/01-flujo-y-casos-de-uso/flujos.md#casos-de-error-de-las-pantallas-de-carga-u1x)) | ✔ Aprobado por el dueño (2026-11-13 10:46): error con «Reintentar» y «Volver», avance guardado |
 | F-002 | 2026-11-12 13:55 | **Catálogo vacío** (E1 sin rutas) | CU-02 | Por definir | ☐ |
 | F-003 | 2026-11-12 13:55 | **Instructor sin cursos** (D1 vacío) | Primer ingreso del instructor | Por definir | ☐ |
 | F-004 | 2026-11-12 13:55 | **Menú de perfil con cambio de rol** (CU-35). Figma solo tiene el selector previo al login (A1) | Usuarios con varios roles | Por definir | ☐ |
@@ -21,7 +21,7 @@ El [archivo de Figma v3](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/Sma
 | F-014 | 2026-11-12 14:3x (aprox.) | **AD4 dice «ítems equivalentes entre el diagnóstico y la evaluación final»**, pero el modelo de datos agrupa como equivalentes las versiones paralelas de la final y de la prueba de retención (`assessment_items.equivalence_group`, `docs/evaluation/metrics.md`). El diagnóstico no tiene grupo | Piloto (T-015d) | Decisión del dueño (2026-11-12 14:38): se cuenta lo que define `metrics.md` (temas con un grupo de dos o más versiones) y se cambia el texto de la pantalla | ✔ Decidido (código ⬆ subido, sin PR) |
 | F-005 | 2026-11-12 13:55 | **Login del administrador**: no tiene pantalla propia | Acceso admin | Se usa la de A4 (Keycloak) | ✖ Resuelto por Keycloak |
 
-## Contradicciones conocidas (de [`design/03…/README.md`](../../design/03-prototipo-alta-fidelidad/README.md#ajustes-pendientes-antes-de-la-prueba-de-usabilidad))
+## Contradicciones conocidas (de [`design/03…/README.md`](../../../design/03-prototipo-alta-fidelidad/README.md#ajustes-pendientes-antes-de-la-prueba-de-usabilidad))
 
 | ID | Registrado | Contradicción | Estado |
 | --- | --- | --- | --- |
@@ -38,7 +38,7 @@ Figma dice «Por seguridad cerramos tu sesión tras 30 minutos sin actividad». 
 
 ## Revisión visual (T-034)
 
-Comparación en el navegador (1280 × 800, app con datos de ejemplo en el puerto 8502) contra la captura de cada frame de Figma. Primera pasada del 2026-11-13 10:52: E1, D1 y AD1, después de corregir B-014. Las diferencias que ya acepta [`app/CLAUDE.md`](../../app/CLAUDE.md#diferencias-aceptadas-con-figma) (logo, avatar con menú, botón secundario con borde, espaciados exactos) no se repiten aquí.
+Comparación en el navegador (1280 × 800, app con datos de ejemplo en el puerto 8502) contra la captura de cada frame de Figma. Primera pasada del 2026-11-13 10:52: E1, D1 y AD1, después de corregir B-014. Las diferencias que ya acepta [`app/CLAUDE.md`](../../../app/CLAUDE.md#diferencias-aceptadas-con-figma) (logo, avatar con menú, botón secundario con borde, espaciados exactos) no se repiten aquí.
 
 | ID | Pantallas | En Figma | En la app | Propuesta | Estado |
 | --- | --- | --- | --- | --- | --- |

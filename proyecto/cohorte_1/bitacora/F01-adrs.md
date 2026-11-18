@@ -6,7 +6,7 @@ Agente `adrs` (Ola 0, Fase 1). Rama `feature/adr-architecture-v3`, creada desde 
 
 | Bloque | Contenido | Commit |
 | --- | --- | --- |
-| 0 | Rama creada; lectura de las reglas, del plan (0.1, 1.3, 2.2–2.6, 3, 4, 5.2–5.6, 9, 13, 15, 16, 17, 18, 19), de los ADR 0001–0006 y de `proyecto/decisiones-pendientes.md` | — |
+| 0 | Rama creada; lectura de las reglas, del plan (0.1, 1.3, 2.2–2.6, 3, 4, 5.2–5.6, 9, 13, 15, 16, 17, 18, 19), de los ADR 0001–0006 y de `proyecto/cohorte_1/decisiones.md` | — |
 | 1 | `docs/adr/_template.md`; ADR 0007 (re-base `v2.0.0`, Aceptado), 0008 (arquitectura de `ai/`), 0009 (propiedad de los datos) y 0010 (trabajos en PostgreSQL e ingesta por consulta), Propuestos | `d46880a` |
 | 2 | ADR 0011 (proveedor de LLM, Aceptado, DEF-01), 0012 (embeddings 768 provisional, Aceptado, DEF-02), 0013 (fragmentos RAG), 0015 (banco de ítems) y 0016 (videos con curaduría), Propuestos | `b85fb45` |
 | 3 | ADR 0014 (client credentials y endurecimiento de Keycloak), 0018 (datos personales), 0019 (usuarios de base), 0020 (despliegue), Propuestos; 0017 (interfaz desde Figma v3 con directorio de estilos) y 0021 (roles neutros), Aceptados. Índice `docs/adr/README.md` con los 21 ADR; nota «complementado por» en 0004 (→ 0014) y 0006 (→ 0017) | ver `git log` (commit del bloque 3) |
@@ -15,15 +15,15 @@ Estados finales: **Aceptado** 0007, 0011, 0012, 0017, 0021 (más 0001–0006). *
 
 ADR 0005: **no se tocó**. Ya decía «la sección 3 fue reemplazada el 2026-11-07» en su estado y en el título de la sección 3, así que la nota pedida ya existía. En el índice figura como «Aceptado; sección 3 modificada el 2026-11-07».
 
-### Pendientes D que cierra cada ADR (para que la sesión principal actualice `proyecto/decisiones-pendientes.md`)
+### Pendientes D que cierra cada ADR (para que la sesión principal actualice `proyecto/cohorte_1/decisiones.md`)
 
 | Pendiente | ADR | Estado del ADR | Cómo marcarlo |
 | --- | --- | --- | --- |
-| D-01 Modelo de embeddings y dimensión | [0012](../../docs/adr/0012-embedding-model-and-dimension.md) | Aceptado (768 provisional) | **Cerrada (ADR 0012)**; valor `vector(768)`; confirmar modelo en P-05 antes de la Fase 5. Ojo: la tabla «Respuestas» aún dice que la propuesta `text-embedding-3-large` está «pendiente de confirmar»; el ADR lo deja como alternativa descartada y advierte que se reemplaza si el dueño elige otro modelo antes de indexar |
-| D-02 Proveedor de LLM | [0011](../../docs/adr/0011-llm-provider.md) | Aceptado | **Cerrada (ADR 0011)**: Gemini por defecto, Claude por el mismo puerto; faltan modelos y tarifas (P-05) |
-| D-04 Almacenamiento de fragmentos RAG | [0013](../../docs/adr/0013-rag-chunks-in-liquibase-tables.md) | Propuesto | «Propuesta en ADR 0013»; se cierra al aceptarlo (Fases 2 y 5, DEF-08) |
-| D-05 Usuario de base con mínimo privilegio | [0019](../../docs/adr/0019-least-privilege-db-users.md) | Propuesto | «Propuesta en ADR 0019»; se cierra en la Fase 2 |
-| D-06 Destino de despliegue | [0020](../../docs/adr/0020-deployment-target.md) | Propuesto | «Propuesta en ADR 0020»; se cierra con DEF-16 antes de la Fase 9 |
+| D-01 Modelo de embeddings y dimensión | [0012](../../../docs/adr/0012-embedding-model-and-dimension.md) | Aceptado (768 provisional) | **Cerrada (ADR 0012)**; valor `vector(768)`; confirmar modelo en P-05 antes de la Fase 5. Ojo: la tabla «Respuestas» aún dice que la propuesta `text-embedding-3-large` está «pendiente de confirmar»; el ADR lo deja como alternativa descartada y advierte que se reemplaza si el dueño elige otro modelo antes de indexar |
+| D-02 Proveedor de LLM | [0011](../../../docs/adr/0011-llm-provider.md) | Aceptado | **Cerrada (ADR 0011)**: Gemini por defecto, Claude por el mismo puerto; faltan modelos y tarifas (P-05) |
+| D-04 Almacenamiento de fragmentos RAG | [0013](../../../docs/adr/0013-rag-chunks-in-liquibase-tables.md) | Propuesto | «Propuesta en ADR 0013»; se cierra al aceptarlo (Fases 2 y 5, DEF-08) |
+| D-05 Usuario de base con mínimo privilegio | [0019](../../../docs/adr/0019-least-privilege-db-users.md) | Propuesto | «Propuesta en ADR 0019»; se cierra en la Fase 2 |
+| D-06 Destino de despliegue | [0020](../../../docs/adr/0020-deployment-target.md) | Propuesto | «Propuesta en ADR 0020»; se cierra con DEF-16 antes de la Fase 9 |
 
 ## Desviaciones frente al plan o al brief
 
@@ -71,7 +71,7 @@ ADR 0005: **no se tocó**. Ya decía «la sección 3 fue reemplazada el 2026-11-
 
 ## Cambios pedidos a archivos compartidos
 
-- `proyecto/decisiones-pendientes.md` (lo edita la sesión principal): marcar D-01 y D-02 como cerradas con los ADR 0012 y 0011, y D-04, D-05, D-06 como «propuestas» en los ADR 0013, 0019 y 0020 (tabla de arriba).
+- `proyecto/cohorte_1/decisiones.md` (lo edita la sesión principal): marcar D-01 y D-02 como cerradas con los ADR 0012 y 0011, y D-04, D-05, D-06 como «propuestas» en los ADR 0013, 0019 y 0020 (tabla de arriba).
 - `docs/adr/0001-postgres-pgvector.md`, sección 7: dice «provisional: 1024». Sugerencia: agregar una nota «superada por el ADR 0012 (768)». No se editó porque el encargo solo pedía notas en 0004, 0005 y 0006.
 - `docs/adr/0003-api-domain-first-layout.md`: el dominio `student` pasa a `learner` (ADR 0021) y `ai/` es una excepción por capas (ADR 0008). Sugerencia: nota «complementado por 0008 y 0021».
 - `docs/adr/0005-keycloak-postgres-realm-versioned.md`, sección 4: la alternativa «exportar el realm sin usuarios ni secretos» figura como descartada, pero es lo que la sección 3 modificada adoptó. Sugerencia: aclararlo.

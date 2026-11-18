@@ -2,7 +2,7 @@
 
 Esta carpeta lleva el registro de lo que falta, lo que se hace, los bugs y las subidas a GitHub, con fecha y hora de cada cosa. Empezó el 2026-11-12 13:57 (-05), con `dev` en `d8de841`.
 
-Completa al plan, no lo reemplaza. [`PLAN_IMPLEMENTACION_V3.md`](../../PLAN_IMPLEMENTACION_V3.md) sigue siendo el plan, y [`proyecto/bitacora/`](../bitacora/) guarda las bitácoras por fase para el brief v2. Aquí se lleva el trabajo del día a día.
+Completa al plan, no lo reemplaza. [`PLAN_IMPLEMENTACION_V3.md`](../../../PLAN_IMPLEMENTACION_V3.md) sigue siendo el plan, y [`proyecto/cohorte_1/bitacora/`](../bitacora/) guarda las bitácoras por fase para el brief v2. Aquí se lleva el trabajo del día a día.
 
 ## Archivos
 
@@ -13,7 +13,7 @@ Completa al plan, no lo reemplaza. [`PLAN_IMPLEMENTACION_V3.md`](../../PLAN_IMPL
 | [`BUGS.md`](BUGS.md) | Bugs `B-NNN`: cuándo se encontró, cuándo se corrigió y dónde | Se actualiza el estado; el historial va en la bitácora |
 | [`FIGMA.md`](FIGMA.md) | Lo que Figma no tiene o contradice, y cómo se resolvió (`F-NNN`) | Igual que los bugs |
 | [`SUBIDAS.md`](SUBIDAS.md) | Cada `push` a GitHub y cada pull request (`S-NNN`) | Solo se agregan entradas |
-| [`PENDIENTES.md`](PENDIENTES.md) | Resumen de lo que falta, con las funcionalidades de cada punto | Se rehace en cada corte, con la fecha y el commit de `dev` |
+| [`TRAZABILIDAD.md`](TRAZABILIDAD.md) | Evidencia y trazabilidad: lo realizado, lo abierto y lo migrado a la siguiente fase, con las funcionalidades de cada punto | Se rehace en cada corte, con la fecha y el commit de `dev` |
 | [`MEJORAS.md`](MEJORAS.md) | Propuestas que nadie pidió pero conviene hacer (`M-NNN`) | Se marca si se aceptan o se descartan |
 | [`PLAN_EXPERIMENTOS_R005.md`](PLAN_EXPERIMENTOS_R005.md) | Plan de los experimentos de R-005 de esta fase: jueces-agente, modelos, nombres `experimento_`, orden y puertas | Se actualiza con cada experimento |
 
@@ -47,10 +47,10 @@ Completa al plan, no lo reemplaza. [`PLAN_IMPLEMENTACION_V3.md`](../../PLAN_IMPL
 
 1. **Local.** Los cambios se hacen en este equipo, en una rama `feature/<tema>` o `fix/<tema>` creada desde `dev` actualizada (`git fetch origin && git switch -c feature/<tema> origin/dev`).
 2. **Registro al momento.** Al empezar, al terminar y al encontrar algo, se agrega una entrada en `BITACORA.md` y se cambia el estado en el archivo que corresponda.
-3. **Commit.** Se usa [Conventional Commits](../../CONTRIBUTING.md#3-commits) en español, con el ID entre corchetes al final del título (`fix(app): … [B-002]`) y el pie de coautoría del equipo. El hash queda anotado en la bitácora.
+3. **Commit.** Se usa [Conventional Commits](../../../CONTRIBUTING.md#3-commits) en español, con el ID entre corchetes al final del título (`fix(app): … [B-002]`) y el pie de coautoría del equipo. El hash queda anotado en la bitácora.
 4. **Pruebas.** `api/scripts/dev.sh all` y `app/scripts/dev.sh all` se corren antes de subir. El resultado real se anota en la bitácora, también si falla. *Desde el 2026-11-12 el dueño autorizó levantar el stack y correr las pruebas en este equipo. Lo que no se puede correr aquí (por ejemplo, la integración de la API, que usaría la base de Neon) queda «sin verificar» hasta que pase la CI.*
 5. **Subida.** `git push -u origin <rama>` **solo con la aprobación del dueño en cada subida**. Nunca a `dev`, `stage` ni `main`, y nunca con `--force`.
-6. **Pull request** hacia `dev`, con la [plantilla](../../.github/pull_request_template.md) y los IDs que cubre. Se registra en `SUBIDAS.md` con la fecha, la rama, los commits, el enlace y el estado de la CI.
+6. **Pull request** hacia `dev`, con la [plantilla](../../../.github/pull_request_template.md) y los IDs que cubre. Se registra en `SUBIDAS.md` con la fecha, la rama, los commits, el enlace y el estado de la CI.
 7. **Fusión.** Cuando el PR entra a `dev`, los IDs pasan a ✔ con la fecha y el commit de la fusión.
 
 ### Lección aprendida: PR apilados

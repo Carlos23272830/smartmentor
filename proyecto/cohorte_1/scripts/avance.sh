@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Calcula el avance de proyecto/checklist.md a partir de sus casillas (- [ ] pendiente, - [x] hecha).
+# Calcula el avance de proyecto/cohorte_1/checklist.md a partir de sus casillas (- [ ] pendiente, - [x] hecha).
 #
 # Uso:
-#   proyecto/scripts/avance.sh                     # muestra el avance por sección
-#   proyecto/scripts/avance.sh --actualizar        # reescribe la tabla de «Avance de la fase» en el checklist
-#   proyecto/scripts/avance.sh pendientes <nombre> # tareas abiertas de una persona; «por asignar» lista las sin dueño
+#   proyecto/cohorte_1/scripts/avance.sh                     # muestra el avance por sección
+#   proyecto/cohorte_1/scripts/avance.sh --actualizar        # reescribe la tabla de «Avance de la fase» en el checklist
+#   proyecto/cohorte_1/scripts/avance.sh pendientes <nombre> # tareas abiertas de una persona; «por asignar» lista las sin dueño
 #
 # Cuenta las casillas de cada sección «## ...» y omite las de los bloques de código.
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-FILE="$ROOT_DIR/proyecto/checklist.md"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+FILE="$ROOT_DIR/proyecto/cohorte_1/checklist.md"
 
 resumen() {
   awk '
@@ -41,7 +41,7 @@ case "${1:-}" in
     HOY="$(TZ=America/Bogota date +%F)"
     TABLA="$(resumen)"
     awk -v tabla="$TABLA" -v hoy="$HOY" '
-      /<!-- AVANCE:INICIO -->/ { print; print ""; print tabla; print ""; print "_Calculado el " hoy " con `proyecto/scripts/avance.sh --actualizar`._"; print ""; skip = 1; next }
+      /<!-- AVANCE:INICIO -->/ { print; print ""; print tabla; print ""; print "_Calculado el " hoy " con `proyecto/cohorte_1/scripts/avance.sh --actualizar`._"; print ""; skip = 1; next }
       /<!-- AVANCE:FIN -->/ { skip = 0 }
       !skip { print }
     ' "$FILE" > "$FILE.tmp"

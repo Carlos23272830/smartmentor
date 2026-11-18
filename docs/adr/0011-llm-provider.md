@@ -3,7 +3,7 @@
 * **Estado:** Aceptado (DEF-01, decidido por el dueño el 2026-11-07). Quedan por fijar los nombres exactos de los modelos y sus tarifas (P-05) y el monto real del presupuesto (P-20)
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
-* **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 3.2, 5.4.6, 5.4.11, 16.2, 18.5 y DEF-01; [`proyecto/decisiones-pendientes.md`](../../proyecto/decisiones-pendientes.md), D-02
+* **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 3.2, 5.4.6, 5.4.11, 16.2, 18.5 y DEF-01; [`proyecto/cohorte_1/decisiones.md`](../../proyecto/cohorte_1/decisiones.md), D-02
 * **Relacionados:** [ADR 0008](0008-ai-service-architecture.md), [ADR 0012](0012-embedding-model-and-dimension.md), [ADR 0018](0018-personal-data-protection.md)
 
 ---

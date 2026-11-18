@@ -3,7 +3,7 @@
 * **Estado:** Propuesto. Lo cierran la Fase 2 (tablas) y la Fase 5 (RAG), con las fuentes y licencias de DEF-08
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
-* **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 5.2.1, 5.4.7, 15 (B-04) y DEF-08; [`proyecto/decisiones-pendientes.md`](../../proyecto/decisiones-pendientes.md), D-04
+* **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 5.2.1, 5.4.7, 15 (B-04) y DEF-08; [`proyecto/cohorte_1/decisiones.md`](../../proyecto/cohorte_1/decisiones.md), D-04
 * **Relacionados:** [ADR 0002](0002-liquibase-schema-versioning.md), [ADR 0009](0009-data-ownership-api-and-ai.md), [ADR 0012](0012-embedding-model-and-dimension.md)
 
 ---

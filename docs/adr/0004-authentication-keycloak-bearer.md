@@ -4,7 +4,7 @@
 * **Fecha:** 2026-10-07
 * **Autor:** eduar.troyano
 * **Fuente:** [`proyecto/brief.md`](../../proyecto/brief.md), módulo 1 "Gestión de usuarios" (registro, login, roles admin, docente y estudiante)
-* **Relacionados:** [D-03](../../proyecto/decisiones-pendientes.md), [estándar de microservicios, sección 35](../../api/microservice-development-standard.md), [`keycloak/README.md`](../../keycloak/README.md)
+* **Relacionados:** [D-03](../../proyecto/cohorte_1/decisiones.md), [estándar de microservicios, sección 35](../../api/microservice-development-standard.md), [`keycloak/README.md`](../../keycloak/README.md)
 
 ## 1. Contexto
 

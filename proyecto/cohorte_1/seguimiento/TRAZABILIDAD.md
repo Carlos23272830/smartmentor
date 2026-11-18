@@ -1,4 +1,6 @@
-# Pendientes del proyecto
+# Trazabilidad del proyecto (cohorte 1)
+
+Registro vivo de **todo lo que se hizo, lo que quedó abierto y lo que pasó a la siguiente fase**, con los incidentes y decisiones de cada punto. Ya casi no quedan pendientes: este archivo es sobre todo la evidencia del trabajo. Antes se llamaba `PENDIENTES.md`.
 
 Une dos revisiones del 2026-11-14. Último corte: 2026-11-17, `dev` en `18c3222` (PR 1 a PR 96 fusionados):
 
@@ -7,7 +9,7 @@ Une dos revisiones del 2026-11-14. Último corte: 2026-11-17, `dev` en `18c3222`
 
 Pruebas sobre `dev` (2026-11-17): interfaz, 1083 en verde (Ruff y mypy limpios); servicio de IA, 563 en verde y 13 omitidas; API, 526 unitarias en verde. Las de integración de la API necesitan PostgreSQL y pasan en la CI.
 
-Este archivo resume, no reemplaza. El detalle con fecha y hora está en [`HOJA_DE_RUTA.md`](HOJA_DE_RUTA.md), [`BUGS.md`](BUGS.md), [`FIGMA.md`](FIGMA.md) y [`HANDOFF.md`](../../HANDOFF.md).
+Este archivo resume, no reemplaza. El detalle con fecha y hora está en [`HOJA_DE_RUTA.md`](HOJA_DE_RUTA.md), [`BUGS.md`](BUGS.md), [`FIGMA.md`](FIGMA.md) y [`HANDOFF.md`](../../../HANDOFF.md).
 
 ## Significado de los iconos
 
@@ -30,7 +32,7 @@ Este archivo resume, no reemplaza. El detalle con fecha y hora está en [`HOJA_D
 
 **Peso en la entrega final:** **Crítico** (sin esto no hay resultados que mostrar), **Alto** (bloquea un experimento o la prueba con usuarios), **Medio** (afecta la calidad o la demo), **Bajo** (detalle o pulido).
 
-Los códigos de pantalla (E1, D5b, AD4…) son los de Figma v3 (archivo maestro `atp2fZdSolEoaww3n9jRLg`); cada enlace abre el nodo en Figma. La lista completa está en [`pantallas.md`](../../design/03-prototipo-alta-fidelidad/v3/pantallas.md).
+Los códigos de pantalla (E1, D5b, AD4…) son los de Figma v3 (archivo maestro `atp2fZdSolEoaww3n9jRLg`); cada enlace abre el nodo en Figma. La lista completa está en [`pantallas.md`](../../../design/03-prototipo-alta-fidelidad/v3/pantallas.md).
 
 ## Ruta crítica hacia la entrega final
 
@@ -41,7 +43,7 @@ La entrega final pide «un recorrido integral por el proceso, observando los res
 3. ~~En paralelo, para E9: T-031, T-040, F-007, T-043 y la convocatoria~~ **Migrado a la siguiente fase** (el piloto no se alcanza; ver «Migrados a la siguiente fase»).
 4. ◐ **Cierre:** T-051 ✔ (brief v2, PR 90 y 91); T-052 ◐ (notas del release en `dev` con el PR 95; falta que el dueño del repositorio promueva a `main`, cree la etiqueta y publique el Release); documento final ☐ (sin fila ni responsable: ver el [checklist](../checklist.md)).
 
-## Pendiente o en curso
+## Abiertos al cierre
 
 Todo lo que falta o está en marcha: ☐ pendiente, ◐ en curso, ⛔ bloqueado y 🔼 con PR abierto. Ordenado por peso en la entrega final. La sección [General · G-001](#g-001--revisar-cada-pantalla-de-figma-frente-al-flujo-implementado) (revisión de las 96 pantallas) y la [deuda técnica](#deuda-técnica-sin-tarea) siguen abajo.
 
@@ -49,7 +51,7 @@ Todo lo que falta o está en marcha: ☐ pendiente, ◐ en curso, ⛔ bloqueado 
 
 | # | ID | Área | Pendiente | Funcionalidades | Estado | Responsable | Depende de | Peso | Recomendación (propuesta práctica) |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | T-052 | Hito y cierre | Release | • Etiqueta `v1.0-cohorte1` y notas de la versión<br>• **Avance 2026-11-17:** notas en `dev` (PR 95) en `CHANGELOG.md` y texto del GitHub Release en [`release-v1.0-cohorte1.md`](../release-v1.0-cohorte1.md), con las métricas y los pasos para publicarlo<br>• **Falta (dueño del repositorio):** promover `dev` → `stage` → `main`, crear la etiqueta sobre `main` y el GitHub Release, como pide `GIT_VERSIONING_STRATEGY.md` | ◐ En curso | Alexander Amador | Dueño del repositorio (T-051 ya está cerrado) | Medio | Que el dueño del repositorio promueva y publique con los pasos de [`release-v1.0-cohorte1.md`](../release-v1.0-cohorte1.md); Eduar Troyano fusiona los PR |
+| 1 | T-052 | Hito y cierre | Release | • Etiqueta `v1.0-cohorte1` y notas de la versión<br>• **Avance 2026-11-17:** notas en `dev` (PR 95) en `CHANGELOG.md` y texto del GitHub Release en [`release-v1.0-cohorte1.md`](../release.md), con las métricas y los pasos para publicarlo<br>• **Falta (dueño del repositorio):** promover `dev` → `stage` → `main`, crear la etiqueta sobre `main` y el GitHub Release, como pide `GIT_VERSIONING_STRATEGY.md` | ◐ En curso | Alexander Amador | Dueño del repositorio (T-051 ya está cerrado) | Medio | Que el dueño del repositorio promueva y publique con los pasos de [`release-v1.0-cohorte1.md`](../release.md); Eduar Troyano fusiona los PR |
 
 ## Migrados a la siguiente fase
 
@@ -78,7 +80,7 @@ Lo que ya está en `dev` (✔) o se cerró sin hacer (✖, con el motivo). Corte
 
 | # | ID | Área | Pendiente | Qué se hizo | Estado | Responsable |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 1 | T-051 | Hito y cierre | Brief v2 | Redactado a partir de las bitácoras F00 a F09: [`proyecto/brief-v2.md`](../brief-v2.md) compara el brief original con lo construido y medido (objetivos, experimentos, costos, retos, limitaciones y lo que pasa a la siguiente fase). Carlos Villada lo dio por cerrado tal como está en `dev` el 2026-11-17, y entra así en el release `v1.0-cohorte1` | ✔ Finalizado · `dev` ([PR 90](https://github.com/armandoordonez/smartmentor/pull/90) y [PR 91](https://github.com/armandoordonez/smartmentor/pull/91), 2026-11-16) | Carlos Villada |
+| 1 | T-051 | Hito y cierre | Brief v2 | Redactado a partir de las bitácoras F00 a F09: [`proyecto/cohorte_1/brief.md`](../brief.md) compara el brief original con lo construido y medido (objetivos, experimentos, costos, retos, limitaciones y lo que pasa a la siguiente fase). Carlos Villada lo dio por cerrado tal como está en `dev` el 2026-11-17, y entra así en el release `v1.0-cohorte1` | ✔ Finalizado · `dev` ([PR 90](https://github.com/armandoordonez/smartmentor/pull/90) y [PR 91](https://github.com/armandoordonez/smartmentor/pull/91), 2026-11-16) | Carlos Villada |
 | 2 | B-062 | Producto | Calidad del banco de preguntas | Formato y mezcla de opciones en código, `topic_quiz` v2 y v3, `diagnostic_generation` v2 y `final_assessment` v2; medición E3b y E3c con jueces-agente | ✔ Finalizado hasta donde se puede · `dev` ([PR 89](https://github.com/armandoordonez/smartmentor/pull/89) y [PR 92](https://github.com/armandoordonez/smartmentor/pull/92), 2026-11-16): válidos con ambos jueces de 32,5 % a 60,0 % (E3b) y 26,7 % a 30,0 % de v2 a v3 con jueces calibrados (E3c); claves erróneas de 4/4 a 0/1; respuesta correcta repartida en las cuatro posiciones. **La meta de ≥ 80 % no se cumple.** Queda con el dueño: Bloom sobredeclarado, distractores débiles y medir diagnóstico y final con jueces. Los bancos publicados no se tocaron: los bancos nuevos usan las versiones nuevas tras recompilar | Eduar Troyano |
 | 3 | T-057 | Evaluación | Datos que faltan para calcular las métricas con la base real | **Hecho en código:** changeset `v2.0.1-010` que da al rol `smartmentor_metrics` `SELECT` sobre `assessment_items` (equivalencia de ítems entre el diagnóstico y la final) y casilla «Minutos estimados (opcional)» en D2b, que guarda `estimated_minutes` del tema (la API ya lo aceptaba). **Límite:** la API solo deja editar temas de cursos en borrador o en revisión, así que los 17 temas de los cursos ya publicados siguen sin minutos y la métrica de minutos ahorrados queda sin datos en esta fase (decisión del dueño, 2026-11-17). **No requieren código y pasan con el piloto a la siguiente fase:** `analysis_included` (la API ya lo marca cuando el aprendiz acepta el consentimiento del piloto; los aprendices de prueba no lo aceptaron) y `pilot_arm` (sin piloto no hay brazos). `item_annotations` ya tiene datos desde E3. El permiso se aplica en Neon con la próxima corrida de Liquibase (`scripts/local-up.sh`) | ✔ Finalizado hasta donde se puede · rama `feature/t-057-metricas`, 2026-11-17 (a la espera de fusión) | Alexander Amador |
 | 4 | E5 | Experimento | Fidelidad y cobertura del RAG (≥ 0,8) | Curso 2 con 5 lecturas aportadas por el dueño (BID, O'Reilly, FUOC, DataCamp, campusMVP), condiciones A (solo syllabus) y B (con lecturas) con regeneración de los 3 temas. **Fidelidad media 0,889 (cumple ≥ 0,8), pero el tema ETL/ELT queda en 0,667.** **La comparación A/B no fue concluyente:** las lecturas no entraron en los 4 fragmentos recuperados y el texto es idéntico. Dejó 12 versiones duplicadas en `pending_review` (T-063). Costo US$ 0,0084. Resultado en `docs/evaluation/results/e5-2026-11-16.md`. Indicativo (verificador propio, sin RAGAS) | ✔ Finalizado · [PR 84](https://github.com/armandoordonez/smartmentor/pull/84), 2026-11-16 (a la espera de fusión) | Eduar Troyano |

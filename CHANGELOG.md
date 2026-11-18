@@ -4,7 +4,7 @@ Cambios por versión y cohorte.
 
 ## v1.0-cohorte1 (2026-11-17)
 
-Cierre de la cohorte 1. Las notas del GitHub Release, con las métricas, están en [`proyecto/release-v1.0-cohorte1.md`](proyecto/release-v1.0-cohorte1.md).
+Cierre de la cohorte 1. Las notas del GitHub Release, con las métricas, están en [`proyecto/cohorte_1/release.md`](proyecto/cohorte_1/release.md).
 
 ### Cierre de la cohorte 1 (2026-11-14 a 2026-11-17, PR 40 a 94)
 
@@ -18,12 +18,12 @@ Cierre de la cohorte 1. Las notas del GitHub Release, con las métricas, están 
 - **Visual:** diferencias con Figma corregidas en el aprendiz y el staff (V-088 a V-101).
 - **Métricas:** cuaderno de la cohorte 1 sobre la base real (R-006) y el rol de métricas lee `interaction_events` y `assessment_items`.
 - **Base compartida en Neon** para todo el equipo, con el esquema hasta el changeset `v2.0.1-010`.
-- **Brief v2** ([`proyecto/brief-v2.md`](proyecto/brief-v2.md)): lo planteado frente a lo logrado (T-051).
+- **Brief v2** ([`proyecto/cohorte_1/brief.md`](proyecto/cohorte_1/brief.md)): lo planteado frente a lo logrado (T-051).
 - **Pasan a la siguiente fase:** el piloto con usuarios reales y lo que depende de él (E4, E9, E10, T-031, T-040, T-042, T-043, T-050, F-007) y la explicación alterna de E7b (B-049).
 
 ### Plan v3 (2026-11-07 a 2026-11-14)
 
-Lo que sigue reemplaza la base v1 que se describe más abajo. El detalle por tarea, con fecha y hora, está en [`proyecto/seguimiento/`](proyecto/seguimiento/README.md).
+Lo que sigue reemplaza la base v1 que se describe más abajo. El detalle por tarea, con fecha y hora, está en [`proyecto/cohorte_1/seguimiento/`](proyecto/cohorte_1/seguimiento/README.md).
 
 - **Base de datos v2.0.0:** 39 tablas, roles `learner`, `instructor` y `admin`, y usuarios de mínimo privilegio por servicio ([ADR 0019](docs/adr/0019-least-privilege-db-users.md)).
 - **API v2:** aprendiz, instructor, administrador, piloto, métricas y log del LLM ([contrato](docs/contracts/api-v2.md)). Cambios aditivos para las pantallas del instructor y del administrador (PR 3 y PR 6).
@@ -73,6 +73,6 @@ Lo que sigue reemplaza la base v1 que se describe más abajo. El detalle por tar
 
 ### Documentación
 
-- `proyecto/checklist.md`: lista de verificación del brief con responsables, avance de la fase y comparación de frontends (Streamlit y Next.js); `proyecto/scripts/avance.sh` calcula el avance.
+- `proyecto/cohorte_1/checklist.md`: lista de verificación del brief con responsables, avance de la fase y comparación de frontends (Streamlit y Next.js); `proyecto/cohorte_1/scripts/avance.sh` calcula el avance.
 
-- ADR 0001 a 0003, `proyecto/decisiones-pendientes.md` y estándar de microservicios FastAPI (rev. 2).
+- ADR 0001 a 0003, `proyecto/cohorte_1/decisiones.md` y estándar de microservicios FastAPI (rev. 2).

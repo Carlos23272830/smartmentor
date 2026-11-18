@@ -42,5 +42,5 @@ Agente `design-docs`, Ola 0, Fase 1. Rama `feature/design-use-cases-v3` (publica
 
 ## Cambios pedidos a archivos compartidos
 - `design/03-prototipo-alta-fidelidad/index.html`: confirmar la clave de Figma y actualizar el enlace.
-- `proyecto/checklist.md`: ninguno pedido por este agente.
+- `proyecto/cohorte_1/checklist.md`: ninguno pedido por este agente.
 - Los `.svg` y el `.drawio` de `design/01` quedan desactualizados (v2); rehacerlos es opcional.

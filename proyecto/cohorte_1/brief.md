@@ -2,7 +2,7 @@
 
 Proyecto de grado · Maestría en Ciencia de Datos · Cierre de la cohorte 1 · Noviembre de 2026 · Documento vivo: cada cohorte lo actualiza.
 
-Este documento compara el [brief original](brief.md) (octubre de 2026) con lo que la cohorte 1 construyó y midió. No reemplaza al original: lo contrasta. Las fuentes son las bitácoras de [`proyecto/bitacora/`](bitacora/), los [ADR](../docs/adr/README.md), los [resultados de los experimentos](../docs/evaluation/results/) y el seguimiento de [`proyecto/seguimiento/`](seguimiento/README.md).
+Este documento compara el [brief original](../brief.md) (octubre de 2026) con lo que la cohorte 1 construyó y midió. No reemplaza al original: lo contrasta. Las fuentes son las bitácoras de [`proyecto/cohorte_1/bitacora/`](bitacora/), los [ADR](../../docs/adr/README.md), los [resultados de los experimentos](../../docs/evaluation/results/) y el seguimiento de [`proyecto/cohorte_1/seguimiento/`](seguimiento/README.md).
 
 ## 1. Resumen ejecutivo
 
@@ -72,7 +72,7 @@ El brief sugería cuatro capas en Python: Streamlit, FastAPI, una capa de IA con
 
 ## 5. Modelo de datos
 
-El brief proponía 11 entidades. La versión `v2.0.x` tiene **40 tablas de negocio y de IA** y 35 tablas `_audit`. Detalle en [`database/README.md`](../database/README.md).
+El brief proponía 11 entidades. La versión `v2.0.x` tiene **40 tablas de negocio y de IA** y 35 tablas `_audit`. Detalle en [`database/README.md`](../../database/README.md).
 
 Las diferencias principales:
 
@@ -100,7 +100,7 @@ El brief planeaba 8 semanas: prototipo, fundamentos, flujo completo, piloto y ci
 
 **Forma de trabajo:**
 
-- Cada tarea se anota en `proyecto/seguimiento/PENDIENTES.md` con un responsable.
+- Cada tarea se anota en `proyecto/cohorte_1/seguimiento/TRAZABILIDAD.md` con un responsable.
 - Los cambios llegan a `dev` por pull request (82 fusionados al 2026-11-16), con una CI que corre Ruff, mypy y pytest en los tres servicios, más Liquibase, los prompts, el realm, gitleaks y Trivy.
 - El seguimiento cierra con 98 puntos: 84 realizados, 9 migrados a la siguiente fase y 5 abiertos.
 
@@ -108,19 +108,19 @@ El brief planeaba 8 semanas: prototipo, fundamentos, flujo completo, piloto y ci
 
 ## 7. Resultados de los experimentos
 
-Todos los resultados se obtuvieron con **jueces-agente** (Claude Opus y Sonnet), a ciegas y sobre datos de prueba. Resumen completo: [`resumen-r005-2026-11-16.md`](../docs/evaluation/results/resumen-r005-2026-11-16.md).
+Todos los resultados se obtuvieron con **jueces-agente** (Claude Opus y Sonnet), a ciegas y sobre datos de prueba. Resumen completo: [`resumen-r005-2026-11-16.md`](../../docs/evaluation/results/resumen-r005-2026-11-16.md).
 
 ### 7.1 Métricas del sistema
 
 | Experimento | Métrica del brief | Meta | Resultado | Cumple |
 | --- | --- | --- | --- | --- |
-| [E2](../docs/evaluation/results/e2-2026-11-16.md) · Estructuración del syllabus | F1 de temas y prerrequisitos | F1 ≥ 0,85 | Temas 1,000; prerrequisitos 0,694 (`flash-lite`) y 0,578 (`flash`) | ✔ temas · ✖ prerrequisitos |
-| [E3](../docs/evaluation/results/e3-2026-11-16.md) · Preguntas válidas | % válidas y κ de Cohen | ≥ 80 % y κ ≥ 0,6 | 28,8 % válidas con ambos jueces; κ 0,704 | ✖ calidad · ✔ acuerdo |
-| [E3b](../docs/evaluation/results/e3b-2026-11-16.md) · Preguntas tras B-062 | Igual que E3 | Igual que E3 | De 32,5 % a 60,0 % válidas (prompt `topic_quiz` v2, más formato y mezcla de opciones en el código); κ 0,264 | ✖ calidad (mejora) · ✖ acuerdo |
-| [E5](../docs/evaluation/results/e5-2026-11-16.md) y [E5b](../docs/evaluation/results/e5b-2026-11-16.md) · Fidelidad del RAG | Fidelidad a las fuentes | ≥ 0,8 | Media 0,889 (un tema en 0,667). Con TOP_K = 10 entraron fragmentos de las lecturas, pero la comparación con y sin lecturas no fue concluyente | ✔ media · sin concluir |
-| [E6](../docs/evaluation/results/e6-2026-11-16.md) · Videos por tema | Precision@3 | ≥ 0,7 | P@3 0,718; κ 0,766 entre jueces | ✔ |
-| [E7](../docs/evaluation/results/e7-2026-11-16.md) · Calificación automática | QWK juez del sistema frente a referencia | ≥ 0,6 | QWK 0,998, con una muestra polarizada (casi sin respuestas parciales) | ✔ con salvedad |
-| [E8](../docs/evaluation/results/e8-2026-11-15.md) · Desempeño técnico | Latencia p95 y JSON inválido | p95 < 20 s; JSON inválido < 2 % | p95 global 120,1 s ✖ (bancos de preguntas y explicaciones; 28 timeouts a los 120 s). La calificación de respuestas cortas (2,1 s) y el cierre del diagnóstico (9,2 s) sí cumplen. JSON inválido 0,8 % ✔ | ✖ latencia de generación · ✔ camino del aprendiz · ✔ JSON |
+| [E2](../../docs/evaluation/results/e2-2026-11-16.md) · Estructuración del syllabus | F1 de temas y prerrequisitos | F1 ≥ 0,85 | Temas 1,000; prerrequisitos 0,694 (`flash-lite`) y 0,578 (`flash`) | ✔ temas · ✖ prerrequisitos |
+| [E3](../../docs/evaluation/results/e3-2026-11-16.md) · Preguntas válidas | % válidas y κ de Cohen | ≥ 80 % y κ ≥ 0,6 | 28,8 % válidas con ambos jueces; κ 0,704 | ✖ calidad · ✔ acuerdo |
+| [E3b](../../docs/evaluation/results/e3b-2026-11-16.md) · Preguntas tras B-062 | Igual que E3 | Igual que E3 | De 32,5 % a 60,0 % válidas (prompt `topic_quiz` v2, más formato y mezcla de opciones en el código); κ 0,264 | ✖ calidad (mejora) · ✖ acuerdo |
+| [E5](../../docs/evaluation/results/e5-2026-11-16.md) y [E5b](../../docs/evaluation/results/e5b-2026-11-16.md) · Fidelidad del RAG | Fidelidad a las fuentes | ≥ 0,8 | Media 0,889 (un tema en 0,667). Con TOP_K = 10 entraron fragmentos de las lecturas, pero la comparación con y sin lecturas no fue concluyente | ✔ media · sin concluir |
+| [E6](../../docs/evaluation/results/e6-2026-11-16.md) · Videos por tema | Precision@3 | ≥ 0,7 | P@3 0,718; κ 0,766 entre jueces | ✔ |
+| [E7](../../docs/evaluation/results/e7-2026-11-16.md) · Calificación automática | QWK juez del sistema frente a referencia | ≥ 0,6 | QWK 0,998, con una muestra polarizada (casi sin respuestas parciales) | ✔ con salvedad |
+| [E8](../../docs/evaluation/results/e8-2026-11-15.md) · Desempeño técnico | Latencia p95 y JSON inválido | p95 < 20 s; JSON inválido < 2 % | p95 global 120,1 s ✖ (bancos de preguntas y explicaciones; 28 timeouts a los 120 s). La calificación de respuestas cortas (2,1 s) y el cierre del diagnóstico (9,2 s) sí cumplen. JSON inválido 0,8 % ✔ | ✖ latencia de generación · ✔ camino del aprendiz · ✔ JSON |
 
 **Costo:**
 
@@ -132,7 +132,7 @@ El 68 % del costo lo generan los bancos de preguntas, que se pagan una vez al pu
 
 ### 7.2 Métricas de los estudiantes (cohorte de desarrollo)
 
-El [cuaderno de métricas](../docs/evaluation/results/metrics-cohort1-2026-11-15.md) corre contra la base real con un usuario de solo lectura. Pero la cohorte es de desarrollo: 9 inscripciones analizadas de **3 personas**, más aprendices simulados. Sirve para comprobar que el cálculo funciona, **no para afirmar efectos**.
+El [cuaderno de métricas](../../docs/evaluation/results/metrics-cohort1-2026-11-15.md) corre contra la base real con un usuario de solo lectura. Pero la cohorte es de desarrollo: 9 inscripciones analizadas de **3 personas**, más aprendices simulados. Sirve para comprobar que el cálculo funciona, **no para afirmar efectos**.
 
 | Métrica | Valor | Meta |
 | --- | --- | --- |
@@ -153,7 +153,7 @@ El [cuaderno de métricas](../docs/evaluation/results/metrics-cohort1-2026-11-15
 
 ## 8. Lo que pasa a la siguiente fase
 
-El piloto con usuarios reales no se alcanzó en esta fase. Pasan 10 puntos del seguimiento ([`PENDIENTES.md`](seguimiento/PENDIENTES.md), sección «Migrados a la siguiente fase»):
+El piloto con usuarios reales no se alcanzó en esta fase. Pasan 10 puntos del seguimiento ([`TRAZABILIDAD.md`](seguimiento/TRAZABILIDAD.md), sección «Migrados a la siguiente fase»):
 
 | ID | Qué | Por qué pasa |
 | --- | --- | --- |
@@ -174,7 +174,7 @@ El piloto con usuarios reales no se alcanzó en esta fase. Pasan 10 puntos del s
 | --- | --- | --- |
 | Tope de gasto y timeouts del LLM | El tope de Google AI Studio detuvo F6 un tiempo, y los bancos de preguntas superaban el límite de 120 s (B-013) | Timeout de 240 s, lease de 1800 s, presupuesto en dólares por tarea y registro de cada llamada |
 | Latencia con la base en la nube | Cada petición hacía unas 16 consultas a Neon, de unos 110 ms cada una (R-008, B-056 y B-063) | Se redujeron las consultas y se leyó en lote en los listados |
-| Trabajo en paralelo y mezclas | Fusiones automáticas que duplicaron código (por ejemplo, el doble envío multipart que corrigió T-055, PR 44) | Pull requests revisados, CI obligatoria y asignación previa en PENDIENTES.md |
+| Trabajo en paralelo y mezclas | Fusiones automáticas que duplicaron código (por ejemplo, el doble envío multipart que corrigió T-055, PR 44) | Pull requests revisados, CI obligatoria y asignación previa en TRAZABILIDAD.md |
 | Diferencias entre Windows y Linux | Los prompts descargados con CRLF cambiaban su hash y el trabajador de IA no arrancaba | Saltos de línea LF para `prompts/` (arreglo local documentado como deuda técnica) |
 | Configuración de identidad | Un realm de Keycloak antiguo dejaba entrar sin OTP (B-035) | En local se acepta; en QA y producción el OTP es obligatorio (nota de activación) |
 | Dependencias | Vulnerabilidades en `pillow` y `certifi` (B-009) | Subida a Streamlit 1.67, revisando el cambio de comportamiento de los widgets |
@@ -216,8 +216,8 @@ Los riesgos del brief siguen vigentes. Esta cohorte agregó:
 
 ## 13. Referencias
 
-- Las referencias científicas del [brief original](brief.md#referencias-científicas) siguen vigentes.
-- Decisiones de arquitectura: [`docs/adr/`](../docs/adr/README.md) (ADR 0001 a 0021).
-- Resultados: [`docs/evaluation/results/`](../docs/evaluation/results/) y [definición de métricas](../docs/evaluation/metrics.md).
-- Bitácoras de fase: [`proyecto/bitacora/`](bitacora/) (F00 a F09; la evidencia de F6 está en la [hoja de ruta](seguimiento/HOJA_DE_RUTA.md#evidencia-de-f6-2026-11-12)).
-- Seguimiento: [`proyecto/seguimiento/PENDIENTES.md`](seguimiento/PENDIENTES.md).
+- Las referencias científicas del [brief original](../brief.md#referencias-científicas) siguen vigentes.
+- Decisiones de arquitectura: [`docs/adr/`](../../docs/adr/README.md) (ADR 0001 a 0021).
+- Resultados: [`docs/evaluation/results/`](../../docs/evaluation/results/) y [definición de métricas](../../docs/evaluation/metrics.md).
+- Bitácoras de fase: [`proyecto/cohorte_1/bitacora/`](bitacora/) (F00 a F09; la evidencia de F6 está en la [hoja de ruta](seguimiento/HOJA_DE_RUTA.md#evidencia-de-f6-2026-11-12)).
+- Seguimiento: [`proyecto/cohorte_1/seguimiento/TRAZABILIDAD.md`](seguimiento/TRAZABILIDAD.md).

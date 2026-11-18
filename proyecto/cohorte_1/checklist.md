@@ -1,6 +1,6 @@
 # Checklist de avance del proyecto
 
-Lista de verificación del [brief](brief.md): qué está hecho, qué falta y quién responde de cada cosa. Se marca a mano (`[x]`) y el resumen de avance se recalcula con un script. Complementa a [`HANDOFF.md`](../HANDOFF.md) (estado técnico y deuda) y a [`decisiones-pendientes.md`](decisiones-pendientes.md).
+Lista de verificación del [brief](../brief.md): qué está hecho, qué falta y quién responde de cada cosa. Se marca a mano (`[x]`) y el resumen de avance se recalcula con un script. Complementa a [`HANDOFF.md`](../../HANDOFF.md) (estado técnico y deuda) y a [`decisiones-pendientes.md`](decisiones.md).
 
 **Última actualización:** 2026-11-14 · **Cohorte:** 1 · El estado tarea por tarea, con fecha y hora, está en [`seguimiento/HOJA_DE_RUTA.md`](seguimiento/HOJA_DE_RUTA.md)
 
@@ -12,9 +12,9 @@ Lista de verificación del [brief](brief.md): qué está hecho, qué falta y qui
 - Después de marcar tareas, actualiza el resumen y confirma el cambio:
 
 ```bash
-proyecto/scripts/avance.sh                     # muestra el avance por sección
-proyecto/scripts/avance.sh --actualizar        # reescribe la tabla de «Avance de la fase» en este archivo
-proyecto/scripts/avance.sh pendientes nombre   # lista las tareas abiertas de una persona (o «por asignar»)
+proyecto/cohorte_1/scripts/avance.sh                     # muestra el avance por sección
+proyecto/cohorte_1/scripts/avance.sh --actualizar        # reescribe la tabla de «Avance de la fase» en este archivo
+proyecto/cohorte_1/scripts/avance.sh pendientes nombre   # lista las tareas abiertas de una persona (o «por asignar»)
 ```
 
 ## Equipo y responsables
@@ -49,7 +49,7 @@ En grupos de 2 personas los roles se combinan.
 | I. Plan de implementación v3 | 11 | 18 | 61 % |
 | **Total** | **72** | **120** | **60 %** |
 
-_Calculado el 2026-11-13 con `proyecto/scripts/avance.sh --actualizar`._
+_Calculado el 2026-11-13 con `proyecto/cohorte_1/scripts/avance.sh --actualizar`._
 
 <!-- AVANCE:FIN -->
 
@@ -72,11 +72,11 @@ _Calculado el 2026-11-13 con `proyecto/scripts/avance.sh --actualizar`._
 ### Repositorio y documentación
 
 - [x] Estructura de carpetas del brief, con un README en cada una — **Resp.:** eduar.troyano
-- [x] Estrategia de ramas y Conventional Commits documentada — **Resp.:** eduar.troyano — [`GIT_VERSIONING_STRATEGY.md`](../GIT_VERSIONING_STRATEGY.md)
-- [x] Decisiones de arquitectura registradas (ADR 0001 a 0005) — **Resp.:** eduar.troyano — [`docs/adr/`](../docs/adr/README.md)
+- [x] Estrategia de ramas y Conventional Commits documentada — **Resp.:** eduar.troyano — [`GIT_VERSIONING_STRATEGY.md`](../../GIT_VERSIONING_STRATEGY.md)
+- [x] Decisiones de arquitectura registradas (ADR 0001 a 0005) — **Resp.:** eduar.troyano — [`docs/adr/`](../../docs/adr/README.md)
 - [x] `HANDOFF.md` y `CHANGELOG.md` iniciales — **Resp.:** eduar.troyano
 - [x] Decisiones pendientes con opciones y recomendación (D-01 a D-06) — **Resp.:** eduar.troyano
-- [x] Estándar de microservicios FastAPI adoptado y traducido (rev. 2) — **Resp.:** eduar.troyano — [`api/microservice-development-standard.md`](../api/microservice-development-standard.md)
+- [x] Estándar de microservicios FastAPI adoptado y traducido (rev. 2) — **Resp.:** eduar.troyano — [`api/microservice-development-standard.md`](../../api/microservice-development-standard.md)
 
 ### Proceso del equipo
 
@@ -128,7 +128,7 @@ Criterio de salida del brief: flujo y pantallas aprobados, y esquemas JSON de ca
 
 - [ ] Mapa del flujo y casos de uso aprobado por el director (el brief ya trae el diagrama del flujo del estudiante) — **Resp.:** _por asignar_ (Director o tutor)
 - [ ] Wireframes de baja fidelidad de las 7 pantallas: login, catálogo de rutas, perfil, diagnóstico, vista de ruta, tema (video, texto y quiz) y badge — **Resp.:** _por asignar_ (Responsable de producto)
-- [x] Prototipo navegable de alta fidelidad (Figma, o Streamlit con datos de ejemplo) — **Resp.:** eduar.troyano — [diseño en Figma v3](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/SmartMentor-%C2%B7-Prototipo-Fase-0-v3--4-?node-id=0-1) y su versión en Streamlit con datos de ejemplo ([`app/`](../app/README.md)): estudiante, docente y admin, sin login
+- [x] Prototipo navegable de alta fidelidad (Figma, o Streamlit con datos de ejemplo) — **Resp.:** eduar.troyano — [diseño en Figma v3](https://www.figma.com/design/atp2fZdSolEoaww3n9jRLg/SmartMentor-%C2%B7-Prototipo-Fase-0-v3--4-?node-id=0-1) y su versión en Streamlit con datos de ejemplo ([`app/`](../../app/README.md)): estudiante, docente y admin, sin login
 - [x] Prueba de prompts «Mago de Oz»: syllabus estructurado, diagnóstico y un tema generados a mano con el LLM — **Resp.:** _por asignar_ (Responsable de IA y datos) — _2026-11-13: notebooks en `design/04-prueba-mago-de-oz/`_
 - [x] Esquemas JSON de cada salida de IA, definidos y versionados en `prompts/` — **Resp.:** _por asignar_ (Responsable de IA y datos) — _2026-11-13: `prompts/schemas/`, verificados por el trabajo `prompts` de la CI_
 - [ ] Prueba de usabilidad con 3 a 5 usuarios (pensar en voz alta) y cuestionario SUS — **Resp.:** _por asignar_ (Responsable de evaluación)
@@ -137,7 +137,7 @@ Criterio de salida del brief: flujo y pantallas aprobados, y esquemas JSON de ca
 
 ### Módulo 1: gestión de usuarios
 
-- [x] Inicio de sesión con Keycloak, validación de tokens en la API y roles admin, docente y estudiante — **Resp.:** eduar.troyano — [ADR 0004](../docs/adr/0004-authentication-keycloak-bearer.md)
+- [x] Inicio de sesión con Keycloak, validación de tokens en la API y roles admin, docente y estudiante — **Resp.:** eduar.troyano — [ADR 0004](../../docs/adr/0004-authentication-keycloak-bearer.md)
 - [x] El estudiante se crea solo en su primer acceso; docentes y administradores los crea un administrador desde la API — **Resp.:** eduar.troyano
 - [x] Perfil del usuario autenticado (`GET /api/v1/me`) — **Resp.:** eduar.troyano
 - [ ] Pantallas de login y perfil — **Resp.:** _por asignar_ (Responsable de producto)
@@ -147,13 +147,13 @@ Criterio de salida del brief: flujo y pantallas aprobados, y esquemas JSON de ca
 - [x] Crear cursos, temas y prerrequisitos (grafo sin ciclos y dentro del mismo curso) — **Resp.:** eduar.troyano
 - [x] Objetivo por defecto y umbrales de la ruta según el brief (70 %, 80 %, 80 % y 3 intentos) — **Resp.:** eduar.troyano
 - [x] Carga del syllabus (PDF o texto) — **Resp.:** _por asignar_ (Responsable de producto) — _2026-11-13: D1b con la API real; el dueño creó un curso desde un PDF el 2026-11-12_
-- [x] Extracción de temas, prerrequisitos y resultados de aprendizaje con LLM — **Resp.:** _por asignar_ (Responsable de IA y datos) — _2026-11-13: `syllabus.structure` con Gemini real (evidencia de F6 en `proyecto/seguimiento/HOJA_DE_RUTA.md`)_
+- [x] Extracción de temas, prerrequisitos y resultados de aprendizaje con LLM — **Resp.:** _por asignar_ (Responsable de IA y datos) — _2026-11-13: `syllabus.structure` con Gemini real (evidencia de F6 en `proyecto/cohorte_1/seguimiento/HOJA_DE_RUTA.md`)_
 - [x] Revisión y aprobación de los temas extraídos por el docente — **Resp.:** _por asignar_ (Responsable de producto) — _2026-11-13: D2 y D2d con la API real (T-017)_
 
 ### Módulo 3: rutas
 
 - [x] Inscripción, estado de avance por tema e historial de intentos — **Resp.:** eduar.troyano
-- [x] Endpoints del estudiante sobre lo propio (`/api/v1/me/enrollments...`), con verificación de pertenencia — **Resp.:** eduar.troyano — [`api/README.md`](../api/README.md)
+- [x] Endpoints del estudiante sobre lo propio (`/api/v1/me/enrollments...`), con verificación de pertenencia — **Resp.:** eduar.troyano — [`api/README.md`](../../api/README.md)
 - [x] Dashboard simple de avance para el docente — **Resp.:** _por asignar_ (Responsable de producto) — _2026-11-13: D3 y D4 con la API real (T-012, T-017)_
 
 ### Módulo 4: diagnóstico
@@ -198,13 +198,13 @@ El corazón académico del proyecto: cada paso es un problema de IA con entrada,
 
 ## F. Interfaz de usuario (frontend)
 
-El brief propone dos caminos: **Streamlit** (recomendado para el MVP) o **Next.js** («válido si el equipo domina React, pero consume tiempo que conviene dedicar a la evaluación»). Ambos usan la misma API y el mismo inicio de sesión con Keycloak. **Decidido: Streamlit** ([ADR 0006](../docs/adr/0006-frontend-streamlit.md)); arquitectura en [`app/README.md`](../app/README.md).
+El brief propone dos caminos: **Streamlit** (recomendado para el MVP) o **Next.js** («válido si el equipo domina React, pero consume tiempo que conviene dedicar a la evaluación»). Ambos usan la misma API y el mismo inicio de sesión con Keycloak. **Decidido: Streamlit** ([ADR 0006](../../docs/adr/0006-frontend-streamlit.md)); arquitectura en [`app/README.md`](../../app/README.md).
 
 ### Decisión
 
-- [x] Decidir el frontend: **Streamlit** — **Resp.:** eduar.troyano — [ADR 0006](../docs/adr/0006-frontend-streamlit.md); comparación a continuación
-- [x] Arquitectura de la interfaz definida (capas, autenticación, caché, datos de ejemplo) y guía de referencia analizada — **Resp.:** eduar.troyano — [`app/README.md`](../app/README.md)
-- [x] Prueba técnica del login de Streamlit con Keycloak (1 día) — **Resp.:** _por asignar_ (Responsable de producto) — [plan](../app/README.md#autenticación) — _2026-11-13: `st.login` con Keycloak; renovación silenciosa del token (PR 6)_
+- [x] Decidir el frontend: **Streamlit** — **Resp.:** eduar.troyano — [ADR 0006](../../docs/adr/0006-frontend-streamlit.md); comparación a continuación
+- [x] Arquitectura de la interfaz definida (capas, autenticación, caché, datos de ejemplo) y guía de referencia analizada — **Resp.:** eduar.troyano — [`app/README.md`](../../app/README.md)
+- [x] Prueba técnica del login de Streamlit con Keycloak (1 día) — **Resp.:** _por asignar_ (Responsable de producto) — [plan](../../app/README.md#autenticación) — _2026-11-13: `st.login` con Keycloak; renovación silenciosa del token (PR 6)_
 - [x] Base de la interfaz: contenedor, cliente de la API y de datos de ejemplo, navegación por rol, errores y pruebas — **Resp.:** _por asignar_ (Responsable de producto) — _2026-11-13: las 96 pantallas de Figma v3 tienen página_
 
 ### Comparación
@@ -228,7 +228,7 @@ El brief propone dos caminos: **Streamlit** (recomendado para el MVP) o **Next.j
 
 ### Pantallas
 
-El prototipo de la Fase 0 ya tiene todas estas pantallas con datos de ejemplo ([`app/README.md`](../app/README.md#pantallas-roles-y-endpoints)). Cada casilla se marca cuando la pantalla funciona con la API real y el login.
+El prototipo de la Fase 0 ya tiene todas estas pantallas con datos de ejemplo ([`app/README.md`](../../app/README.md#pantallas-roles-y-endpoints)). Cada casilla se marca cuando la pantalla funciona con la API real y el login.
 
 - [ ] Login y perfil — **Resp.:** _por asignar_ (Responsable de producto)
 - [ ] Catálogo de rutas e inscripción — **Resp.:** _por asignar_ (Responsable de producto)
@@ -254,9 +254,9 @@ El prototipo de la Fase 0 ya tiene todas estas pantallas con datos de ejemplo ([
 
 ## H. Decisiones técnicas pendientes
 
-Detalle, opciones y recomendación en [`decisiones-pendientes.md`](decisiones-pendientes.md).
+Detalle, opciones y recomendación en [`decisiones-pendientes.md`](decisiones.md).
 
-- [x] D-03: autenticación, contraseñas y seguridad de la API (Keycloak y bearer tokens) — **Resp.:** eduar.troyano — cerrada, [ADR 0004](../docs/adr/0004-authentication-keycloak-bearer.md)
+- [x] D-03: autenticación, contraseñas y seguridad de la API (Keycloak y bearer tokens) — **Resp.:** eduar.troyano — cerrada, [ADR 0004](../../docs/adr/0004-authentication-keycloak-bearer.md)
 - [x] D-02: proveedor de LLM (Claude, GPT u open source). **Bloquea la capa de IA** — **Resp.:** _por asignar_ (Director o tutor, con el Responsable de IA y datos) — _2026-11-13: Gemini (DEF-01 y DEF-02)_
 - [x] D-01: modelo de embeddings y dimensión del vector (hoy `vector(1024)` provisional); benchmark con el syllabus real — **Resp.:** _por asignar_ (Responsable de IA y datos) — _2026-11-13: `gemini-embedding-001`, dimensión 768_
 - [x] D-04: almacenamiento de los fragmentos RAG (`document_chunks` gestionado por Liquibase) — **Resp.:** _por asignar_ (Responsable de IA y datos) — _2026-11-13: tabla `ai_embeddings` en la base v2.0.0_
@@ -265,10 +265,10 @@ Detalle, opciones y recomendación en [`decisiones-pendientes.md`](decisiones-pe
 
 ## I. Plan de implementación v3
 
-Fases y tareas de [`PLAN_IMPLEMENTACION_V3.md`](../PLAN_IMPLEMENTACION_V3.md) (sección 7). Se ejecutan solo con la autorización del dueño; las ramas y su tope (`dev`) están en la sección 16.1 del plan.
+Fases y tareas de [`PLAN_IMPLEMENTACION_V3.md`](../../PLAN_IMPLEMENTACION_V3.md) (sección 7). Se ejecutan solo con la autorización del dueño; las ramas y su tope (`dev`) están en la sección 16.1 del plan.
 
 - [x] Plan de implementación v3 redactado y ajustado con las decisiones del 2026-11-07 — **Resp.:** eduar.troyano — pendiente de revisión y autorización del dueño y el director
-- [x] Especificación de Figma v3 extraída en [`design/03-prototipo-alta-fidelidad/v3/`](../design/03-prototipo-alta-fidelidad/v3/README.md) (96 pantallas, 24 variables, tokens) — **Resp.:** eduar.troyano
+- [x] Especificación de Figma v3 extraída en [`design/03-prototipo-alta-fidelidad/v3/`](../../design/03-prototipo-alta-fidelidad/v3/README.md) (96 pantallas, 24 variables, tokens) — **Resp.:** eduar.troyano
 - [x] F0: responder las decisiones bloqueantes (DEF-01, 02, 13, 14 y 25; las demás por defecto) — **Resp.:** eduar.troyano — 2026-11-07
 - [ ] F0: confirmar la sección 18.4 del plan (DEF-02, DEF-27, DEF-28 y SMTP) y aprobar el plan con el director — **Resp.:** eduar.troyano
 - [x] F0: integrar la línea base a `dev` por pull request (`feature/phase-0-prototypes` y luego `feature/plan-v3-decisiones`) — **Resp.:** eduar.troyano — los `push` son del dueño — _2026-11-13: `eb84c97` en `dev`_

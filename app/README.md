@@ -2,7 +2,7 @@
 
 Interfaz de usuario de SmartMentor en **Streamlit**: portal del Aprendiz, panel del Instructor y administración. Decisión registrada en el [ADR 0006](../docs/adr/0006-frontend-streamlit.md); la reconstrucción desde Figma v3 y el directorio de estilos, en el [ADR 0017](../docs/adr/0017-frontend-rebuilt-from-figma-v3.md); los roles y el glosario de etiquetas, en el [ADR 0021](../docs/adr/0021-neutral-roles-and-label-glossary.md).
 
-> **Estado (2026-11-14, Fase 7):** las 96 pantallas de Figma v3 tienen su página en `src/pages/`, con pruebas `AppTest`. Las del **instructor** y las del **administrador** leen la API real, a través de un adaptador por pantalla en `src/clients/*_adapter.py`; la excepción es el catálogo de prompts (C4), que copia `prompts/catalog.yaml`. Las del **aprendiz** con la API real (catálogo, perfil, quiz y ruta) están en `dev` desde el PR 5 (2026-11-14); el resto del aprendiz sigue pendiente (T-011). Streamlit 1.67 (`pillow` 13.0.0). El login es con Keycloak (`st.login`): la sesión dura 3 h y el token de 5 min se renueva solo (`core/auth.py`). Falta la revisión visual frente a Figma. El estado tarea por tarea está en [`proyecto/seguimiento/HOJA_DE_RUTA.md`](../proyecto/seguimiento/HOJA_DE_RUTA.md). Las reglas para pasar los diseños de Figma a código están en [`CLAUDE.md`](CLAUDE.md).
+> **Estado (2026-11-14, Fase 7):** las 96 pantallas de Figma v3 tienen su página en `src/pages/`, con pruebas `AppTest`. Las del **instructor** y las del **administrador** leen la API real, a través de un adaptador por pantalla en `src/clients/*_adapter.py`; la excepción es el catálogo de prompts (C4), que copia `prompts/catalog.yaml`. Las del **aprendiz** con la API real (catálogo, perfil, quiz y ruta) están en `dev` desde el PR 5 (2026-11-14); el resto del aprendiz sigue pendiente (T-011). Streamlit 1.67 (`pillow` 13.0.0). El login es con Keycloak (`st.login`): la sesión dura 3 h y el token de 5 min se renueva solo (`core/auth.py`). Falta la revisión visual frente a Figma. El estado tarea por tarea está en [`proyecto/cohorte_1/seguimiento/HOJA_DE_RUTA.md`](../proyecto/cohorte_1/seguimiento/HOJA_DE_RUTA.md). Las reglas para pasar los diseños de Figma a código están en [`CLAUDE.md`](CLAUDE.md).
 
 ## Cómo ejecutarla
 
@@ -18,7 +18,7 @@ La imagen (`Dockerfile`, usuario sin privilegios, healthcheck en `/_stcore/healt
 
 ## Por qué Streamlit
 
-El brief da 8 semanas y se aprueba por la calidad de la evaluación, no por la cantidad de funcionalidades. La capa de IA es el aporte académico. Streamlit construye las pantallas en días, mantiene todo el proyecto en Python (el mismo stack que la API, la IA y los notebooks) y lo mantiene cualquier integrante de una cohorte de ciencia de datos. Sus límites (control fino del diseño, interactividad compleja, mucho tráfico) no afectan a un piloto de 15 a 30 aprendices. La comparación completa con Next.js está en [`proyecto/checklist.md`](../proyecto/checklist.md#comparación).
+El brief da 8 semanas y se aprueba por la calidad de la evaluación, no por la cantidad de funcionalidades. La capa de IA es el aporte académico. Streamlit construye las pantallas en días, mantiene todo el proyecto en Python (el mismo stack que la API, la IA y los notebooks) y lo mantiene cualquier integrante de una cohorte de ciencia de datos. Sus límites (control fino del diseño, interactividad compleja, mucho tráfico) no afectan a un piloto de 15 a 30 aprendices. La comparación completa con Next.js está en [`proyecto/cohorte_1/checklist.md`](../proyecto/cohorte_1/checklist.md#comparación).
 
 ## Principios
 
@@ -192,4 +192,4 @@ La [guía de arquitectura para Streamlit](streamlit_frontend_architecture_guide.
 | Carpeta `api/` dentro de `src/` | **Se renombra** a `clients/` | Evita confundirla con el microservicio `api/` |
 | `requirements.txt` | **Se reemplaza** por `pyproject.toml` y `uv.lock` | Las mismas herramientas y versiones fijadas que la API |
 
-El seguimiento de cada tarea, con responsable, está en [`proyecto/checklist.md`](../proyecto/checklist.md) (sección F) y en el tablero del plan.
+El seguimiento de cada tarea, con responsable, está en [`proyecto/cohorte_1/checklist.md`](../proyecto/cohorte_1/checklist.md) (sección F) y en el tablero del plan.

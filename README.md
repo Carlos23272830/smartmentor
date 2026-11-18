@@ -17,7 +17,7 @@ Plataforma de cursos adaptativos generados con IA: a partir de un syllabus gener
 | Integración de punta a punta con el LLM real (Fase 6) | En curso: detenida por el tope de gasto de Google AI Studio |
 | Anotación de expertos, usabilidad y piloto (Fase 9b), revisión final (10) y cierre (11) | Pendiente |
 
-Seguimiento: [`PLAN_IMPLEMENTACION_V3.md`](PLAN_IMPLEMENTACION_V3.md) (fuente vigente). [`proyecto/checklist.md`](proyecto/checklist.md) y [`HANDOFF.md`](HANDOFF.md) son anteriores a la versión 3 y se actualizan en la Fase 10.
+Seguimiento: [`PLAN_IMPLEMENTACION_V3.md`](PLAN_IMPLEMENTACION_V3.md) (fuente vigente). [`proyecto/cohorte_1/checklist.md`](proyecto/cohorte_1/checklist.md) y [`HANDOFF.md`](HANDOFF.md) son anteriores a la versión 3 y se actualizan en la Fase 10.
 
 ## Requisitos
 

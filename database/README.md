@@ -5,7 +5,7 @@ Gestión de la base de datos de SmartMentor: **PostgreSQL 17 + pgvector 0.8.7**,
 - Decisiones: [ADR 0001 (PostgreSQL + pgvector)](../docs/adr/0001-postgres-pgvector.md), [ADR 0002 (Liquibase)](../docs/adr/0002-liquibase-schema-versioning.md), [ADR 0007 (re-base v2.0.0)](../docs/adr/0007-schema-rebase-v2.md), [ADR 0009 (propiedad de los datos)](../docs/adr/0009-data-ownership-api-and-ai.md), [ADR 0012 (embeddings 768)](../docs/adr/0012-embedding-model-and-dimension.md), [ADR 0019 (usuarios de mínimo privilegio)](../docs/adr/0019-least-privilege-db-users.md) y [ADR 0021 (roles neutros)](../docs/adr/0021-neutral-roles-and-label-glossary.md).
 - Operación de Liquibase (escenarios y comandos): [`liquibase/README.md`](liquibase/README.md).
 - Plan de origen: [`PLAN_IMPLEMENTACION_V3.md`](../PLAN_IMPLEMENTACION_V3.md), sección 5.2.
-- Decisiones abiertas que afectan el modelo: [`proyecto/decisiones-pendientes.md`](../proyecto/decisiones-pendientes.md).
+- Decisiones abiertas que afectan el modelo: [`proyecto/cohorte_1/decisiones.md`](../proyecto/cohorte_1/decisiones.md).
 
 ## Estructura
 
@@ -622,4 +622,4 @@ erDiagram
 
 ### Cómo se probó
 
-Ver la sección «Validación» de [`proyecto/bitacora/F02-database.md`](../proyecto/bitacora/F02-database.md): `liquibase validate`, `update`, `update-testing-rollback`, auditoría de las 34 tablas, `CHECK`, permisos de los usuarios y `reset-app-schema.sh`.
+Ver la sección «Validación» de [`proyecto/cohorte_1/bitacora/F02-database.md`](../proyecto/cohorte_1/bitacora/F02-database.md): `liquibase validate`, `update`, `update-testing-rollback`, auditoría de las 34 tablas, `CHECK`, permisos de los usuarios y `reset-app-schema.sh`.
