@@ -28,8 +28,9 @@ Instrucciones y comandos: `notebooks/README.md`.
 
 El changeset `v2.0.1-004` (aplicado en Neon el 2026-11-15) da `SELECT` sobre `interaction_events` al rol de
 métricas. El cuaderno lee esa tabla aparte (`OPTIONAL_QUERIES`): si falta el permiso, avisa y deja el tiempo
-en tarea sin calcular en lugar de fallar. El rol no tiene `SELECT` sobre `assessment_items`, así que la
-equivalencia de ítems entre el diagnóstico y la final no se puede verificar desde el cuaderno.
+en tarea sin calcular en lugar de fallar. El changeset `v2.0.1-010` (T-057) da además `SELECT` sobre
+`assessment_items`, para verificar desde el cuaderno la equivalencia de ítems entre el diagnóstico y la final
+(`equivalence_group`).
 
 ## Métricas del sistema
 
