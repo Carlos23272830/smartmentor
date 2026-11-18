@@ -1,6 +1,6 @@
 # Bugs
 
-Estados y formato en el [README](TRAZABILIDAD.md#cómo-se-lleva-este-registro). Severidad: **Alta** (rompe un flujo), **Media** (funciona mal o confunde), **Baja** (documentación o detalle). El historial de cada bug está en la [bitácora](BITACORA.md).
+Estados y formato en el [README](TRAZABILIDAD.md#cómo-se-lleva-este-registro). Severidad: **Alta** (rompe un flujo), **Media** (funciona mal o confunde), **Baja** (documentación o detalle). El historial de cada bug queda en los commits y los pull requests de GitHub.
 
 | ID | Encontrado | Severidad | Descripción | Estado | Corregido | Commit / PR |
 | --- | --- | --- | --- | --- | --- | --- |

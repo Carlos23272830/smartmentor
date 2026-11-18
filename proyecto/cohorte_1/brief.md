@@ -183,6 +183,17 @@ flowchart LR
 
 Detalle de contenedores, puertos, autenticación, directorios y despliegue: [anexo A](../../docs/cohorte_1/anexos/A-arquitectura-y-despliegue.md) y [runbook](../../docs/cohorte_1/runbook-despliegue.md).
 
+### 8.1 Base de datos: despliegue, respaldo y restauración
+
+| Tema | Qué hay | Dónde se documenta |
+| --- | --- | --- |
+| Esquema y cambios | Liquibase (66 changesets), usuarios de mínimo privilegio por servicio, bootstrap de bases y roles | [`database/README.md`](../../database/README.md), [`database/liquibase/README.md`](../../database/liquibase/README.md), [anexo B](../../docs/cohorte_1/anexos/B-modelo-de-datos.md) y los ADR [0002](../../docs/adr/0002-liquibase-schema-versioning.md), [0007](../../docs/adr/0007-schema-rebase-v2.md) y [0019](../../docs/adr/0019-least-privilege-db-users.md) |
+| Despliegue de la base | Local con `docker compose` (PostgreSQL 17 con pgvector) o remota en Neon; el arranque va en tres niveles: bases y roles, esquema y datos | [Anexo A, sección 9](../../docs/cohorte_1/anexos/A-arquitectura-y-despliegue.md#9-base-de-datos-en-el-despliegue) y [runbook, sección 4](../../docs/cohorte_1/runbook-despliegue.md#4-base-remota-neon-preparación-y-arranque) |
+| Respaldo | `database/scripts/backup.sh` (bases de la aplicación y de Keycloak, formato `pg_dump -Fc`) y `neon-to-local.sh pull` (solo lee Neon). No hay programación automática ni copia fuera de la máquina | [Runbook, sección 5](../../docs/cohorte_1/runbook-despliegue.md#5-respaldo-y-restauración) |
+| Restauración | `restore.sh` (base local), `remote-sync.sh` (de local a Neon) y `neon-to-local.sh restore` (de Neon a local, barriendo la base local tras copiarla) | [`RESTAURAR_NEON_EN_LOCAL.md`](../../database/RESTAURAR_NEON_EN_LOCAL.md), con el prompt que usan los compañeros para restaurar |
+| Respaldo del equipo | Copia de la base de desarrollo de Neon del 2026-11-17 (`neon_20261117_224227`, 5,4 MB con su suma SHA-256), versionada por decisión del dueño. Incluye syllabus y lecturas de prueba y las llaves del realm de desarrollo: no es práctica para datos reales | [`database/respaldos-equipo/`](../../database/respaldos-equipo/) |
+| Base compartida o por integrante | Neon sirve de fuente compartida y cada integrante trabaja con su base local. Neon en plan gratuito agotó su cuota el 2026-11-17 | [Anexo A, sección 9.4](../../docs/cohorte_1/anexos/A-arquitectura-y-despliegue.md#94-descentralizar-neon-compartido-frente-a-base-local-por-integrante) y [runbook, sección 9.3](../../docs/cohorte_1/runbook-despliegue.md#93-cuota-de-neon-agotada) |
+
 ## 9. Modelo de datos
 
 El brief base proponía 11 entidades. La versión `v2.0.x` tiene **40 tablas de negocio y de IA y 35 tablas `_audit`**, con auditoría por trigger, y los cambios se versionan con Liquibase.
@@ -342,6 +353,7 @@ El brief base planeaba 8 semanas. La cohorte avanzó por fases técnicas, del 20
 | --- | --- |
 | [Anexo A · Arquitectura y despliegue](../../docs/cohorte_1/anexos/A-arquitectura-y-despliegue.md) | Contenedores, puertos, autenticación, directorios, CI y modos de despliegue |
 | [Runbook de despliegue](../../docs/cohorte_1/runbook-despliegue.md) | Pasos operativos: arranque, base remota, respaldo y restauración, diagnóstico |
+| [Base de datos](../../database/README.md) y [restaurar Neon en local](../../database/RESTAURAR_NEON_EN_LOCAL.md) | Documentación propia de la base: bootstrap, Liquibase, respaldo y restauración, y el respaldo del equipo |
 | [Anexo B · Modelo de datos](../../docs/cohorte_1/anexos/B-modelo-de-datos.md) | Mapa entidad a tabla, diagramas por dominio, auditoría, permisos y evolución |
 | [Anexo C · Agentes, prompts y modelos](../../docs/cohorte_1/anexos/C-agentes-prompts-y-modelos.md) | Tareas de IA, prompts versionados, modelos, presupuestos y jueces-agente |
 | [Anexo D · Experimentos](../../docs/cohorte_1/anexos/D-experimentos.md) | Índice de experimentos hechos y no alcanzados, con sus resultados |

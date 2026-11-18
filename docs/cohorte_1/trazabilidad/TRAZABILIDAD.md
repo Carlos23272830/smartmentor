@@ -377,7 +377,7 @@ Reglas con las que se llevó este seguimiento durante la cohorte 1: formato de f
 ### Flujo de trabajo
 
 1. **Local.** Los cambios se hacen en este equipo, en una rama `feature/<tema>` o `fix/<tema>` creada desde `dev` actualizada (`git fetch origin && git switch -c feature/<tema> origin/dev`).
-2. **Registro al momento.** Al empezar, al terminar y al encontrar algo, se agrega una entrada en `BITACORA.md` y se cambia el estado en el archivo que corresponda.
+2. **Registro al momento.** Al empezar, al terminar y al encontrar algo, se cambia el estado en el archivo que corresponda; el historial lo llevan los commits y los pull requests.
 3. **Commit.** Se usa [Conventional Commits](../../../CONTRIBUTING.md#3-commits) en español, con el ID entre corchetes al final del título (`fix(app): … [B-002]`) y el pie de coautoría del equipo. El hash queda anotado en la bitácora.
 4. **Pruebas.** `api/scripts/dev.sh all` y `app/scripts/dev.sh all` se corren antes de subir. El resultado real se anota en la bitácora, también si falla. *Desde el 2026-11-12 el dueño autorizó levantar el stack y correr las pruebas en este equipo. Lo que no se puede correr aquí (por ejemplo, la integración de la API, que usaría la base de Neon) queda «sin verificar» hasta que pase la CI.*
 5. **Subida.** `git push -u origin <rama>` **solo con la aprobación del dueño en cada subida**. Nunca a `dev`, `stage` ni `main`, y nunca con `--force`.
