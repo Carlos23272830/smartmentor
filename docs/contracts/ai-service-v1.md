@@ -1,6 +1,6 @@
 # Contrato HTTP del servicio de IA (`ai/`, v1)
 
-Estado: **borrador de la Fase 1** (rama `feature/prompts-and-contracts`). Lo implementa `ai/` en las Fases 4 y 5 y lo consume la API a través del puerto `AiServicePort` (`ai_gateway`, plan 5.3.1). Fuentes: plan 5.3.3, 5.4.2, 5.4.3, 5.4.11 a 5.4.13. Los cuerpos de salida son los contratos de `prompts/schemas/*.v1.json`; los errores, los de `docs/contracts/error-codes.md`.
+Estado: **vigente**. Nació como borrador de la Fase 1 (rama `feature/prompts-and-contracts`) y `ai/` lo implementa desde las Fases 4 y 5; revisado contra el código el 2026-11-18 y lo consume la API a través del puerto `AiServicePort` (`ai_gateway`, plan 5.3.1). Fuentes: plan 5.3.3, 5.4.2, 5.4.3, 5.4.11 a 5.4.13. Los cuerpos de salida son los contratos de `prompts/schemas/*.v1.json`; los errores, los de `docs/contracts/error-codes.md`.
 
 ## 1. Reglas generales
 
@@ -114,7 +114,7 @@ Cada entrada lista el `input` y el contrato de `result`. Las tareas que llaman a
 | `diagnostic.generate_items` | `diagnostic_generation` + `item_review` | `{course_id: int}` | `assessment_item_bank.v1` (`source=diagnostic`) | por curso | E3 |
 | `items.generate_quiz_bank` | `topic_quiz` + `item_review` | `{topic_id: str, n_multiple_choice: int, n_short_answer: int, previous_stems: [str]}` | `assessment_item_bank.v1` (`source=topic_quiz`, `topic_id` fijo) | por tema | E6b, E6c, U1b |
 | `items.generate_final_bank` | `final_assessment` + `item_review` | `{learning_path_id: int, topic_ids: [str], n_short_answer: int, n_versions: int, previous_stems: [str]}` | `assessment_item_bank.v1` (`f<n>_v1` → `final`, `f<n>_v2…` → `retention`; mismo `equivalence_group`) | por ruta | E8, E14 |
-| `items.review` | `item_review` | `{items: [{item_id, item_type, bloom_level, stem, options, correct_option, rubric, outcome}]}` | `item_review.v1` | por ítem | D5 |
+| `items.review` | `item_review` | `{items: [{item_id, item_type, bloom_level, stem, options, correct_option, rubric, outcome}]}` | `item_review.v1` | por lote (clave del prompt renderizado) | D5 |
 | `content.explain_topic` | `topic_explanation` + `rag_faithfulness` | `{topic_id: str}` | `topic_explanation.v1` (`kind=main`, `audience=all_learners`, con `faithfulness`) | **por tema, compartido** | E6, D5 |
 | `content.check_faithfulness` | `rag_faithfulness` | `{topic_id: str, text: str, source_ids: [str]}` | `faithfulness_check.v1` | por versión del texto | D5d |
 | `content.remedial` | `remedial_explanation` + `rag_faithfulness` | `{topic_id: str, level: float, profile_text: str, failed_items: [{stem: str, learner_answer: str}]}` | `topic_explanation.v1` (`kind=remedial`, `audience=enrollment`) | sin caché entre aprendices | E7b |
@@ -213,8 +213,8 @@ Sale de `prompts/catalog.yaml` más los agregados de `llm_call_logs`. `GET /v1/p
 
 ## 6. Presupuesto, caché y registro
 
-- `BudgetGuard` revisa antes de cada llamada `AI_DAILY_BUDGET_USD`, `AI_COURSE_BUDGET_USD` (por `refs.course_id`) y `AI_ENROLLMENT_BUDGET_USD` (por `refs.enrollment_id`). Si se supera, el trabajo termina `failed` con `BUDGET_EXCEEDED` y `retryable=false`.
-- Caché: `ai_generation_cache.cache_key` = SHA-256 de modelo + tarea + versión del prompt + system + prompt renderizado + nombre del esquema (notebook v2). No se usa en `grading.short_answer`, `content.remedial` ni `content.personal_example`. Una salida de caché lleva `meta.from_cache = true`.
+- `BudgetGuard` revisa antes de cada llamada `AI_DAILY_BUDGET_USD`, `AI_MONTHLY_BUDGET_USD`, `AI_COURSE_BUDGET_USD` (por `refs.course_id`) y `AI_ENROLLMENT_BUDGET_USD` (por `refs.enrollment_id`). Si se supera, el trabajo termina `failed` con `BUDGET_EXCEEDED` y `retryable=false`.
+- Caché: `ai_generation_cache.cache_key` = SHA-256 de modelo + tarea + versión del prompt + system + prompt renderizado + nombre del esquema (notebook v2). No se usa en `grading.short_answer`, `content.remedial`, `content.personal_example`, `diagnostic.finalize` (objetivo personal) ni en la verificación de fidelidad de la explicación alterna. Una salida de caché lleva `meta.from_cache = true`.
 - Cada intento de llamada deja una fila en `llm_call_logs` (`ai_job_id`, `provider`, `task`, `prompt_id`, `prompt_version`, `input_sha256`, `json_valid`, `call_attempt`, `from_cache`, `cost_usd`, `latency_ms`, `status`).
 
 ## 7. Cambios futuros

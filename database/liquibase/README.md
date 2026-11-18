@@ -17,7 +17,7 @@ En cada ejecución compara los changelogs con `databasechangelog` y **aplica sol
 
 ### Ejecución en contenedor
 
-- **Imagen propia** ([`Dockerfile`](Dockerfile)) basada en `liquibase/liquibase:5.0.4`. Desde la versión 5.0 la imagen oficial no trae drivers, así que se instala el de PostgreSQL con `lpm add postgresql --global`.
+- **Imagen propia** ([`Dockerfile`](Dockerfile)) basada en `liquibase/liquibase:5.0.4`. Desde la versión 5.0 la imagen oficial no trae drivers, así que el `Dockerfile` descarga el driver de PostgreSQL (`postgresql-42.7.13.jar`) con versión y suma de verificación fijas. Antes se instalaba con `lpm add postgresql`, que fallaba en la CI.
 - **Contenedor de ejecución única:** arranca, ejecuta el comando y termina (`restart: "no"`). No queda corriendo.
 - **Changelogs desde git:** se montan de solo lectura desde `database/liquibase/changelog/`. El contenido siempre sale del repositorio, no de la imagen.
 - **Conexión por variables de entorno**, tomadas de `.env` en el compose:

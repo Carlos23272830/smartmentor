@@ -474,7 +474,7 @@ Otras observaciones de despliegue que salen del compose y que el equipo debe dec
 
 ## 12. Inconsistencias encontradas entre documentos y código
 
-Para que se corrijan en su propio cambio; este anexo no modifica esos archivos.
+**Estado: corregidas el 2026-11-18** en el cambio de reajuste documental, salvo dos. El ADR 0020 sigue «Propuesto» (parcialmente implementado) porque el destino del piloto no está decidido; los ADR 0013, 0015, 0016 y 0018 siguen «Propuesto» con la nota de lo que falta decidir. La fila del brief base ya consta en el [brief de la cohorte](../../../proyecto/cohorte_1/brief.md#5-qué-cambió-frente-al-brief-base). La tabla conserva lo que se encontró.
 
 | Dónde | Qué dice | Qué hay en el código |
 | --- | --- | --- |

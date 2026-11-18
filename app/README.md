@@ -36,7 +36,7 @@ flowchart LR
     B["Navegador<br/>(aprendiz, instructor, admin)"] -- "HTTP / WebSocket" --> S["app (Streamlit)<br/>localhost:8501"]
     B -- "login (redirección)" --> K["Keycloak<br/>localhost:8180"]
     S -- "OpenID Connect<br/>(código de autorización)" --> K
-    S -- "HTTP + Bearer token<br/>http://api:8020/api/v1" --> A["api (FastAPI)"]
+    S -- "HTTP + Bearer token<br/>http://api:8000/api/v1" --> A["api (FastAPI)"]
     A -- "llaves públicas (JWKS)" --> K
     A --> P[("PostgreSQL<br/>+ pgvector")]
 ```
@@ -159,7 +159,7 @@ Todas las variables llegan por entorno (`pydantic-settings`); ninguna tiene un s
 | `APP_CONTEXT_PROFILE` | `generic` | Perfil de etiquetas (`generic`, `academic`, `corporate`; los dos últimos son P2) |
 | `ORGANIZATION_NAME` | (según la organización) | Organización responsable que citan los textos de A3b y A3c |
 | `PILOT_WINDOW_TEXT` | `entre el 2 y el 15 de noviembre de 2026` | Ventana del piloto que cita A3b (C-03: las fechas definitivas son posteriores al hito) |
-| `API_BASE_URL` | `http://api:8020` | La API por la red interna de Docker (la app agrega `/api/v1`) |
+| `API_BASE_URL` | `http://api:8000` | La API por la red interna de Docker, en el puerto del contenedor (8000; el 8020 es el puerto publicado en tu máquina). La app agrega `/api/v1` |
 | `API_UPLOAD_TIMEOUT_SECONDS` | `80` | Segundos que espera la app al subir el syllabus o los apuntes (el resto de llamadas espera 10 s); súbelo si la base en la nube está lenta |
 | `OIDC_SERVER_METADATA_URL` | `http://keycloak:8080/realms/smartmentor/.well-known/openid-configuration` | Descubrimiento de Keycloak desde el contenedor |
 | `OIDC_UI_CLIENT_ID` | `smartmentor-ui` | Cliente confidencial de la interfaz |

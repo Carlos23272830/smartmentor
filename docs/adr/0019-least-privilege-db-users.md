@@ -1,6 +1,6 @@
 # ADR 0019: Usuarios de base de datos con mínimo privilegio (cierra D-05)
 
-* **Estado:** Propuesto. Lo cierra la Fase 2 (bootstrap y changeset de permisos), con la propiedad de los datos del [ADR 0009](0009-data-ownership-api-and-ai.md)
+* **Estado:** Aceptado (implementado en el código; el dueño lo cerró el 2026-11-18). Historial de la propuesta: lo cierra la Fase 2 (bootstrap y changeset de permisos), con la propiedad de los datos del [ADR 0009](0009-data-ownership-api-and-ai.md)
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
 * **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 5.2.3, 5.2.4, 5.6 (notebook de métricas) y Anexo D; [`docs/cohorte_1/decisiones.md`](../cohorte_1/decisiones.md), D-05

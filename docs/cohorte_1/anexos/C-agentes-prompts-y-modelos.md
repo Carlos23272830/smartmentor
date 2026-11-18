@@ -327,7 +327,7 @@ Hechos no verificados:
 - La **dimensión efectiva de 768** en la base de Neon: lo confirman el changeset (`vector(768)`) y el ADR 0012, no una consulta a la base.
 - La verificación independiente por un segundo agente en el desarrollo (sección 7) no está documentada como procedimiento.
 
-Inconsistencias halladas (no se corrigieron en esta rama):
+Inconsistencias halladas. **Corregidas el 2026-11-18** las 2, 3, 4 y 7, y la 1 en el contrato (no en `prompts/catalog.yaml`, cuyo texto no se toca para no cambiar los hashes de los prompts); la 6 y la 7 llevan además una nota en su ADR. La 5 es de una bitácora histórica y la 8 no es un error:
 
 1. `prompts/catalog.yaml` y la tabla 3 de `docs/contracts/ai-service-v1.md` dicen que `item_review` se cachea «por ítem»; el código cachea por lote (clave del prompt renderizado), como reconoce la bitácora F05 (DV-06).
 2. La sección 6 de `docs/contracts/ai-service-v1.md` lista como sin caché `grading.short_answer`, `content.remedial` y `content.personal_example`, pero el código también desactiva la caché en `diagnostic.finalize` (objetivo personal) y en la verificación de fidelidad de la explicación alterna.

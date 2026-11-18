@@ -14,7 +14,8 @@ keycloak/
     ├── sanitize-realm.py        # quita usuarios, secretos y llaves de un export, pone los marcadores ${VARIABLE} y comprueba (--check)
     ├── apply-secrets.sh         # aplica a un Keycloak ya importado los secretos y el correo de .env (rotación)
     ├── check-realm-import.sh    # importa el realm en un Keycloak desechable y lo verifica (lo usa la CI)
-    └── verify-realm.py          # las comprobaciones sobre la API de administración
+    ├── verify-realm.py          # las comprobaciones sobre la API de administración
+    └── seed-dev-users.sh        # crea los usuarios de desarrollo (lo invoca scripts/local-up.sh)
 ```
 
 Keycloak **no tiene volumen propio**: guarda todo en la base `keycloak` del PostgreSQL del proyecto (`database/data/`), con su propio rol (`KEYCLOAK_DB_USER`), separada de la base `smartmentor`.

@@ -1,6 +1,6 @@
 # ADR 0018: Protección de datos personales: consentimiento, supresión y auditoría (Ley 1581)
 
-* **Estado:** Propuesto. Lo cierra DEF-05 (director, responsable de evaluación y jurídica de la organización responsable) con la revisión de P-09; bloquea la supresión en la Fase 3 y el envío al LLM en la Fase 4
+* **Estado:** Propuesto (implementado en el código; falta la decisión del director, el responsable de evaluación y jurídica (DEF-05)). Lo cierra DEF-05 (director, responsable de evaluación y jurídica de la organización responsable) con la revisión de P-09; bloquea la supresión en la Fase 3 y el envío al LLM en la Fase 4
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
 * **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 0 (riesgo 4), 2.3, 2.4 (C-13), 5.2.1, 5.3.2, 5.3.4, 5.4.12, 10 (R-04, R-05), 18.2 y DEF-05
