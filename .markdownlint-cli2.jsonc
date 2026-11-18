@@ -33,7 +33,7 @@
     // Histórico y material de insumo: no se corrige.
     "design/**",
     "proyecto/brief.md",
-    "proyecto/cohorte_1/bitacora/**",
+    "docs/cohorte_1/bitacora/F*.md",
     "notebooks/**",
     "CHANGELOG.md",
     // Los prompts se versionan con su sha256 (prompts/catalog.yaml): no se reformatean.

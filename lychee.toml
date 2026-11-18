@@ -7,7 +7,7 @@ no_progress = true
 exclude_path = [
   "design",
   "proyecto/brief.md",
-  "proyecto/cohorte_1/bitacora",
+  "docs/cohorte_1/bitacora",
   "notebooks",
   "CHANGELOG.md",
   ".claude",

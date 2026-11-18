@@ -2,17 +2,17 @@
 
 Este anexo describe la base de datos de SmartMentor tal como quedó al cierre de la cohorte 1. Todas las cifras se verificaron el 2026-11-18 contra los changesets de Liquibase y contra el catálogo de la base local (`information_schema` y `pg_catalog`, solo `SELECT`; no se leyeron datos de personas ni contenidos). Donde un documento anterior difiere, se indica y se explica en la sección 1.2.
 
-Documentos relacionados: [brief de la cohorte 1](../brief.md), [Anexo A, arquitectura y despliegue](A-arquitectura-y-despliegue.md), [Anexo C, agentes, prompts y modelos](C-agentes-prompts-y-modelos.md), [trazabilidad](../seguimiento/TRAZABILIDAD.md), [brief original](../../brief.md) y [`database/README.md`](../../../database/README.md).
+Documentos relacionados: [brief de la cohorte 1](../../../proyecto/cohorte_1/brief.md), [Anexo A, arquitectura y despliegue](A-arquitectura-y-despliegue.md), [Anexo C, agentes, prompts y modelos](C-agentes-prompts-y-modelos.md), [trazabilidad](../trazabilidad/TRAZABILIDAD.md), [brief original](../../../proyecto/brief.md) y [`database/README.md`](../../../database/README.md).
 
 ## 1. Resumen
 
 ### 1.1 Del brief a la base implementada
 
-El brief original ([`proyecto/brief.md`](../../brief.md), sección «Modelo de datos principal») planteó **11 entidades** para el MVP. La base implementada es PostgreSQL 17 con pgvector 0.8.7, zona horaria `America/Bogota`, y su esquema lo gobierna Liquibase 5.0.4 ([ADR 0001](../../../docs/adr/0001-postgres-pgvector.md) y [ADR 0002](../../../docs/adr/0002-liquibase-schema-versioning.md)).
+El brief original ([`proyecto/brief.md`](../../../proyecto/brief.md), sección «Modelo de datos principal») planteó **11 entidades** para el MVP. La base implementada es PostgreSQL 17 con pgvector 0.8.7, zona horaria `America/Bogota`, y su esquema lo gobierna Liquibase 5.0.4 ([ADR 0001](../../adr/0001-postgres-pgvector.md) y [ADR 0002](../../adr/0002-liquibase-schema-versioning.md)).
 
 | Concepto | Cifra verificada | Cómo se verificó |
 | --- | --- | --- |
-| Entidades del brief | 11 | [`proyecto/brief.md`](../../brief.md) |
+| Entidades del brief | 11 | [`proyecto/brief.md`](../../../proyecto/brief.md) |
 | Tablas de negocio y de IA | **40** | Catálogo: tablas de `public` que no terminan en `_audit` ni son de control de Liquibase |
 | Tablas `_audit` | **35** | Catálogo; 35 triggers `<tabla>_audit_trg` |
 | Tablas de control de Liquibase | 2 | `databasechangelog` y `databasechangeloglock` |
@@ -37,7 +37,7 @@ Fuentes: [`database/liquibase/changelog/db.changelog-master.xml`](../../../datab
 | --- | --- | --- |
 | [`HANDOFF.md`](../../../HANDOFF.md), [`CHANGELOG.md`](../../../CHANGELOG.md), [`README.md`](../../../README.md) | 39 tablas (34 `_audit`) | Es la foto de la `v2.0.0`. No se actualizó cuando la `v2.0.1` agregó `course_materials` |
 | [`database/README.md`](../../../database/README.md) | 39 + 34 en el encabezado de la sección, y una nota que lleva a 40 + 35 | Conserva el texto de la `v2.0.0` y suma la nota «Cambios de la v2.0.1» |
-| [`proyecto/cohorte_1/brief.md`](../brief.md) | 40 tablas y 35 `_audit` | Coincide con la base verificada |
+| [`proyecto/cohorte_1/brief.md`](../../../proyecto/cohorte_1/brief.md) | 40 tablas y 35 `_audit` | Coincide con la base verificada |
 | Base local (catálogo) | 40 de negocio + 35 `_audit` | Es la realidad aplicada |
 | Lectura de «42 de negocio» | No se reproduce | El catálogo da 40. Una cuenta de 42 solo sale al sumar las 2 tablas de control de Liquibase, que no son de negocio |
 
@@ -47,7 +47,7 @@ Una inconsistencia menor adicional: [`database/README.md`](../../../database/REA
 
 ## 2. Cambio conceptual: de docente y estudiante a `instructor`, `learner` y `admin`
 
-El prototipo inicial y el brief usaban vocabulario académico (docente, estudiante, cohorte). El dueño pidió que SmartMentor no quedara atado al mundo universitario ([ADR 0021](../../../docs/adr/0021-neutral-roles-and-label-glossary.md)), de modo que el modelo pasó a términos neutros y las palabras visibles salen de un glosario, no de la base.
+El prototipo inicial y el brief usaban vocabulario académico (docente, estudiante, cohorte). El dueño pidió que SmartMentor no quedara atado al mundo universitario ([ADR 0021](../../adr/0021-neutral-roles-and-label-glossary.md)), de modo que el modelo pasó a términos neutros y las palabras visibles salen de un glosario, no de la base.
 
 | Aspecto | Antes (v1 y brief) | Ahora (v2.0.x) |
 | --- | --- | --- |
@@ -452,18 +452,18 @@ erDiagram
 
 | Decisión | Qué quedó en la base | ADR |
 | --- | --- | --- |
-| PostgreSQL 17 con pgvector 0.8.7 como única base (relacional y vectorial) | Extensión `vector` creada en el bootstrap y declarada en `v2.0.0-001-extensions-and-timezone` | [0001](../../../docs/adr/0001-postgres-pgvector.md) |
-| Esquema versionado con Liquibase, en XML, con `rollback` obligatorio y ids `vX.Y.Z-NNN-<acción>` | 66 changesets; un changeset aplicado no se edita | [0002](../../../docs/adr/0002-liquibase-schema-versioning.md) |
-| Re-base del esquema como `v2.0.0` | 14 tablas de la v1 pasaron a 39 (hoy 40); v1 retirada, etiqueta git `schema-v1-final` | [0007](../../../docs/adr/0007-schema-rebase-v2.md) |
-| Un escritor por tabla: la API escribe el negocio y `ai/` solo sus tablas | `smartmentor_api` sin escritura en `ai_*`, `source_documents`, `document_chunks`; `smartmentor_ai` sin escritura en negocio | [0009](../../../docs/adr/0009-data-ownership-api-and-ai.md) |
-| Cola de trabajos en Postgres, sin broker | Tabla `ai_jobs` con `idempotency_key` único y `locked_until`; el worker toma trabajos con `FOR UPDATE SKIP LOCKED` | [0010](../../../docs/adr/0010-async-jobs-postgres-pull-ingestion.md) |
-| Embeddings de 768 dimensiones en tabla propia | `ai_embeddings.embedding vector(768)`, índice `ai_embeddings_embedding_hnsw_idx` (HNSW, `vector_cosine_ops`); la columna `model` impide comparar modelos distintos | [0012](../../../docs/adr/0012-embedding-model-and-dimension.md) |
-| Fragmentos del RAG en tablas de Liquibase | `source_documents` y `document_chunks`; el vector del fragmento va en `ai_embeddings` con `owner_type = 'chunk'` | [0013](../../../docs/adr/0013-rag-chunks-in-liquibase-tables.md) |
-| Banco de ítems pregenerado y revisado por el instructor | `assessment_items` con `source`, `difficulty`, `equivalence_group`, `review_status`; el intento guarda `item_ids` | [0015](../../../docs/adr/0015-pregenerated-item-bank.md) |
-| Protección de datos personales | `consents`, `data_subject_requests`, seudonimización y `purge_user_audit(bigint)`; `llm_call_logs` guarda `input_sha256`, no el texto | [0018](../../../docs/adr/0018-personal-data-protection.md) |
-| Usuarios de base de mínimo privilegio | Cuatro roles de servicio y permisos otorgados por changeset | [0019](../../../docs/adr/0019-least-privilege-db-users.md) |
-| Roles neutros y etiquetas fuera de la base | Tabla `roles` con tres códigos; evaluadores por curso | [0021](../../../docs/adr/0021-neutral-roles-and-label-glossary.md) |
-| Auditoría por trigger `SECURITY DEFINER` | Ver sección 6 | [0007](../../../docs/adr/0007-schema-rebase-v2.md) y [0019](../../../docs/adr/0019-least-privilege-db-users.md) |
+| PostgreSQL 17 con pgvector 0.8.7 como única base (relacional y vectorial) | Extensión `vector` creada en el bootstrap y declarada en `v2.0.0-001-extensions-and-timezone` | [0001](../../adr/0001-postgres-pgvector.md) |
+| Esquema versionado con Liquibase, en XML, con `rollback` obligatorio y ids `vX.Y.Z-NNN-<acción>` | 66 changesets; un changeset aplicado no se edita | [0002](../../adr/0002-liquibase-schema-versioning.md) |
+| Re-base del esquema como `v2.0.0` | 14 tablas de la v1 pasaron a 39 (hoy 40); v1 retirada, etiqueta git `schema-v1-final` | [0007](../../adr/0007-schema-rebase-v2.md) |
+| Un escritor por tabla: la API escribe el negocio y `ai/` solo sus tablas | `smartmentor_api` sin escritura en `ai_*`, `source_documents`, `document_chunks`; `smartmentor_ai` sin escritura en negocio | [0009](../../adr/0009-data-ownership-api-and-ai.md) |
+| Cola de trabajos en Postgres, sin broker | Tabla `ai_jobs` con `idempotency_key` único y `locked_until`; el worker toma trabajos con `FOR UPDATE SKIP LOCKED` | [0010](../../adr/0010-async-jobs-postgres-pull-ingestion.md) |
+| Embeddings de 768 dimensiones en tabla propia | `ai_embeddings.embedding vector(768)`, índice `ai_embeddings_embedding_hnsw_idx` (HNSW, `vector_cosine_ops`); la columna `model` impide comparar modelos distintos | [0012](../../adr/0012-embedding-model-and-dimension.md) |
+| Fragmentos del RAG en tablas de Liquibase | `source_documents` y `document_chunks`; el vector del fragmento va en `ai_embeddings` con `owner_type = 'chunk'` | [0013](../../adr/0013-rag-chunks-in-liquibase-tables.md) |
+| Banco de ítems pregenerado y revisado por el instructor | `assessment_items` con `source`, `difficulty`, `equivalence_group`, `review_status`; el intento guarda `item_ids` | [0015](../../adr/0015-pregenerated-item-bank.md) |
+| Protección de datos personales | `consents`, `data_subject_requests`, seudonimización y `purge_user_audit(bigint)`; `llm_call_logs` guarda `input_sha256`, no el texto | [0018](../../adr/0018-personal-data-protection.md) |
+| Usuarios de base de mínimo privilegio | Cuatro roles de servicio y permisos otorgados por changeset | [0019](../../adr/0019-least-privilege-db-users.md) |
+| Roles neutros y etiquetas fuera de la base | Tabla `roles` con tres códigos; evaluadores por curso | [0021](../../adr/0021-neutral-roles-and-label-glossary.md) |
+| Auditoría por trigger `SECURITY DEFINER` | Ver sección 6 | [0007](../../adr/0007-schema-rebase-v2.md) y [0019](../../adr/0019-least-privilege-db-users.md) |
 
 Reglas comunes verificadas en el catálogo: las 40 tablas tienen `active` (borrado lógico: la API pone `active = false`) y `created_at`; 36 tienen `updated_at`; las llaves son `bigint` con secuencia `<tabla>_id_seq`; las fechas son `timestamptz`; los enumerados llevan `CHECK` con nombre `<tabla>_<columna>_ck`; los nombres de tablas, columnas y comentarios están en inglés y `snake_case`.
 
@@ -473,7 +473,7 @@ Reglas comunes verificadas en el catálogo: las 40 tablas tienen `active` (borra
 
 Cada tabla con auditoría (35 de 40) tiene la tabla `<tabla>_audit`, la secuencia `<tabla>_audit_id_seq` y el trigger `<tabla>_audit_trg` (`AFTER INSERT OR UPDATE OR DELETE FOR EACH ROW`). Todos llaman a la función común `audit_row_change()`, que es `SECURITY DEFINER` con `search_path = public, pg_temp` ([`002-audit-function.xml`](../../../database/liquibase/changelog/v2.0.0/002-audit-function.xml)). Guarda la fila anterior y la nueva en `jsonb`, el `session_user` y el usuario de la aplicación (`smartmentor.current_user_id`, que fija la API en cada transacción). Como guarda la fila completa, agregar una columna a una tabla no exige cambiar su `_audit`; una tabla nueva sí necesita su `_audit`, su secuencia y su trigger.
 
-La supresión de un titular necesita borrar también sus huellas en las tablas `_audit`. Como la API no tiene permisos sobre ellas, lo hace la función `purge_user_audit(p_user_id bigint) RETURNS bigint` (changeset `v2.0.1-002-purge-user-audit`), `SECURITY DEFINER`, con `EXECUTE` solo para `smartmentor_api` ([ADR 0018](../../../docs/adr/0018-personal-data-protection.md)).
+La supresión de un titular necesita borrar también sus huellas en las tablas `_audit`. Como la API no tiene permisos sobre ellas, lo hace la función `purge_user_audit(p_user_id bigint) RETURNS bigint` (changeset `v2.0.1-002-purge-user-audit`), `SECURITY DEFINER`, con `EXECUTE` solo para `smartmentor_api` ([ADR 0018](../../adr/0018-personal-data-protection.md)).
 
 ### 6.2 Usuarios de base por servicio
 
@@ -500,7 +500,7 @@ Ninguno de los tres usuarios de servicio puede alterar el esquema ni toca las ta
 
 ## 7. Evolución del esquema
 
-1. **Rebase v1 a v2.0.0 ([ADR 0007](../../../docs/adr/0007-schema-rebase-v2.md)).** La v1 (`v1.0.0` y `v1.0.1`) tenía 14 tablas: `roles`, `users`, `user_roles`, `courses`, `topics`, `topic_prerequisites`, `learning_paths`, `enrollments`, `diagnostics`, `path_steps`, `resources`, `assessment_attempts`, `badges` y `llm_call_logs`. Como no había datos que conservar, se rehízo el esquema en lugar de migrarlo: se retiró v1 del maestro y su último estado quedó en la etiqueta git local `schema-v1-final`. El rebase pasó el vector de 1024 a 768 dimensiones, sacó `topics.embedding` y `enrollments.profile_embedding` hacia `ai_embeddings`, convirtió los resultados de aprendizaje y el objetivo en estructuras propias, y agregó auditoría, `updated_at`, `public_id`, vistas y los roles de base.
+1. **Rebase v1 a v2.0.0 ([ADR 0007](../../adr/0007-schema-rebase-v2.md)).** La v1 (`v1.0.0` y `v1.0.1`) tenía 14 tablas: `roles`, `users`, `user_roles`, `courses`, `topics`, `topic_prerequisites`, `learning_paths`, `enrollments`, `diagnostics`, `path_steps`, `resources`, `assessment_attempts`, `badges` y `llm_call_logs`. Como no había datos que conservar, se rehízo el esquema en lugar de migrarlo: se retiró v1 del maestro y su último estado quedó en la etiqueta git local `schema-v1-final`. El rebase pasó el vector de 1024 a 768 dimensiones, sacó `topics.embedding` y `enrollments.profile_embedding` hacia `ai_embeddings`, convirtió los resultados de aprendizaje y el objetivo en estructuras propias, y agregó auditoría, `updated_at`, `public_id`, vistas y los roles de base.
 2. **v2.0.1.** Cambios incrementales sobre la v2.0.0: usuarios de desarrollo, `purge_user_audit`, valores por defecto de `learning_paths`, permisos de métricas (`interaction_events`, `assessment_items`), propuesta de objetivo, dueño evaluador, `course_materials` y `video_candidates.search_position` (línea base del experimento E6).
 3. **Versionado.** El maestro incluye cada versión en su carpeta `vX.Y.Z/`; cada cambio es un changeset con `id` y `author`, `logicalFilePath` fijo y checksum. Si un changeset aplicado se modifica, Liquibase se detiene: las correcciones van en uno nuevo. La versión se cierra con `tagDatabase`.
 4. **Rollback.** Es obligatorio y explícito en cada changeset. Comandos: `rollback --tag=v2.0.0`, `rollback-count --count=N`, `rollback-sql` para ver el SQL y `update-testing-rollback` para aplicar, revertir y reaplicar antes de un PR.
@@ -520,19 +520,19 @@ Ninguno de los tres usuarios de servicio puede alterar el esquema ni toca las ta
 | Bajar Neon a la base local | `database/scripts/neon-to-local.sh pull`, `restore` o `sync`; barre la base local y antes hace una copia con `backup.sh` | `database/scripts/neon-to-local.sh` |
 | Respaldo compartido del equipo | `database/respaldos-equipo/neon_20261117_224227.tar.gz` con su `.sha256`, y el prompt en [`database/RESTAURAR_NEON_EN_LOCAL.md`](../../../database/RESTAURAR_NEON_EN_LOCAL.md) | `database/respaldos-equipo/` |
 
-**Base local frente a Neon.** La base local es el PostgreSQL del contenedor `smartmentor-postgres`. Neon es una base remota compartida para pruebas del equipo (solo datos de prueba, conexión directa sin `-pooler` y TLS); es de desarrollo y no es el destino de producción, que sigue pendiente (D-06, [ADR 0020](../../../docs/adr/0020-deployment-target.md)). En ambas, Liquibase aplica los mismos changelogs. La verificación de este anexo se hizo contra la base local (66 changesets ejecutados y ninguno pendiente); no se consultó Neon. El detalle del despliegue está en el [Anexo A](A-arquitectura-y-despliegue.md).
+**Base local frente a Neon.** La base local es el PostgreSQL del contenedor `smartmentor-postgres`. Neon es una base remota compartida para pruebas del equipo (solo datos de prueba, conexión directa sin `-pooler` y TLS); es de desarrollo y no es el destino de producción, que sigue pendiente (D-06, [ADR 0020](../../adr/0020-deployment-target.md)). En ambas, Liquibase aplica los mismos changelogs. La verificación de este anexo se hizo contra la base local (66 changesets ejecutados y ninguno pendiente); no se consultó Neon. El detalle del despliegue está en el [Anexo A](A-arquitectura-y-despliegue.md).
 
 ## 9. Qué quedó fuera o pendiente del modelo
 
 | Tema | Estado | Fuente |
 | --- | --- | --- |
-| `estimated_minutes` (T-057) | La columna existe en `topics` y la casilla de D2b la guarda desde 2026-11-17, pero los 17 temas de los cursos ya publicados no tienen minutos (la API solo deja editar temas en borrador o en revisión). La métrica de minutos ahorrados queda sin datos | [`TRAZABILIDAD.md`](../seguimiento/TRAZABILIDAD.md), [`HANDOFF.md`](../../../HANDOFF.md) |
-| `analysis_included` | Columna de `enrollments`; la API la marca cuando el aprendiz acepta el consentimiento `pilot_research`. Los aprendices de prueba no lo aceptaron. Pasa con el piloto a la siguiente fase | [`TRAZABILIDAD.md`](../seguimiento/TRAZABILIDAD.md) (T-057) |
-| `pilot_arm` | Columna de `enrollments`: sin piloto no hay brazos (tabla `pilots`, estados `draft` a `closed`). Pasa a la siguiente fase | [`TRAZABILIDAD.md`](../seguimiento/TRAZABILIDAD.md) (T-057) |
-| Discriminación de ítems y otras métricas psicométricas | El esquema las soporta (`item_annotations`, `human_gradings`, `v_item_validity`, permiso de lectura de `assessment_items` por `v2.0.1-010`), pero la base real no tiene datos suficientes (`item_annotations` ya tiene datos desde E3): faltan calidad de preguntas, psicometría, videos, d de Cohen y m27 | [`TRAZABILIDAD.md`](../seguimiento/TRAZABILIDAD.md) (R-006, T-057) |
-| Cuaderno de métricas | Corrió en solo lectura sobre 9 inscripciones de 3 personas; resultados indicativos | [`TRAZABILIDAD.md`](../seguimiento/TRAZABILIDAD.md) (R-006) |
+| `estimated_minutes` (T-057) | La columna existe en `topics` y la casilla de D2b la guarda desde 2026-11-17, pero los 17 temas de los cursos ya publicados no tienen minutos (la API solo deja editar temas en borrador o en revisión). La métrica de minutos ahorrados queda sin datos | [`TRAZABILIDAD.md`](../trazabilidad/TRAZABILIDAD.md), [`HANDOFF.md`](../../../HANDOFF.md) |
+| `analysis_included` | Columna de `enrollments`; la API la marca cuando el aprendiz acepta el consentimiento `pilot_research`. Los aprendices de prueba no lo aceptaron. Pasa con el piloto a la siguiente fase | [`TRAZABILIDAD.md`](../trazabilidad/TRAZABILIDAD.md) (T-057) |
+| `pilot_arm` | Columna de `enrollments`: sin piloto no hay brazos (tabla `pilots`, estados `draft` a `closed`). Pasa a la siguiente fase | [`TRAZABILIDAD.md`](../trazabilidad/TRAZABILIDAD.md) (T-057) |
+| Discriminación de ítems y otras métricas psicométricas | El esquema las soporta (`item_annotations`, `human_gradings`, `v_item_validity`, permiso de lectura de `assessment_items` por `v2.0.1-010`), pero la base real no tiene datos suficientes (`item_annotations` ya tiene datos desde E3): faltan calidad de preguntas, psicometría, videos, d de Cohen y m27 | [`TRAZABILIDAD.md`](../trazabilidad/TRAZABILIDAD.md) (R-006, T-057) |
+| Cuaderno de métricas | Corrió en solo lectura sobre 9 inscripciones de 3 personas; resultados indicativos | [`TRAZABILIDAD.md`](../trazabilidad/TRAZABILIDAD.md) (R-006) |
 | Destino de despliegue | Propuesta del ADR 0020; sin base de producción | [`HANDOFF.md`](../../../HANDOFF.md) |
-| Sin multi-organización | Una instalación es un contexto; servir a varias organizaciones es una decisión de otra cohorte | [ADR 0021](../../../docs/adr/0021-neutral-roles-and-label-glossary.md) |
+| Sin multi-organización | Una instalación es un contexto; servir a varias organizaciones es una decisión de otra cohorte | [ADR 0021](../../adr/0021-neutral-roles-and-label-glossary.md) |
 | Documentación desactualizada | `HANDOFF.md`, `CHANGELOG.md` y `README.md` dicen 39 tablas; `database/README.md` dice «versión actual v2.0.0» | Sección 1.2 |
 
 ## 10. Cómo reproducir las cifras

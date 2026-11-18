@@ -1,6 +1,6 @@
 # Bugs
 
-Estados y formato en el [README](README.md#estados). Severidad: **Alta** (rompe un flujo), **Media** (funciona mal o confunde), **Baja** (documentación o detalle). El historial de cada bug está en la [bitácora](BITACORA.md).
+Estados y formato en el [README](TRAZABILIDAD.md#cómo-se-lleva-este-registro). Severidad: **Alta** (rompe un flujo), **Media** (funciona mal o confunde), **Baja** (documentación o detalle). El historial de cada bug está en la [bitácora](BITACORA.md).
 
 | ID | Encontrado | Severidad | Descripción | Estado | Corregido | Commit / PR |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -54,4 +54,4 @@ Estados y formato en el [README](README.md#estados). Severidad: **Alta** (rompe 
 - **Corrección aplicada (2026-11-12 14:01):** rama `fix/bloqueo-trabajos-ia-a-dev` desde `origin/dev` (`d8de841`) con `git cherry-pick -x 448e154` → `0699da7`. Entró sin conflictos y el `patch-id` coincide con el original (`21f67f3…`), así que es el mismo cambio que el PR 4 ya había probado. Ninguno de los 7 archivos cambió en `dev` desde entonces. Las llaves foráneas de `ai_jobs` apuntan a `courses`, `topics` y `enrollments`, y las tres quedan cubiertas.
 - **Cerrado:** llegó a `dev` con el PR 6 (fusionado el 2026-11-12 21:11, `42b14df`). La rama `fix/bloqueo-trabajos-ia-a-dev` ya no hace falta.
 - **A revisar aparte:** quedan `with_for_update()` simples en `pilot`, `assessments` e `identity`. Ninguna de esas tablas es destino de una llave foránea de `ai_jobs`, así que no deberían tener este problema. Si `ai/` llegara a escribir filas que apunten a ellas, habría que revisarlas.
-- **Cómo evitarlo:** ver la [lección de los PR apilados](README.md#lección-aprendida-pr-apilados).
+- **Cómo evitarlo:** ver la [lección de los PR apilados](TRAZABILIDAD.md#cómo-se-lleva-este-registro).

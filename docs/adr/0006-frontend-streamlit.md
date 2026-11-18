@@ -4,7 +4,7 @@
 * **Fecha:** 2026-10-07
 * **Autor:** eduar.troyano
 * **Fuente:** [`proyecto/brief.md`](../../proyecto/brief.md), secciones "Arquitectura técnica y stack sugerido" («Streamlit para la interfaz (se construye en días)») y "Fase 0: prototipado"
-* **Relacionados:** [ADR 0004](0004-authentication-keycloak-bearer.md), [`app/README.md`](../../app/README.md), [`proyecto/cohorte_1/checklist.md`](../../proyecto/cohorte_1/checklist.md#comparación)
+* **Relacionados:** [ADR 0004](0004-authentication-keycloak-bearer.md), [`app/README.md`](../../app/README.md), [brief de la cohorte 1](../../proyecto/cohorte_1/brief.md)
 
 ## 1. Contexto
 

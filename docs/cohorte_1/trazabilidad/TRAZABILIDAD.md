@@ -41,7 +41,7 @@ La entrega final pide «un recorrido integral por el proceso, observando los res
 1. ✔ **Código, 1 o 2 días:** R-001 (filtro de videos), R-003 (eventos de la interfaz) y T-010 / T-011 (recorrer la final y el badge en el navegador).
 2. ✔ **Experimentos sin terceros:** E2, E3, E6, E7 y E8, y la línea base (R-006). Se hicieron con jueces-agente en lugar de integrantes del equipo (R-005); la calibración humana pasa a la siguiente fase.
 3. ~~En paralelo, para E9: T-031, T-040, F-007, T-043 y la convocatoria~~ **Migrado a la siguiente fase** (el piloto no se alcanza; ver «Migrados a la siguiente fase»).
-4. ◐ **Cierre:** T-051 ✔ (brief v2, PR 90 y 91); T-052 ◐ (notas del release en `dev` con el PR 95; falta que el dueño del repositorio promueva a `main`, cree la etiqueta y publique el Release); documento final ☐ (sin fila ni responsable: ver el [checklist](../checklist.md)).
+4. ◐ **Cierre:** T-051 ✔ (brief v2, PR 90 y 91); T-052 ◐ (notas del release en `dev` con el PR 95; falta que el dueño del repositorio promueva a `main`, cree la etiqueta y publique el Release); documento final ☐ (sin fila ni responsable: ver el [checklist](../../../proyecto/cohorte_1/brief.md)).
 
 ## Abiertos al cierre
 
@@ -80,7 +80,7 @@ Lo que ya está en `dev` (✔) o se cerró sin hacer (✖, con el motivo). Corte
 
 | # | ID | Área | Pendiente | Qué se hizo | Estado | Responsable |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 1 | T-051 | Hito y cierre | Brief v2 | Redactado a partir de las bitácoras F00 a F09: [`proyecto/cohorte_1/brief.md`](../brief.md) compara el brief original con lo construido y medido (objetivos, experimentos, costos, retos, limitaciones y lo que pasa a la siguiente fase). Carlos Villada lo dio por cerrado tal como está en `dev` el 2026-11-17, y entra así en el release `v1.0-cohorte1` | ✔ Finalizado · `dev` ([PR 90](https://github.com/armandoordonez/smartmentor/pull/90) y [PR 91](https://github.com/armandoordonez/smartmentor/pull/91), 2026-11-16) | Carlos Villada |
+| 1 | T-051 | Hito y cierre | Brief v2 | Redactado a partir de las bitácoras F00 a F09: [`proyecto/cohorte_1/brief.md`](../../../proyecto/cohorte_1/brief.md) compara el brief original con lo construido y medido (objetivos, experimentos, costos, retos, limitaciones y lo que pasa a la siguiente fase). Carlos Villada lo dio por cerrado tal como está en `dev` el 2026-11-17, y entra así en el release `v1.0-cohorte1` | ✔ Finalizado · `dev` ([PR 90](https://github.com/armandoordonez/smartmentor/pull/90) y [PR 91](https://github.com/armandoordonez/smartmentor/pull/91), 2026-11-16) | Carlos Villada |
 | 2 | B-062 | Producto | Calidad del banco de preguntas | Formato y mezcla de opciones en código, `topic_quiz` v2 y v3, `diagnostic_generation` v2 y `final_assessment` v2; medición E3b y E3c con jueces-agente | ✔ Finalizado hasta donde se puede · `dev` ([PR 89](https://github.com/armandoordonez/smartmentor/pull/89) y [PR 92](https://github.com/armandoordonez/smartmentor/pull/92), 2026-11-16): válidos con ambos jueces de 32,5 % a 60,0 % (E3b) y 26,7 % a 30,0 % de v2 a v3 con jueces calibrados (E3c); claves erróneas de 4/4 a 0/1; respuesta correcta repartida en las cuatro posiciones. **La meta de ≥ 80 % no se cumple.** Queda con el dueño: Bloom sobredeclarado, distractores débiles y medir diagnóstico y final con jueces. Los bancos publicados no se tocaron: los bancos nuevos usan las versiones nuevas tras recompilar | Eduar Troyano |
 | 3 | T-057 | Evaluación | Datos que faltan para calcular las métricas con la base real | **Hecho en código:** changeset `v2.0.1-010` que da al rol `smartmentor_metrics` `SELECT` sobre `assessment_items` (equivalencia de ítems entre el diagnóstico y la final) y casilla «Minutos estimados (opcional)» en D2b, que guarda `estimated_minutes` del tema (la API ya lo aceptaba). **Límite:** la API solo deja editar temas de cursos en borrador o en revisión, así que los 17 temas de los cursos ya publicados siguen sin minutos y la métrica de minutos ahorrados queda sin datos en esta fase (decisión del dueño, 2026-11-17). **No requieren código y pasan con el piloto a la siguiente fase:** `analysis_included` (la API ya lo marca cuando el aprendiz acepta el consentimiento del piloto; los aprendices de prueba no lo aceptaron) y `pilot_arm` (sin piloto no hay brazos). `item_annotations` ya tiene datos desde E3. El permiso se aplica en Neon con la próxima corrida de Liquibase (`scripts/local-up.sh`) | ✔ Finalizado hasta donde se puede · rama `feature/t-057-metricas`, 2026-11-17 (a la espera de fusión) | Alexander Amador |
 | 4 | E5 | Experimento | Fidelidad y cobertura del RAG (≥ 0,8) | Curso 2 con 5 lecturas aportadas por el dueño (BID, O'Reilly, FUOC, DataCamp, campusMVP), condiciones A (solo syllabus) y B (con lecturas) con regeneración de los 3 temas. **Fidelidad media 0,889 (cumple ≥ 0,8), pero el tema ETL/ELT queda en 0,667.** **La comparación A/B no fue concluyente:** las lecturas no entraron en los 4 fragmentos recuperados y el texto es idéntico. Dejó 12 versiones duplicadas en `pending_review` (T-063). Costo US$ 0,0084. Resultado en `docs/evaluation/results/e5-2026-11-16.md`. Indicativo (verificador propio, sin RAGAS) | ✔ Finalizado · [PR 84](https://github.com/armandoordonez/smartmentor/pull/84), 2026-11-16 (a la espera de fusión) | Eduar Troyano |
@@ -318,7 +318,7 @@ No son pendientes del desarrollo: se aplican al crear esos ambientes.
 | El lease de los trabajos de IA (1800 s) no se renueva mientras corren | Generación de bancos de preguntas largos |
 | Las pruebas no miden la cobertura | Toda la base de código |
 
-Las mejoras M-003 a M-008 esperan la decisión del dueño ([`MEJORAS.md`](MEJORAS.md)).
+Las mejoras M-003 a M-008 esperan la decisión del dueño (sección «Mejoras propuestas» al final de este documento).
 
 ## Quién vio cada punto
 
@@ -328,3 +328,62 @@ Las mejoras M-003 a M-008 esperan la decisión del dueño ([`MEJORAS.md`](MEJORA
 | Solo la revisión de producto | F-007, T-016, T-015, T-024, T-033, T-034, renovación del token, lease de los trabajos |
 | Solo la revisión de evaluación | R-001 a R-009 |
 | Nuevos del 2026-11-14 (agentes de verificación) | B-009 menores, V-033 a V-057 |
+
+## Mejoras propuestas
+
+Cosas que nadie pidió pero conviene hacer. El dueño decide: ✔ aceptada, ✖ descartada (con el motivo).
+
+| ID | Propuesta | Por qué | Registrada | Estado |
+| --- | --- | --- | --- | --- |
+| M-001 | Agregar a la [plantilla de PR](../../../.github/pull_request_template.md) una sección «IDs de seguimiento» y la casilla «la base es `dev`, o se cambió antes de fusionar el PR de abajo» | Así cada PR enlaza con su tarea y se evita que se repita B-001 | 2026-11-12 13:57 | ☐ |
+| M-002 | Mover `pr-3-descripcion-actualizada.md` (sin versionar, solo en el equipo del dueño) de la raíz a `docs/cohorte_1/trazabilidad/pr/` o borrarlo, porque ya está publicado como descripción del PR 3 | Hoy está suelto en la raíz y sin versionar | 2026-11-12 13:57 | ☐ |
+| M-003 | Que `proyecto/cohorte_1/scripts/avance.sh` lea también `HOJA_DE_RUTA.md` para calcular el avance | Así el porcentaje del checklist no se queda viejo (B-002) | 2026-11-12 13:57 | ✖ Descartada: el checklist y `avance.sh` se retiraron al cierre de la cohorte 1 |
+| M-004 | Etiquetar los PR en GitHub con su ID (`T-012`, `B-001`) | Para buscarlos rápido desde la interfaz de GitHub | 2026-11-12 13:57 | ☐ |
+| M-005 | Hacer la revisión visual en el navegador de cada pantalla frente a su captura de Figma, con un registro aquí | Las bitácoras F07b y F07c dicen que nunca se hizo; las pruebas comparan textos, no cómo se ve | 2026-11-12 13:57 | ☐ Requiere levantar la app (hoy no autorizado) |
+| M-006 | Que D5 («Revisar recursos y preguntas») avise, mientras el curso está en borrador, que los recursos y las preguntas se generan al pulsar «Aprobar y publicar» | El dueño vio la pantalla vacía y no sabía por qué. Figma no dibuja ese estado, así que el texto se decide con el dueño | 2026-11-12 17:39 | ☐ |
+| M-007 | Revisar si el p95 de unos 120 s en `items.generate_quiz_bank`, `items.generate_final_bank` y `diagnostic.generate_items` es un límite de tiempo del cliente de Gemini o del trabajador, y si corta generaciones | En la evidencia de F6, las 3 tareas tienen el mismo p95 (120,1 a 120,9 s) | 2026-11-13 10:19 | ✔ Confirmado: es el timeout de `ai/` → [B-013](BUGS.md) |
+| M-008 | Una prueba de la app que compare `services/staff_prompts.py` con `prompts/catalog.yaml` (ids, versiones y nombres) | Hoy coinciden, pero la prueba que existe solo revisa que no se repitan los ids: un prompt v2 no se notaría en C4 | 2026-11-13 10:22 | ◐ Hecho, sin commit: `app/tests/unit/test_prompt_catalog_sync.py` |
+
+## Cómo se lleva este registro
+
+Reglas con las que se llevó este seguimiento durante la cohorte 1: formato de fecha y hora, estados, identificadores y flujo de trabajo.
+
+### Fecha y hora
+
+- Siempre en la hora de Bogotá (`America/Bogota`, -05), la misma zona de la base de datos. Formato: `AAAA-MM-DD HH:MM`.
+- Se saca así, para no depender de la zona del equipo (este equipo está en UTC):
+
+  ```bash
+  TZ=America/Bogota date '+%Y-%m-%d %H:%M'
+  ```
+
+### Estados
+
+| Símbolo | Tareas y mejoras | Bugs y huecos de Figma |
+| --- | --- | --- |
+| ☐ | Pendiente | Abierto |
+| ◐ | En curso | En corrección |
+| ⏳ | Hecho en local, sin subir | Corregido en local, sin subir |
+| ⬆ | Subido a una rama, sin PR | Corrección subida, sin PR |
+| 🔼 | Subido a una rama, con PR abierto | Corrección subida, PR abierto |
+| ✔ | En `dev` | Corregido y en `dev` |
+| ⛔ | Bloqueado (se dice por qué) | Bloqueado |
+| ✖ | Descartado (se dice por qué) | No es un bug, o no se corrige |
+
+### Identificadores
+
+`T-NNN` tarea, `B-NNN` bug, `F-NNN` hueco de Figma, `V-NNN` diferencia visual frente a Figma (revisión T-034, en `FIGMA.md`), `M-NNN` mejora. Son correlativos, nunca se reutilizan y se citan en los commits y los PR. Así, desde cualquier commit se llega a la tarea y desde la tarea al commit.
+
+### Flujo de trabajo
+
+1. **Local.** Los cambios se hacen en este equipo, en una rama `feature/<tema>` o `fix/<tema>` creada desde `dev` actualizada (`git fetch origin && git switch -c feature/<tema> origin/dev`).
+2. **Registro al momento.** Al empezar, al terminar y al encontrar algo, se agrega una entrada en `BITACORA.md` y se cambia el estado en el archivo que corresponda.
+3. **Commit.** Se usa [Conventional Commits](../../../CONTRIBUTING.md#3-commits) en español, con el ID entre corchetes al final del título (`fix(app): … [B-002]`) y el pie de coautoría del equipo. El hash queda anotado en la bitácora.
+4. **Pruebas.** `api/scripts/dev.sh all` y `app/scripts/dev.sh all` se corren antes de subir. El resultado real se anota en la bitácora, también si falla. *Desde el 2026-11-12 el dueño autorizó levantar el stack y correr las pruebas en este equipo. Lo que no se puede correr aquí (por ejemplo, la integración de la API, que usaría la base de Neon) queda «sin verificar» hasta que pase la CI.*
+5. **Subida.** `git push -u origin <rama>` **solo con la aprobación del dueño en cada subida**. Nunca a `dev`, `stage` ni `main`, y nunca con `--force`.
+6. **Pull request** hacia `dev`, con la [plantilla](../../../.github/pull_request_template.md) y los IDs que cubre. Los pull requests y sus checks quedan registrados en GitHub.
+7. **Fusión.** Cuando el PR entra a `dev`, los IDs pasan a ✔ con la fecha y el commit de la fusión.
+
+#### Lección aprendida: PR apilados
+
+Si un PR va encima de otro (su base no es `dev`), **antes de fusionar el de abajo** hay que cambiar la base del de arriba a `dev`. Si no se hace, el de arriba se fusiona en una rama ya cerrada y su cambio nunca llega a `dev`. Eso pasó con el PR 4 ([B-001](BUGS.md)).

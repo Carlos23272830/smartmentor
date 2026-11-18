@@ -4,7 +4,7 @@ Cambios por versión y cohorte.
 
 ## v1.0-cohorte1 (2026-11-17)
 
-Cierre de la cohorte 1. Las notas del GitHub Release, con las métricas, están en [`proyecto/cohorte_1/release.md`](proyecto/cohorte_1/release.md).
+Cierre de la cohorte 1. Las notas del GitHub Release, con las métricas, están en [`docs/cohorte_1/release.md`](docs/cohorte_1/release.md).
 
 ### Cierre de la cohorte 1 (2026-11-14 a 2026-11-17, PR 40 a 94)
 
@@ -23,7 +23,7 @@ Cierre de la cohorte 1. Las notas del GitHub Release, con las métricas, están 
 
 ### Plan v3 (2026-11-07 a 2026-11-14)
 
-Lo que sigue reemplaza la base v1 que se describe más abajo. El detalle por tarea, con fecha y hora, está en [`proyecto/cohorte_1/seguimiento/`](proyecto/cohorte_1/seguimiento/README.md).
+Lo que sigue reemplaza la base v1 que se describe más abajo. El detalle por tarea, con fecha y hora, está en [`docs/cohorte_1/trazabilidad/`](docs/cohorte_1/trazabilidad/TRAZABILIDAD.md#cómo-se-lleva-este-registro).
 
 - **Base de datos v2.0.0:** 39 tablas, roles `learner`, `instructor` y `admin`, y usuarios de mínimo privilegio por servicio ([ADR 0019](docs/adr/0019-least-privilege-db-users.md)).
 - **API v2:** aprendiz, instructor, administrador, piloto, métricas y log del LLM ([contrato](docs/contracts/api-v2.md)). Cambios aditivos para las pantallas del instructor y del administrador (PR 3 y PR 6).
@@ -73,6 +73,6 @@ Lo que sigue reemplaza la base v1 que se describe más abajo. El detalle por tar
 
 ### Documentación
 
-- `proyecto/cohorte_1/checklist.md`: lista de verificación del brief con responsables, avance de la fase y comparación de frontends (Streamlit y Next.js); `proyecto/cohorte_1/scripts/avance.sh` calcula el avance.
+- Lista de verificación del brief con responsables y avance (`checklist.md`, con su script `avance.sh`). Se retiró al cierre de la cohorte 1: los responsables están en el [brief de la cohorte](proyecto/cohorte_1/brief.md#12-gestión-del-proyecto) y el avance en la [trazabilidad](docs/cohorte_1/trazabilidad/TRAZABILIDAD.md).
 
-- ADR 0001 a 0003, `proyecto/cohorte_1/decisiones.md` y estándar de microservicios FastAPI (rev. 2).
+- ADR 0001 a 0003, `docs/cohorte_1/decisiones.md` y estándar de microservicios FastAPI (rev. 2).

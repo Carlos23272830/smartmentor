@@ -17,7 +17,7 @@ Plataforma de cursos adaptativos generados con IA: a partir de un syllabus gener
 | Integración de punta a punta con el LLM real (Fase 6) | En curso: detenida por el tope de gasto de Google AI Studio |
 | Anotación de expertos, usabilidad y piloto (Fase 9b), revisión final (10) y cierre (11) | Pendiente |
 
-Seguimiento: [`PLAN_IMPLEMENTACION_V3.md`](PLAN_IMPLEMENTACION_V3.md) (fuente vigente). [`proyecto/cohorte_1/checklist.md`](proyecto/cohorte_1/checklist.md) y [`HANDOFF.md`](HANDOFF.md) son anteriores a la versión 3 y se actualizan en la Fase 10.
+Seguimiento: [`PLAN_IMPLEMENTACION_V3.md`](PLAN_IMPLEMENTACION_V3.md) (fuente vigente). [`proyecto/cohorte_1/checklist.md`](proyecto/cohorte_1/brief.md) y [`HANDOFF.md`](HANDOFF.md) son anteriores a la versión 3 y se actualizan en la Fase 10.
 
 ## Requisitos
 
@@ -79,7 +79,7 @@ La integración continua (GitHub Actions) repite estas validaciones y además re
 | [`database/`](database/README.md) | PostgreSQL, Liquibase, bootstrap, respaldos y modelo de datos |
 | [`keycloak/`](keycloak/README.md) | Proveedor de identidad: realm versionado y guía de configuración |
 | [`docs/adr/`](docs/adr/README.md) | Decisiones de arquitectura |
-| [`proyecto/`](proyecto/README.md) | Brief y decisiones pendientes |
+| [`proyecto/`](proyecto/brief.md) | Brief y decisiones pendientes |
 | [`app/`](app/README.md) | Interfaz en Streamlit (versión 3 del diseño) |
 | [`ai/`](ai/README.md) | Servicio de IA: API, worker, tarifas y arnés de evaluación |
 | [`prompts/`](prompts/README.md) | Prompts versionados y esquemas |

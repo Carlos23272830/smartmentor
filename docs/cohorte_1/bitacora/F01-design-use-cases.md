@@ -6,7 +6,7 @@ Agente `design-docs`, Ola 0, Fase 1. Rama `feature/design-use-cases-v3` (publica
 - `design/01-flujo-y-casos-de-uso/casos-de-uso.md`: CU-01 a CU-35, trazabilidad pantalla a caso de uso, matriz de Figma `2:3` más 16 acciones nuevas. Commit `docs(design): actualiza casos de uso y estados al prototipo v3`.
 - `estados.md`: 9 diagramas de estados (curso, inscripción, paso, intento, recurso, ítem, trabajo de IA, piloto, autorización) más primer ingreso (CU-34) y cambio de perfil (CU-35), cada uno con tabla de quién dispara la transición.
 - `flujos.md`, `glosario.md`, `design/01.../README.md` (lista de archivos), `design/03-prototipo-alta-fidelidad/README.md` (64 pantallas con nodo, página, CU y prioridad), `design/05-prueba-de-usabilidad/guion-de-tareas.md` (12 tareas de aprendiz, 9 de instructor, 5 de administrador, dos con estado de error). Commit `docs(design): agrega flujos, glosario, inventario v3 y guion de usabilidad`.
-- `app/CLAUDE.md` reescrito (secciones 2.6, 5.5 y 5.5.1 del plan) y `proyecto/flujo-por-usuario.md` con los pasos 1b, 3b, 10b, 14b–14d (aprendiz), 3b, 7b, 7c, 8b (instructor) y 3b (administrador).
+- `app/CLAUDE.md` reescrito (secciones 2.6, 5.5 y 5.5.1 del plan) y `docs/cohorte_1/flujo-por-usuario.md` con los pasos 1b, 3b, 10b, 14b–14d (aprendiz), 3b, 7b, 7c, 8b (instructor) y 3b (administrador).
 
 ## Desviaciones frente al plan o al brief
 - El worktree arrancó en `main` (solo `proyecto/brief.md`); la rama se creó desde `feature/baseline-dev` como pide la regla común.

@@ -4,10 +4,10 @@ Estado técnico del proyecto, deuda y próximos pasos para la siguiente cohorte.
 
 Dónde está cada cosa:
 
-- Tareas con fecha y hora, bugs, huecos de Figma y subidas: [`proyecto/cohorte_1/seguimiento/`](proyecto/cohorte_1/seguimiento/README.md), empezando por la [hoja de ruta](proyecto/cohorte_1/seguimiento/HOJA_DE_RUTA.md).
-- Avance frente al brief y responsables: [`proyecto/cohorte_1/checklist.md`](proyecto/cohorte_1/checklist.md).
+- Tareas con fecha y hora, bugs, huecos de Figma y subidas: [`docs/cohorte_1/trazabilidad/`](docs/cohorte_1/trazabilidad/TRAZABILIDAD.md#cómo-se-lleva-este-registro), empezando por la [hoja de ruta](docs/cohorte_1/trazabilidad/HOJA_DE_RUTA.md).
+- Avance frente al brief y responsables: [brief de la cohorte 1](proyecto/cohorte_1/brief.md#12-gestión-del-proyecto) y la [trazabilidad](docs/cohorte_1/trazabilidad/TRAZABILIDAD.md).
 - Fases y decisiones: el [plan v3](PLAN_IMPLEMENTACION_V3.md).
-- Lo planteado frente a lo logrado: el [brief de la cohorte 1](proyecto/cohorte_1/brief.md). Resultados de los experimentos: [`docs/evaluation/results/`](docs/evaluation/results/resumen-r005-2026-11-16.md). Notas de la versión: [`CHANGELOG.md`](CHANGELOG.md) y [`proyecto/cohorte_1/release.md`](proyecto/cohorte_1/release.md).
+- Lo planteado frente a lo logrado: el [brief de la cohorte 1](proyecto/cohorte_1/brief.md). Resultados de los experimentos: [`docs/evaluation/results/`](docs/evaluation/results/resumen-r005-2026-11-16.md). Notas de la versión: [`CHANGELOG.md`](CHANGELOG.md) y [`docs/cohorte_1/release.md`](docs/cohorte_1/release.md).
 
 ## Qué funciona
 
@@ -23,7 +23,7 @@ Dónde está cada cosa:
   - buscar videos;
   - generar bancos de preguntas, y revisarlos y calificarlos con el LLM como juez.
 
-  **Probado con Gemini real el 2026-11-12:** 354 llamadas, US$ 1,83 ([evidencia de F6](proyecto/cohorte_1/seguimiento/HOJA_DE_RUTA.md#evidencia-de-f6-2026-11-12)).
+  **Probado con Gemini real el 2026-11-12:** 354 llamadas, US$ 1,83 ([evidencia de F6](docs/cohorte_1/trazabilidad/HOJA_DE_RUTA.md#evidencia-de-f6-2026-11-12)).
 - **Interfaz (Streamlit):**
   - las 96 pantallas de Figma v3 tienen página, con pruebas `AppTest`;
   - todas leen la API real; el flujo completo se recorrió en el navegador con el syllabus real, del syllabus al badge (T-032, 2026-11-15 y 16);
@@ -36,14 +36,14 @@ Dónde está cada cosa:
 
 | Pendiente | Detalle |
 | --- | --- |
-| Publicar el release | Las notas están en `dev` (PR 95). Falta que el dueño del repositorio promueva `dev` → `stage` → `main`, cree la etiqueta `v1.0-cohorte1` y publique el Release, con los pasos de [`release-v1.0-cohorte1.md`](proyecto/cohorte_1/release.md) (T-052) |
-| Piloto con personas | Pasa a la siguiente fase con lo que depende de él: syllabus del curso piloto (T-031), textos legales (T-040), fechas (F-007), despliegue y operación (T-043), usabilidad (T-042), endurecimiento (T-050) y los experimentos E4, E9 y E10. Detalle en «Migrados a la siguiente fase» de [`TRAZABILIDAD.md`](proyecto/cohorte_1/seguimiento/TRAZABILIDAD.md) |
+| Publicar el release | Las notas están en `dev` (PR 95). Falta que el dueño del repositorio promueva `dev` → `stage` → `main`, cree la etiqueta `v1.0-cohorte1` y publique el Release, con los pasos de [`release-v1.0-cohorte1.md`](docs/cohorte_1/release.md) (T-052) |
+| Piloto con personas | Pasa a la siguiente fase con lo que depende de él: syllabus del curso piloto (T-031), textos legales (T-040), fechas (F-007), despliegue y operación (T-043), usabilidad (T-042), endurecimiento (T-050) y los experimentos E4, E9 y E10. Detalle en «Migrados a la siguiente fase» de [`TRAZABILIDAD.md`](docs/cohorte_1/trazabilidad/TRAZABILIDAD.md) |
 | Calibración humana | E3, E6 y E7 se midieron con jueces-agente: los resultados son indicativos. Falta que una persona califique 15 a 20 elementos por experimento y se compare con los jueces |
 | Calidad de las preguntas | 26 a 60 % de preguntas válidas según la medición (E3, E3b y E3c), lejos de la meta de 80 % (B-062) |
 | Explicación alterna de E7b | El prompt y la tarea de IA existen; falta que la API la pida al reprobar un quiz y la guarde (B-049, siguiente fase) |
 | Minutos estimados | La casilla de D2b existe desde el 2026-11-17 (T-057), pero los temas de los cursos ya publicados no tienen minutos, así que la métrica de minutos ahorrados no tiene datos |
 | Revisión del equipo en el navegador | 74 de 96 pantallas validadas por agente; falta que el equipo las cruce (G-001) |
-| Documento final | En el formato de la maestría; sin responsable en el [checklist](proyecto/cohorte_1/checklist.md) |
+| Documento final | En el formato de la maestría; sin responsable en el [checklist](proyecto/cohorte_1/brief.md) |
 
 ## Deuda técnica
 

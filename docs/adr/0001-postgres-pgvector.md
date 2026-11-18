@@ -5,7 +5,7 @@
 * **Ámbito:** Base de datos de SmartMentor (desarrollo local y referencia para entornos gestionados)
 * **Autor:** eduar.troyano
 * **Fuente:** [`proyecto/brief.md`](../../proyecto/brief.md), secciones "Arquitectura técnica y stack sugerido" y "Modelo de datos principal"
-* **Relacionados:** [ADR 0002 (Liquibase)](0002-liquibase-schema-versioning.md), [decisiones pendientes](../../proyecto/cohorte_1/decisiones.md)
+* **Relacionados:** [ADR 0002 (Liquibase)](0002-liquibase-schema-versioning.md), [decisiones pendientes](../cohorte_1/decisiones.md)
 
 ---
 
@@ -153,7 +153,7 @@ En servicios gestionados, `CREATE EXTENSION vector` y `ALTER DATABASE ... SET ti
 
 ## 7. Límites relevantes para el diseño
 
-- **Dimensión de los embeddings:** los índices HNSW sobre el tipo `vector` admiten hasta 2000 dimensiones; `halfvec` llega a 4000. La dimensión elegida (provisional: 1024) está en el pendiente D-01 de [decisiones pendientes](../../proyecto/cohorte_1/decisiones.md).
+- **Dimensión de los embeddings:** los índices HNSW sobre el tipo `vector` admiten hasta 2000 dimensiones; `halfvec` llega a 4000. La dimensión elegida (provisional: 1024) está en el pendiente D-01 de [decisiones pendientes](../cohorte_1/decisiones.md).
 - **Un solo modelo de embeddings:** temas, perfiles y fragmentos deben usar el mismo modelo, porque se comparan entre sí.
 
 ---

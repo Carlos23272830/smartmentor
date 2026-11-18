@@ -1,6 +1,6 @@
 # Runbook de despliegue y operación de SmartMentor
 
-Runbook operativo que promete el [ADR 0020](../adr/0020-deployment-target.md) (decisión 5). Cubre lo que existe hoy: **despliegue local con Docker Compose** y **base remota (Neon)**. **No cubre un servidor del piloto**: el destino no está decidido (el ADR 0020 sigue en estado «Propuesto»; ver DEF-16 y P-18). La arquitectura que explica cada pieza está en el [Anexo A](../../proyecto/cohorte_1/anexos/A-arquitectura-y-despliegue.md).
+Runbook operativo que promete el [ADR 0020](../adr/0020-deployment-target.md) (decisión 5). Cubre lo que existe hoy: **despliegue local con Docker Compose** y **base remota (Neon)**. **No cubre un servidor del piloto**: el destino no está decidido (el ADR 0020 sigue en estado «Propuesto»; ver DEF-16 y P-18). La arquitectura que explica cada pieza está en el [Anexo A](../cohorte_1/anexos/A-arquitectura-y-despliegue.md).
 
 **Reglas de este documento**
 

@@ -36,11 +36,11 @@ Revisión del archivo de Figma en vivo frente a `design/03-prototipo-alta-fideli
 
 ### 2026-11-12 13:57 · INICIO · T-001
 
-Rama `feature/seguimiento-trazabilidad` desde `dev` (`d8de841`) para crear `proyecto/cohorte_1/seguimiento/`.
+Rama `feature/seguimiento-trazabilidad` desde `dev` (`d8de841`) para crear `docs/cohorte_1/trazabilidad/`.
 
 ### 2026-11-12 14:05 · CAMBIO · T-001
 
-Se crean `README.md`, `HOJA_DE_RUTA.md`, `BITACORA.md`, `BUGS.md`, `FIGMA.md`, `SUBIDAS.md` y `MEJORAS.md` en `proyecto/cohorte_1/seguimiento/`. Falta el commit y la subida (los aprueba el dueño).
+Se crean `README.md`, `HOJA_DE_RUTA.md`, `BITACORA.md`, `BUGS.md`, `FIGMA.md`, `SUBIDAS.md` y `MEJORAS.md` en `docs/cohorte_1/trazabilidad/`. Falta el commit y la subida (los aprueba el dueño).
 - Rama: `feature/seguimiento-trazabilidad` · Sin commit todavía
 - Pruebas: no aplican (solo documentación)
 
@@ -257,7 +257,7 @@ A pedido del dueño, `HOJA_DE_RUTA.md` suma la sección «Estado por fase (F0 a 
 
 ### 2026-11-12 15:01 · SUBIDA · S-001
 
-`git push -u origin feature/seguimiento-trazabilidad`: 5 commits sobre `dev`. Detalle en [SUBIDAS.md](SUBIDAS.md). La CI arrancó (corrida `43296141612`).
+`git push -u origin feature/seguimiento-trazabilidad`: 5 commits sobre `dev`. Detalle en [SUBIDAS.md](TRAZABILIDAD.md). La CI arrancó (corrida `43296141612`).
 
 ### 2026-11-12 15:02 · CAMBIO · —
 
@@ -547,7 +547,7 @@ Cierre de los últimos pendientes de la cohorte 1 (Alexander Amador). Desde el 2
 
 - **T-057** ([PR 93](https://github.com/armandoordonez/smartmentor/pull/93), `292bfde`): changeset `v2.0.1-010` con `SELECT` sobre `assessment_items` para el rol de métricas y casilla «Minutos estimados (opcional)» en D2b. Los temas de cursos publicados no se pueden editar, así que siguen sin minutos. `analysis_included` y `pilot_arm` pasan con el piloto a la siguiente fase. Interfaz: 1083 pruebas en verde.
 - **B-049** ([PR 94](https://github.com/armandoordonez/smartmentor/pull/94), `efaf2ed`): pasa a la siguiente fase, con lo que ya existe y lo que falta anotado. La fila de B-062, que estaba dentro de la tabla de pantallas de G-001, vuelve a «Realizado».
-- **T-052** ([PR 95](https://github.com/armandoordonez/smartmentor/pull/95), `caba9e5`): notas de `v1.0-cohorte1` en `CHANGELOG.md` y texto del GitHub Release en `proyecto/cohorte_1/release.md`. Falta que el dueño del repositorio promueva a `main`, cree la etiqueta y publique el Release.
+- **T-052** ([PR 95](https://github.com/armandoordonez/smartmentor/pull/95), `caba9e5`): notas de `v1.0-cohorte1` en `CHANGELOG.md` y texto del GitHub Release en `docs/cohorte_1/release.md`. Falta que el dueño del repositorio promueva a `main`, cree la etiqueta y publique el Release.
 - **T-051** ([PR 96](https://github.com/armandoordonez/smartmentor/pull/96), `18c3222`): Carlos Villada da por cerrado el brief v2 tal como está en `dev`. El mismo PR agrega `prompts/** text eol=lf` al `.gitattributes`.
 - **Pruebas sobre `dev`:** interfaz 1083, API 526 unitarias y servicio de IA 563 (13 omitidas). CI en verde en los cuatro PR.
 - **Fusiones:** los PR 93 a 96 los fusionó Alexander Amador con el acuerdo del equipo, porque Carlos Villada no podía conectarse esa noche.

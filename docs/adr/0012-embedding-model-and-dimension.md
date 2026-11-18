@@ -3,7 +3,7 @@
 * **Estado:** Aceptado (DEF-02, decidido por el dueño el 2026-11-07), con la dimensión **768 provisional**: se confirma en P-05 antes de la Fase 5
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
-* **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 3.2, 5.2.5, 5.4.7, 18.1 (G-09), 18.9 y DEF-02; [`proyecto/cohorte_1/decisiones.md`](../../proyecto/cohorte_1/decisiones.md), D-01
+* **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 3.2, 5.2.5, 5.4.7, 18.1 (G-09), 18.9 y DEF-02; [`docs/cohorte_1/decisiones.md`](../cohorte_1/decisiones.md), D-01
 * **Relacionados:** [ADR 0001](0001-postgres-pgvector.md) (sección 7), [ADR 0007](0007-schema-rebase-v2.md), [ADR 0011](0011-llm-provider.md), [ADR 0013](0013-rag-chunks-in-liquibase-tables.md)
 
 ---
@@ -38,4 +38,4 @@ SmartMentor usa embeddings para comparar la descripción del aprendiz con cada t
 - **Negativas y pendientes:**
   - La sección 7 del ADR 0001 (dimensión provisional 1024) queda superada por este ADR.
   - P-05: verificar el modelo vigente y su dimensión antes de la Fase 5; si cambia, changeset y reindexado.
-  - La lectura de la respuesta del dueño (modelo del notebook frente a `text-embedding-3-large`) quedó «por confirmar» en `proyecto/cohorte_1/decisiones.md` (18.4). Si el dueño elige otro modelo, este ADR se reemplaza antes de indexar.
+  - La lectura de la respuesta del dueño (modelo del notebook frente a `text-embedding-3-large`) quedó «por confirmar» en `docs/cohorte_1/decisiones.md` (18.4). Si el dueño elige otro modelo, este ADR se reemplaza antes de indexar.

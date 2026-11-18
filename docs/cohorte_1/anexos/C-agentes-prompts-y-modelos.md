@@ -1,10 +1,10 @@
 # Anexo C · Agentes, prompts y modelos
 
-Anexo del [brief de la cohorte 1](../brief.md). Describe qué hace la IA de SmartMentor y qué no, cada tarea del servicio `ai/` con su prompt, modelo, validación y costo, y quiénes son los agentes que evaluaron y construyeron el sistema. Complementa el [Anexo A](A-arquitectura-y-despliegue.md) (dónde corre cada pieza) y el [Anexo B](B-modelo-de-datos.md) (tablas `ai_jobs`, `ai_generation_cache`, `ai_embeddings`, `source_documents`, `document_chunks` y `llm_call_logs`). La trazabilidad de las tareas y los PR está en [TRAZABILIDAD.md](../seguimiento/TRAZABILIDAD.md).
+Anexo del [brief de la cohorte 1](../../../proyecto/cohorte_1/brief.md). Describe qué hace la IA de SmartMentor y qué no, cada tarea del servicio `ai/` con su prompt, modelo, validación y costo, y quiénes son los agentes que evaluaron y construyeron el sistema. Complementa el [Anexo A](A-arquitectura-y-despliegue.md) (dónde corre cada pieza) y el [Anexo B](B-modelo-de-datos.md) (tablas `ai_jobs`, `ai_generation_cache`, `ai_embeddings`, `source_documents`, `document_chunks` y `llm_call_logs`). La trazabilidad de las tareas y los PR está en [TRAZABILIDAD.md](../trazabilidad/TRAZABILIDAD.md).
 
 Estado del anexo: 2026-11-18, sobre el código de la rama `docs/cohorte-1`. Cada dato lleva su ruta fuente entre paréntesis, relativa a la raíz del repositorio. Lo que no se pudo verificar en el código se marca como **no verificado** (sección 10).
 
-**Advertencia de lectura.** Todos los resultados de calidad son de la versión MVP, con datos de prueba y **jueces que son agentes de IA, no expertos humanos**. Son indicativos. El resumen de los experimentos está en [resumen-r005-2026-11-16.md](../../../docs/evaluation/results/resumen-r005-2026-11-16.md).
+**Advertencia de lectura.** Todos los resultados de calidad son de la versión MVP, con datos de prueba y **jueces que son agentes de IA, no expertos humanos**. Son indicativos. El resumen de los experimentos está en [resumen-r005-2026-11-16.md](../../evaluation/results/resumen-r005-2026-11-16.md).
 
 ## 1. Qué hace la IA y qué no
 
@@ -105,8 +105,8 @@ Regla del catálogo: cambiar el texto de un prompt obliga a crear `<id>/v<n+1>.m
 | Prompt | Versión | Qué cambió | Medición |
 | --- | --- | --- | --- |
 | `topic_quiz` | v1 | Versión del notebook «Mago de Oz». Pedía variar la posición de la correcta y que `model_answer` justificara cada distractor | Línea base de E3 y brazo «antes» de E3b |
-| `topic_quiz` | v2 (B-062) | Cada distractor nace de un error conceptual típico; las cuatro opciones con la misma forma y longitud; prohibidas opciones absurdas, «todas/ninguna de las anteriores» y extremos («costo cero», «escala infinitamente», «siempre», «nunca»); `bloom_level` declara lo que el ítem exige de verdad; texto plano con tildes; las opciones se nombran por su contenido en `model_answer` porque el código las mezcla después | [E3b](../../../docs/evaluation/results/e3b-2026-11-16.md): ítems válidos con ambos jueces de 32,5 % a 60,0 %; distractores no plausibles del juez 1 de 24 a 7 de 40 |
-| `topic_quiz` | v3 (B-062, E3c) | Bloom más fino (elegir un comando o un flag es `remember` o `apply`; `analyze` solo si el enunciado trae evidencia; ante la duda, el nivel más bajo), distractores que el enunciado no descarte, y precisión técnica de la clave | [E3c](../../../docs/evaluation/results/e3c-2026-11-16.md): 26,7 % → 30,0 % válidas con ambos jueces (dentro del ruido); claves discutibles 4 y 4 → 0 y 1. Se publicó como vigente |
+| `topic_quiz` | v2 (B-062) | Cada distractor nace de un error conceptual típico; las cuatro opciones con la misma forma y longitud; prohibidas opciones absurdas, «todas/ninguna de las anteriores» y extremos («costo cero», «escala infinitamente», «siempre», «nunca»); `bloom_level` declara lo que el ítem exige de verdad; texto plano con tildes; las opciones se nombran por su contenido en `model_answer` porque el código las mezcla después | [E3b](../../evaluation/results/e3b-2026-11-16.md): ítems válidos con ambos jueces de 32,5 % a 60,0 %; distractores no plausibles del juez 1 de 24 a 7 de 40 |
+| `topic_quiz` | v3 (B-062, E3c) | Bloom más fino (elegir un comando o un flag es `remember` o `apply`; `analyze` solo si el enunciado trae evidencia; ante la duda, el nivel más bajo), distractores que el enunciado no descarte, y precisión técnica de la clave | [E3c](../../evaluation/results/e3c-2026-11-16.md): 26,7 % → 30,0 % válidas con ambos jueces (dentro del ruido); claves discutibles 4 y 4 → 0 y 1. Se publicó como vigente |
 | `diagnostic_generation` | v2 (B-062) | Mismas reglas de distractores, Bloom y texto plano; cada ítem debe exigir el nivel que declara (el diagnóstico pide remember, apply y analyze). Se quitó la instrucción de variar la posición de la correcta | **No medida con jueces** |
 | `final_assessment` | v2 (B-062) | Mismas reglas; además, cada versión paralela debe tener sus propios distractores plausibles; el ítem `analyze` trae evidencia que examinar | **No medida con jueces** |
 | `short_answer_grading` | v2 (B-038) | Agrega `reason` por criterio (una frase al aprendiz que no revela la respuesta esperada) y precisa `evidence` como cita literal breve | Sin medición v1 contra v2; E7 compara las calificaciones guardadas del sistema sin separarlas por versión |
@@ -167,7 +167,7 @@ Cadena (ADR 0016; `ai/app/application/video/service.py`, `ai/app/domain/video_ra
 
 **E6** (13 temas, 124 videos, dos jueces-agente a ciegas): κ 0,766, P@3 del puntaje vigente **0,718** (meta 0,7: cumple), nDCG@3 0,706. Comparación de ordenaciones: azar 0,473, orden de YouTube 0,564, **solo similitud 0,769** y puntaje vigente 0,718. Los bonos por idioma y duración no ayudaron en esta muestra (la diferencia no es concluyente con 13 temas). Cerca del 60 % de los candidatos no es pertinente: la búsqueda trae ruido y el recomendador lo filtra en parte (`docs/evaluation/results/e6-2026-11-16.md`).
 
-**Piezas del diseño que NO se construyeron (R-007)**, declaradas como trabajo futuro (`proyecto/cohorte_1/seguimiento/TRAZABILIDAD.md`, fila R-007; `proyecto/cohorte_1/brief.md`):
+**Piezas del diseño que NO se construyeron (R-007)**, declaradas como trabajo futuro (`docs/cohorte_1/trazabilidad/TRAZABILIDAD.md`, fila R-007; `proyecto/cohorte_1/brief.md`):
 
 - La recomendación de video por **conceptos débiles de cada aprendiz** (sin ella no se prueba la hipótesis H3).
 - El **índice bayesiano de calidad del video** con la etiqueta «Midiendo».
@@ -195,7 +195,7 @@ Tiempo que espera el aprendiz: p95 de 2,1 s y 1,0 % de JSON inválido en 105 lla
 
 ## 6. Agentes de evaluación (jueces-agente)
 
-Para los experimentos de R-005 no hubo expertos humanos disponibles. El dueño decidió el 2026-11-16 que los jueces y anotadores serían **dos agentes de IA afinados como jueces** (`proyecto/cohorte_1/seguimiento/PLAN_EXPERIMENTOS_R005.md`, sección 2).
+Para los experimentos de R-005 no hubo expertos humanos disponibles. El dueño decidió el 2026-11-16 que los jueces y anotadores serían **dos agentes de IA afinados como jueces** (`docs/cohorte_1/trazabilidad/PLAN_EXPERIMENTOS_R005.md`, sección 2).
 
 | Papel | Modelo | Qué hizo | Cuenta en la aplicación |
 | --- | --- | --- | --- |
@@ -249,9 +249,9 @@ Parte del código, las pruebas y los documentos se escribieron con agentes de Cl
 
 - **Orquestación con subagentes por frente.** El plan definió olas (0 a 3) y un agente por frente (`F00` a `F09`: base de datos, API, `ai/` base, `ai/` contenido, aplicación, infraestructura y herramientas de evaluación). En la tabla de personas, «Claude» es la sesión principal (Opus) y los subagentes (Sonnet o Haiku). El plan fija el modelo por tarea y **nunca Fable** (`PLAN_IMPLEMENTACION_V3.md`, sección 19.1, sección 19.2 regla 5 y decisión R-4).
 - **Un `git worktree` y una rama por frente.** Cada agente trabajaba en su rama `feature/*` y su propio worktree, sin tocar `stage` ni `main`, y solo hacía `push` a su rama (plan, 19.2, reglas 1 y 2). Cada uno era dueño de sus carpetas; los archivos compartidos los consolidaba un solo agente integrador (regla 3).
-- **PR por rama.** Los cambios entran a `dev` por PR; la trazabilidad de cada tarea con su PR y commit está en [TRAZABILIDAD.md](../seguimiento/TRAZABILIDAD.md). Los experimentos de R-005 mantuvieron la regla: los agentes no suben a `dev`, `stage` ni `main`, y los cambios de código siguen el flujo de ramas y PR (`PLAN_EXPERIMENTOS_R005.md`, sección 6).
+- **PR por rama.** Los cambios entran a `dev` por PR; la trazabilidad de cada tarea con su PR y commit está en [TRAZABILIDAD.md](../trazabilidad/TRAZABILIDAD.md). Los experimentos de R-005 mantuvieron la regla: los agentes no suben a `dev`, `stage` ni `main`, y los cambios de código siguen el flujo de ramas y PR (`PLAN_EXPERIMENTOS_R005.md`, sección 6).
 - **Verificación.** Cada agente corría `dev.sh all` de su servicio (Ruff, mypy, pruebas, esquemas al día) antes de cerrar una tarea y registraba el resultado (plan, 19.2, regla 6); la CI repite Ruff, mypy y pytest en los tres servicios, más Liquibase, los prompts, la documentación, gitleaks y Trivy (`HANDOFF.md`). Los números de los experimentos los revisó el orquestador final. No hay en el repositorio un procedimiento escrito de verificación por un segundo agente distinto del autor, más allá de lo anterior (no verificado).
-- **Bitácora por agente.** Cada agente escribió `proyecto/cohorte_1/bitacora/F<NN>-<tema>.md` mientras trabajaba, con lo hecho, desviaciones, decisiones y lecciones. Una lección frecuente: el aislamiento del worktree rechazaba comandos de shell complejos y se usaron scripts auxiliares.
+- **Bitácora por agente.** Cada agente escribió `docs/cohorte_1/bitacora/F<NN>-<tema>.md` mientras trabajaba, con lo hecho, desviaciones, decisiones y lecciones. Una lección frecuente: el aislamiento del worktree rechazaba comandos de shell complejos y se usaron scripts auxiliares.
 - **Reglas de seguridad.** Los agentes no leen ni imprimen `.env`; prueban con `FakeLlmProvider`, `FakeAiService` y bases de prueba (plan, 19.2, regla 4); las corridas con servicios reales las lanza el dueño con sus credenciales; la CI incluye gitleaks; los experimentos usan solo el flujo normal de usuario (no se borra nada ni se toca la base ni Keycloak directamente) y no se versionan datos reales (`PLAN_EXPERIMENTOS_R005.md`, sección 6). El historial de git conserva secretos del realm de Keycloak anteriores a `sanitize-realm.py`, y hay que rotarlos antes de usar datos reales (`HANDOFF.md`, deuda técnica).
 - **Commits.** Llevan el pie de coautoría de los cuatro integrantes y no una referencia a Claude, por indicación del dueño (plan, 19.4).
 

@@ -5,7 +5,7 @@ La API es un servidor de recursos: no inicia sesiones ni guarda contraseñas. Re
   - la firma, con las llaves públicas del proveedor (JWKS), solo con RS256;
   - el emisor (`iss`), la audiencia (`aud`) y la expiración (`exp`).
 Quién es el usuario y qué puede hacer lo decide `app/auth` con la base de datos.
-Ver ADR 0004 y proyecto/cohorte_1/decisiones.md (D-03).
+Ver ADR 0004 y docs/cohorte_1/decisiones.md (D-03).
 """
 
 import asyncio

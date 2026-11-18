@@ -2,7 +2,7 @@
 
 Proyecto de grado · Maestría en Ciencia de Datos · Cohorte 1 · Octubre a noviembre de 2026 · Cierre: 2026-11-17
 
-Este es el brief de la cohorte 1. Parte del [brief base](../brief.md), que plantea el proyecto y se conserva como referencia común, y cuenta lo que esta cohorte construyó, midió y cambió, lo que no alcanzó y lo que deja a la siguiente. El soporte técnico está en los [anexos](#16-anexos-y-evidencia) y la evidencia día a día en la [trazabilidad](seguimiento/TRAZABILIDAD.md).
+Este es el brief de la cohorte 1. Parte del [brief base](../brief.md), que plantea el proyecto y se conserva como referencia común, y cuenta lo que esta cohorte construyó, midió y cambió, lo que no alcanzó y lo que deja a la siguiente. El soporte técnico está en los [anexos](#16-anexos-y-evidencia) y la evidencia día a día en la [trazabilidad](../../docs/cohorte_1/trazabilidad/TRAZABILIDAD.md).
 
 ## 1. Cómo leer este documento
 
@@ -104,7 +104,7 @@ flowchart TD
     M --> J
 ```
 
-Los temas dominados en el diagnóstico (≥ 80 %) se omiten y se incluyen sus prerrequisitos débiles. El detalle por rol y pantalla está en el [flujo por usuario](../flujo-por-usuario.md).
+Los temas dominados en el diagnóstico (≥ 80 %) se omiten y se incluyen sus prerrequisitos débiles. El detalle por rol y pantalla está en el [flujo por usuario](../../docs/cohorte_1/flujo-por-usuario.md).
 
 **Qué hace cada rol:**
 
@@ -134,7 +134,7 @@ La IA propone y las personas validan: el instructor revisa lo que genera la IA a
 
 **Agentes de desarrollo:** el trabajo se orquestó con subagentes de Claude en ramas y copias de trabajo separadas, con verificación independiente antes de cada pull request, sin secretos y sin tocar datos reales.
 
-Detalle de cada tarea, versión de prompt, modelo y presupuesto: [anexo C](anexos/C-agentes-prompts-y-modelos.md).
+Detalle de cada tarea, versión de prompt, modelo y presupuesto: [anexo C](../../docs/cohorte_1/anexos/C-agentes-prompts-y-modelos.md).
 
 ## 8. Arquitectura y despliegue
 
@@ -181,7 +181,7 @@ flowchart LR
 - **CI** en GitHub Actions (`ci.yml`, 11 trabajos; `audit` e `images` son informativos y los demás bloquean): Ruff, mypy y pytest en los tres servicios, Liquibase, realm de Keycloak, prompts, documentación, gitleaks y Trivy. **No existe despliegue continuo ni un archivo de producción del compose.**
 - **Destino del piloto:** sin decidir. El [ADR 0020](../../docs/adr/0020-deployment-target.md) propone primero la red de la organización responsable con el mismo compose.
 
-Detalle de contenedores, puertos, autenticación, directorios y despliegue: [anexo A](anexos/A-arquitectura-y-despliegue.md) y [runbook](../../docs/deploy/runbook.md).
+Detalle de contenedores, puertos, autenticación, directorios y despliegue: [anexo A](../../docs/cohorte_1/anexos/A-arquitectura-y-despliegue.md) y [runbook](../../docs/deploy/runbook.md).
 
 ## 9. Modelo de datos
 
@@ -193,11 +193,11 @@ El brief base proponía 11 entidades. La versión `v2.0.x` tiene **40 tablas de 
 - **Capa de IA:** `ai_jobs`, `ai_generation_cache`, `ai_embeddings`, `source_documents`, `document_chunks`, `llm_call_logs` y `course_materials`.
 - **Ética y piloto:** `consents`, `data_subject_requests`, `pilots`, `survey_responses` e `interaction_events`.
 
-Mapa de las entidades originales a las tablas actuales, diagramas por dominio y decisiones: [anexo B](anexos/B-modelo-de-datos.md).
+Mapa de las entidades originales a las tablas actuales, diagramas por dominio y decisiones: [anexo B](../../docs/cohorte_1/anexos/B-modelo-de-datos.md).
 
 ## 10. Evaluación: métricas y resultados
 
-Todos los resultados usan **jueces-agente** (Claude Opus y Sonnet) a ciegas sobre datos de prueba. Índice y detalle: [anexo D](anexos/D-experimentos.md) y [resumen de R-005](../../docs/evaluation/results/resumen-r005-2026-11-16.md).
+Todos los resultados usan **jueces-agente** (Claude Opus y Sonnet) a ciegas sobre datos de prueba. Índice y detalle: [anexo D](../../docs/cohorte_1/anexos/D-experimentos.md) y [resumen de R-005](../../docs/evaluation/results/resumen-r005-2026-11-16.md).
 
 ### 10.1 Métricas del sistema
 
@@ -253,7 +253,7 @@ El brief base planeaba 8 semanas. La cohorte avanzó por fases técnicas, del 20
 
 **Fase 10 sin cumplir:** el plan v3 prometía una revisión final con `docs/revision-final.md`, prueba de carga ligera con 20 usuarios y recorrido caso por caso de los casos de uso. No hay registro de ellas en el repositorio. Sí hay evidencia de despliegue en **Windows y Linux** por parte del equipo y, desde esta entrega, el [runbook](../../docs/deploy/runbook.md).
 
-**Desvío principal:** el hito de la semana 4 («flujo completo») se cumplió más tarde de lo planeado y el piloto no alcanzó a ejecutarse. Siguiendo la regla del brief base («recortar alcance antes que mover el piloto sin datos»), la cohorte cerró con experimentos sobre datos de prueba y dejó el piloto preparado para la siguiente. Los detalles de cada fase están en las [bitácoras](bitacora/) y la [hoja de ruta](seguimiento/HOJA_DE_RUTA.md).
+**Desvío principal:** el hito de la semana 4 («flujo completo») se cumplió más tarde de lo planeado y el piloto no alcanzó a ejecutarse. Siguiendo la regla del brief base («recortar alcance antes que mover el piloto sin datos»), la cohorte cerró con experimentos sobre datos de prueba y dejó el piloto preparado para la siguiente. Los detalles de cada fase están en las [bitácoras](../../docs/cohorte_1/bitacora/) y la [hoja de ruta](../../docs/cohorte_1/trazabilidad/HOJA_DE_RUTA.md).
 
 ## 12. Gestión del proyecto
 
@@ -269,7 +269,7 @@ El brief base planeaba 8 semanas. La cohorte avanzó por fases técnicas, del 20
 
 - Repositorio único en GitHub, con ramas `feature/*`, `fix/*` y `docs/*` hacia `dev`; `stage` y `main` se promueven por el dueño del repositorio.
 - Cada cambio llega por pull request revisado y con CI en verde (98 fusionados al cierre).
-- Cada tarea se registra con ID, responsable y estado en la [trazabilidad](seguimiento/TRAZABILIDAD.md); el seguimiento cierra con 98 puntos: 85 realizados, 9 migrados a la siguiente fase y 4 abiertos.
+- Cada tarea se registra con ID, responsable y estado en la [trazabilidad](../../docs/cohorte_1/trazabilidad/TRAZABILIDAD.md); el seguimiento cierra con 98 puntos: 85 realizados, 9 migrados a la siguiente fase y 4 abiertos.
 - Estándares: Conventional Commits con coautoría del equipo, [definición de terminado](../../docs/standards/definition-of-done.md) y [estrategia de versionado](../../GIT_VERSIONING_STRATEGY.md).
 
 ## 13. Pendientes y siguiente fase
@@ -281,7 +281,7 @@ El brief base planeaba 8 semanas. La cohorte avanzó por fases técnicas, del 20
 | B-049 | Explicación alterna al reprobar un quiz («Otra forma de verlo», E7b) | El prompt y la tarea de IA existen; falta que la API la pida y la guarde |
 | T-057 | Datos para las métricas con la base real: `estimated_minutes`, `analysis_included` y `pilot_arm` | Decisión del dueño |
 | T-051 | Brief de la cohorte | Este documento |
-| T-052 | Publicar el release `v1.0-cohorte1` | Lo hace el dueño del repositorio: promover `dev` a `stage` y `main`, crear la etiqueta y el Release ([notas](release.md)) |
+| T-052 | Publicar el release `v1.0-cohorte1` | Lo hace el dueño del repositorio: promover `dev` a `stage` y `main`, crear la etiqueta y el Release ([notas](../../docs/cohorte_1/release.md)) |
 
 ### 13.2 Migrados a la siguiente fase
 
@@ -321,7 +321,7 @@ El brief base planeaba 8 semanas. La cohorte avanzó por fases técnicas, del 20
 | Fidelidad al prototipo | 96 pantallas con decenas de diferencias visuales (G-001) | Revisión pantalla por pantalla con registro de diferencias (V-001 en adelante) |
 | Calidad de las preguntas | Distractores triviales, formato roto y la correcta casi siempre en la primera opción (B-062) | Prompt v2 y v3, limpieza de formato y mezcla en el código |
 
-**Hallazgos de despliegue** (del [anexo A](anexos/A-arquitectura-y-despliegue.md)): `postgres`, `api`, `keycloak` y `app` publican su puerto en todas las interfaces de la máquina (solo `ai` y `mailpit` van a `127.0.0.1`), y varios ADR (0008, 0009, 0010, 0014, 0019 y 0020) figuran como «Propuesto» aunque el código ya los implementa. El [anexo C](anexos/C-agentes-prompts-y-modelos.md) lista además ocho diferencias entre documentos y código por reajustar.
+**Hallazgos de despliegue** (del [anexo A](../../docs/cohorte_1/anexos/A-arquitectura-y-despliegue.md)): `postgres`, `api`, `keycloak` y `app` publican su puerto en todas las interfaces de la máquina (solo `ai` y `mailpit` van a `127.0.0.1`), y varios ADR (0008, 0009, 0010, 0014, 0019 y 0020) figuran como «Propuesto» aunque el código ya los implementa. El [anexo C](../../docs/cohorte_1/anexos/C-agentes-prompts-y-modelos.md) lista además ocho diferencias entre documentos y código por reajustar.
 
 **Deuda técnica** (detalle en [`HANDOFF.md`](../../HANDOFF.md)): secretos que estuvieron en el historial de git, el cliente de desarrollo `smartmentor-dev-tools`, Keycloak en `start-dev`, renovación del token por redirección, `GET /jobs/{id}` sin `next_action` (B-012), widgets de Streamlit con estado entre pasos (B-009), cobertura sin umbral (T-061) y la base compartida en un plan gratuito.
 
@@ -340,14 +340,14 @@ El brief base planeaba 8 semanas. La cohorte avanzó por fases técnicas, del 20
 
 | Documento | Contenido |
 | --- | --- |
-| [Anexo A · Arquitectura y despliegue](anexos/A-arquitectura-y-despliegue.md) | Contenedores, puertos, autenticación, directorios, CI y modos de despliegue |
+| [Anexo A · Arquitectura y despliegue](../../docs/cohorte_1/anexos/A-arquitectura-y-despliegue.md) | Contenedores, puertos, autenticación, directorios, CI y modos de despliegue |
 | [Runbook de despliegue](../../docs/deploy/runbook.md) | Pasos operativos: arranque, base remota, respaldo y restauración, diagnóstico |
-| [Anexo B · Modelo de datos](anexos/B-modelo-de-datos.md) | Mapa entidad a tabla, diagramas por dominio, auditoría, permisos y evolución |
-| [Anexo C · Agentes, prompts y modelos](anexos/C-agentes-prompts-y-modelos.md) | Tareas de IA, prompts versionados, modelos, presupuestos y jueces-agente |
-| [Anexo D · Experimentos](anexos/D-experimentos.md) | Índice de experimentos hechos y no alcanzados, con sus resultados |
-| [Trazabilidad](seguimiento/TRAZABILIDAD.md) | Lo realizado, lo abierto y lo migrado, con incidentes y decisiones |
-| [Hoja de ruta](seguimiento/HOJA_DE_RUTA.md), [bitácoras](bitacora/) y [decisiones](decisiones.md) | Historia de las fases y de las decisiones técnicas |
-| [Notas de la versión](release.md) y [`HANDOFF.md`](../../HANDOFF.md) | Release `v1.0-cohorte1`, estado técnico y deuda |
+| [Anexo B · Modelo de datos](../../docs/cohorte_1/anexos/B-modelo-de-datos.md) | Mapa entidad a tabla, diagramas por dominio, auditoría, permisos y evolución |
+| [Anexo C · Agentes, prompts y modelos](../../docs/cohorte_1/anexos/C-agentes-prompts-y-modelos.md) | Tareas de IA, prompts versionados, modelos, presupuestos y jueces-agente |
+| [Anexo D · Experimentos](../../docs/cohorte_1/anexos/D-experimentos.md) | Índice de experimentos hechos y no alcanzados, con sus resultados |
+| [Trazabilidad](../../docs/cohorte_1/trazabilidad/TRAZABILIDAD.md) | Lo realizado, lo abierto y lo migrado, con incidentes y decisiones |
+| [Hoja de ruta](../../docs/cohorte_1/trazabilidad/HOJA_DE_RUTA.md), [bitácoras](../../docs/cohorte_1/bitacora/) y [decisiones](../../docs/cohorte_1/decisiones.md) | Historia de las fases y de las decisiones técnicas |
+| [Notas de la versión](../../docs/cohorte_1/release.md) y [`HANDOFF.md`](../../HANDOFF.md) | Release `v1.0-cohorte1`, estado técnico y deuda |
 | [ADR](../../docs/adr/README.md) | 21 decisiones de arquitectura (0001 a 0021) |
 
 Las referencias científicas del [brief base](../brief.md#referencias-científicas) siguen vigentes.

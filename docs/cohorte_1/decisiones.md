@@ -1,6 +1,6 @@
 # Registro de decisiones técnicas (cohorte 1)
 
-Decisiones técnicas que se abrieron durante la cohorte y cómo se cerraron (antes `decisiones-pendientes.md`). Afectan el diseño. Cuando una se toma, se registra como ADR en [`docs/adr/`](../../docs/adr/) y aquí se marca como cerrada, con el enlace al ADR.
+Decisiones técnicas que se abrieron durante la cohorte y cómo se cerraron (antes `decisiones-pendientes.md`). Afectan el diseño. Cuando una se toma, se registra como ADR en [`docs/adr/`](../adr/) y aquí se marca como cerrada, con el enlace al ADR.
 
 | ID | Decisión | Estado | Valor provisional | Bloquea |
 | --- | --- | --- | --- | --- |
@@ -71,7 +71,7 @@ El brief admite Claude, GPT u open source. Afecta las salidas estructuradas (JSO
 
 ## D-03: autenticación, contraseñas y seguridad de la API
 
-**Estado:** **cerrada e implementada** en la cohorte 1 ([ADR 0004](../../docs/adr/0004-authentication-keycloak-bearer.md)). Quedan los pendientes de la sección "Lo que queda" más abajo.
+**Estado:** **cerrada e implementada** en la cohorte 1 ([ADR 0004](../adr/0004-authentication-keycloak-bearer.md)). Quedan los pendientes de la sección "Lo que queda" más abajo.
 
 ### Qué se decidió e implementó
 
@@ -80,7 +80,7 @@ El brief admite Claude, GPT u open source. Afecta las salidas estructuradas (JSO
 - El usuario se enlaza por `sub`, o por correo verificado la primera vez; si no existe se **crea automáticamente como `student`**. Docentes y administradores los crea un administrador desde la API (`/users` y `/user-roles`).
 - La autorización usa `user_roles` de la base de datos, no los roles del token. Matriz de permisos en el ADR 0004 y en `api/app/auth/policies.py`.
 - La auditoría registra el id del usuario autenticado. La cabecera temporal `X-User-Id` se eliminó.
-- **Keycloak 26.8.0** corre en el compose (puerto 8180) con sus datos en una base `keycloak` del PostgreSQL del proyecto y el realm versionado en `keycloak/realm/` ([ADR 0005](../../docs/adr/0005-keycloak-postgres-realm-versioned.md)). Guía de configuración, audiencia y traslado: [`keycloak/README.md`](../../keycloak/README.md).
+- **Keycloak 26.8.0** corre en el compose (puerto 8180) con sus datos en una base `keycloak` del PostgreSQL del proyecto y el realm versionado en `keycloak/realm/` ([ADR 0005](../adr/0005-keycloak-postgres-realm-versioned.md)). Guía de configuración, audiencia y traslado: [`keycloak/README.md`](../../keycloak/README.md).
 - Usuario inicial: `Administrador` (`admin.smartmentor@yopmail.com`, rol `admin`), sembrado por Liquibase `v1.0.1`.
 
 ### Criterio sobre contraseñas
@@ -102,7 +102,7 @@ La API no depende del frontend: solo valida el token. El frontend inicia sesión
 | Streamlit | Inicio de sesión nativo `st.login()`. Con `expose_tokens` el *access token* queda disponible en el servidor (`st.user.tokens`) para llamar a la API | Las llamadas salen del servidor de Streamlit, así que el token no pasa por el navegador. Antes tenía el límite de no exponer el access token. Hay que verificar en la versión que se instale la renovación del token y el cierre de sesión en Keycloak. |
 | Next.js | Auth.js (proveedor Keycloak) o `keycloak-js` | Integración más madura: tokens en el servidor, renovación y protección de rutas. Cuesta más tiempo de desarrollo, que el brief prefiere dedicar a la evaluación. |
 
-Recomendación: Streamlit para el MVP del brief. Si se elige Next.js, nada de lo diseñado cambia. **Decidida: Streamlit** ([ADR 0006](../../docs/adr/0006-frontend-streamlit.md)); arquitectura en [`app/README.md`](../../app/README.md).
+Recomendación: Streamlit para el MVP del brief. Si se elige Next.js, nada de lo diseñado cambia. **Decidida: Streamlit** ([ADR 0006](../adr/0006-frontend-streamlit.md)); arquitectura en [`app/README.md`](../../app/README.md).
 
 ### Lo que queda
 
