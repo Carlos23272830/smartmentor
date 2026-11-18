@@ -1,12 +1,13 @@
 # HANDOFF
 
-Estado técnico del proyecto, deuda y próximos pasos para la siguiente cohorte. **Última actualización: 2026-11-14 (cohorte 1).**
+Estado técnico del proyecto, deuda y próximos pasos para la siguiente cohorte. **Última actualización: 2026-11-17 (cierre de la cohorte 1).**
 
 Dónde está cada cosa:
 
 - Tareas con fecha y hora, bugs, huecos de Figma y subidas: [`proyecto/seguimiento/`](proyecto/seguimiento/README.md), empezando por la [hoja de ruta](proyecto/seguimiento/HOJA_DE_RUTA.md).
 - Avance frente al brief y responsables: [`proyecto/checklist.md`](proyecto/checklist.md).
 - Fases y decisiones: el [plan v3](PLAN_IMPLEMENTACION_V3.md).
+- Lo planteado frente a lo logrado: el [brief v2](proyecto/brief-v2.md). Resultados de los experimentos: [`docs/evaluation/results/`](docs/evaluation/results/resumen-r005-2026-11-16.md). Notas de la versión: [`CHANGELOG.md`](CHANGELOG.md) y [`proyecto/release-v1.0-cohorte1.md`](proyecto/release-v1.0-cohorte1.md).
 
 ## Qué funciona
 
@@ -25,7 +26,7 @@ Dónde está cada cosa:
   **Probado con Gemini real el 2026-11-12:** 354 llamadas, US$ 1,83 ([evidencia de F6](proyecto/seguimiento/HOJA_DE_RUTA.md#evidencia-de-f6-2026-11-12)).
 - **Interfaz (Streamlit):**
   - las 96 pantallas de Figma v3 tienen página, con pruebas `AppTest`;
-  - las del instructor y las del administrador ya leen la API real;
+  - todas leen la API real; el flujo completo se recorrió en el navegador con el syllabus real, del syllabus al badge (T-032, 2026-11-15 y 16);
   - el login es con Keycloak, la sesión dura 3 h y el token de 5 min se renueva solo.
 - **Keycloak v3:** realm versionado sin secretos (`sanitize-realm.py`), OTP obligatorio para el instructor y el administrador, y una prueba de importación en la CI.
 - **CI** ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)): Ruff, mypy y pytest en los tres servicios, más Liquibase, el realm, los prompts, la documentación, gitleaks y Trivy.
@@ -35,11 +36,14 @@ Dónde está cada cosa:
 
 | Pendiente | Detalle |
 | --- | --- |
-| Aprendiz por la interfaz | El catálogo, el perfil, el quiz y la ruta con la API real están en `dev` (PR 5, 2026-11-14). Falta recorrerlos en el navegador (T-010 y T-011) y el resto de las pantallas del aprendiz con la API real (T-011) |
-| Syllabus real | El del curso piloto (T-031) |
-| Piloto con personas | Textos legales del consentimiento (T-040), dónde se despliega y quién lo opera (T-043), anotación de expertos y prueba de usabilidad (T-041 y T-042) |
-| Revisión visual | Nunca se comparó cada pantalla con su captura de Figma (T-034) |
-| Estados que Figma no dibuja | Catálogo vacío, instructor sin cursos y menú de perfil (F-002 a F-004); el estado «sin piloto» de AD4 (F-013) |
+| Publicar el release | Las notas están en `dev` (PR 95). Falta que el dueño del repositorio promueva `dev` → `stage` → `main`, cree la etiqueta `v1.0-cohorte1` y publique el Release, con los pasos de [`release-v1.0-cohorte1.md`](proyecto/release-v1.0-cohorte1.md) (T-052) |
+| Piloto con personas | Pasa a la siguiente fase con lo que depende de él: syllabus del curso piloto (T-031), textos legales (T-040), fechas (F-007), despliegue y operación (T-043), usabilidad (T-042), endurecimiento (T-050) y los experimentos E4, E9 y E10. Detalle en «Migrados a la siguiente fase» de [`PENDIENTES.md`](proyecto/seguimiento/PENDIENTES.md) |
+| Calibración humana | E3, E6 y E7 se midieron con jueces-agente: los resultados son indicativos. Falta que una persona califique 15 a 20 elementos por experimento y se compare con los jueces |
+| Calidad de las preguntas | 26 a 60 % de preguntas válidas según la medición (E3, E3b y E3c), lejos de la meta de 80 % (B-062) |
+| Explicación alterna de E7b | El prompt y la tarea de IA existen; falta que la API la pida al reprobar un quiz y la guarde (B-049, siguiente fase) |
+| Minutos estimados | La casilla de D2b existe desde el 2026-11-17 (T-057), pero los temas de los cursos ya publicados no tienen minutos, así que la métrica de minutos ahorrados no tiene datos |
+| Revisión del equipo en el navegador | 74 de 96 pantallas validadas por agente; falta que el equipo las cruce (G-001) |
+| Documento final | En el formato de la maestría; sin responsable en el [checklist](proyecto/checklist.md) |
 
 ## Deuda técnica
 
@@ -50,25 +54,26 @@ Dónde está cada cosa:
 - **`ai/` corta las llamadas al LLM a los 240 s:** antes eran 120 s y se cortaban los bancos de preguntas (B-013). El lease de los trabajos no se renueva mientras corren: es de 1800 s.
 - **`GET /jobs/{id}` siempre devuelve `next_action` en `null`** (B-012): la app vuelve a leer la inscripción.
 - **Streamlit 1.67 y los widgets con `key`:** conserva su estado aunque no se dibujen. Se corrigió A3b; otras páginas con pasos y `st.stop()` (nuevo curso, encuesta final, quiz, evaluación final) no tienen prueba que lo cubra (B-009).
-- **Las pruebas no miden la cobertura.**
+- **La cobertura se informa en la CI sin umbral** (T-061).
+- **Base compartida en Neon con el plan gratis:** el 2026-11-17 se superó una de sus cuotas mensuales (lo más probable, las 100 CU-horas de cómputo) y la base dejó de aceptar conexiones hasta el siguiente mes de facturación. El `ai-worker` consulta la base todo el tiempo y no deja que Neon se suspenda: hay que apagar el stack cuando no se usa (`scripts/local-up.sh --down`) o pasar a un plan de pago.
 
 ## Próximos pasos sugeridos
 
-1. Recorrer una ruta completa del aprendiz en el navegador con la API real (el PR 5 ya está en `dev`) y terminar T-011.
-2. Correr el flujo de punta a punta con el syllabus real del curso piloto (cierra F6).
-3. Revisión visual frente a Figma y decidir los estados que Figma no dibuja.
-4. Textos legales, despliegue y piloto con 15 a 30 aprendices (F9).
-5. Endurecimiento (T-050), brief v2 y etiqueta `v1.0-cohorte1` (F10 y F11).
+1. Publicar el release `v1.0-cohorte1` (dueño del repositorio, T-052).
+2. Escribir el documento final con los resultados de `docs/evaluation/results/` y el brief v2.
+3. Calibrar los jueces-agente con una persona en E3, E6 y E7.
+4. Para la siguiente fase: endurecimiento (T-050), textos legales, despliegue y el piloto con 15 a 30 aprendices (E4, E9 y E10).
+5. Mejorar la calidad de las preguntas (B-062) y construir la explicación alterna de E7b (B-049).
 
 ## Traspaso entre cohortes
 
 Checklist del brief:
 
-- [ ] Versión etiquetada en Git y aplicación desplegada funcionando.
-- [x] Este `HANDOFF.md` actualizado (2026-11-13).
+- [ ] Versión etiquetada en Git y aplicación desplegada funcionando. Las notas de la versión están listas; faltan la etiqueta y el despliegue.
+- [x] Este `HANDOFF.md` actualizado (2026-11-17).
 - [ ] Notebook de métricas reproducible con los datos del piloto.
 - [ ] Datos anonimizados y anotaciones en `data/`.
 - [ ] Accesos transferidos (GitHub, despliegue, claves de API, Figma, Keycloak).
-- [ ] Brief actualizado con métricas y lecciones aprendidas.
+- [x] Brief actualizado con métricas y lecciones aprendidas ([brief v2](proyecto/brief-v2.md)).
 
 Para pasar los datos de un PC a otro: `database/scripts/backup.sh` en el origen, copiar los `.dump` y `restore.sh` en el destino (aplicación y Keycloak). El `.env` no viaja con git y tiene credenciales: cópialo por un canal seguro o regenéralo con `scripts/gen-secrets.sh`.

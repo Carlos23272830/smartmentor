@@ -540,3 +540,17 @@ A pedido del dueño se comprobó con `gh` y `git` que todo lo hecho está en `de
 - **B-009 (`pillow`):** el `audit (app)` fallaba con 42 vulnerabilidades de `pillow` 12.3.0, que Streamlit 1.65 no deja subir (`pillow<13`). Se subió a Streamlit 1.67.0 (`38fcf00`) y `pillow` quedó en 13.0.0. Streamlit 1.67 conserva el estado de un widget con `key` aunque no se dibuje, así que A3b recuperaba la casilla vieja del piloto: la decisión se fija ahora en `st.session_state` al volver del consentimiento informado y se quitó `value=`. También se quitó un botón `topic-continue-quiz` repetido en `topic.py`, sobrante de una fusión, que hacía fallar 2 pruebas del quiz.
 - **Riesgo abierto:** otras páginas con pasos y `st.stop()` (nuevo curso, encuesta final, quiz y evaluación final) con casillas o radios con `key` podrían mostrar un valor viejo. Ninguna prueba lo detecta; hay que recorrerlas en el navegador.
 - **Documentos al día:** BUGS (B-009, B-012 a B-020 y B-022 a B-029 pasan a ✔ en `dev`; B-021 sigue sin causa confirmada), HOJA_DE_RUTA (T-003 y T-010), SUBIDAS (S-011), HANDOFF, checklist, `app/README.md`, `app/CLAUDE.md` y CHANGELOG.
+
+### 2026-11-17 22:40 · CIERRE · T-057, B-049, T-051 y T-052
+
+Cierre de los últimos pendientes de la cohorte 1 (Alexander Amador). Desde el 2026-11-15 el seguimiento se llevó sobre todo en [`PENDIENTES.md`](PENDIENTES.md) (PR 31 a 92); esta entrada retoma la bitácora.
+
+- **T-057** ([PR 93](https://github.com/armandoordonez/smartmentor/pull/93), `292bfde`): changeset `v2.0.1-010` con `SELECT` sobre `assessment_items` para el rol de métricas y casilla «Minutos estimados (opcional)» en D2b. Los temas de cursos publicados no se pueden editar, así que siguen sin minutos. `analysis_included` y `pilot_arm` pasan con el piloto a la siguiente fase. Interfaz: 1083 pruebas en verde.
+- **B-049** ([PR 94](https://github.com/armandoordonez/smartmentor/pull/94), `efaf2ed`): pasa a la siguiente fase, con lo que ya existe y lo que falta anotado. La fila de B-062, que estaba dentro de la tabla de pantallas de G-001, vuelve a «Realizado».
+- **T-052** ([PR 95](https://github.com/armandoordonez/smartmentor/pull/95), `caba9e5`): notas de `v1.0-cohorte1` en `CHANGELOG.md` y texto del GitHub Release en `proyecto/release-v1.0-cohorte1.md`. Falta que el dueño del repositorio promueva a `main`, cree la etiqueta y publique el Release.
+- **T-051** ([PR 96](https://github.com/armandoordonez/smartmentor/pull/96), `18c3222`): Carlos Villada da por cerrado el brief v2 tal como está en `dev`. El mismo PR agrega `prompts/** text eol=lf` al `.gitattributes`.
+- **Pruebas sobre `dev`:** interfaz 1083, API 526 unitarias y servicio de IA 563 (13 omitidas). CI en verde en los cuatro PR.
+- **Fusiones:** los PR 93 a 96 los fusionó Alexander Amador con el acuerdo del equipo, porque Carlos Villada no podía conectarse esa noche.
+- **Neon:** a las 21:49 la base compartida rechazó las conexiones por superar la cuota del plan gratis. El changeset `v2.0.1-010` queda sin aplicar en Neon hasta que vuelva.
+- **Calibración humana:** las hojas de E3, E6 y E7 están en `/tmp/claude-1000/calibracion/` del equipo de Eduar Troyano, fuera del repositorio. Hay que subirlas antes de que se borren.
+- **Documentos al día:** PENDIENTES (encabezado y ruta crítica), HOJA_DE_RUTA (F6, F7, F9 a F11 y T-050 a T-052), SUBIDAS (S-016), checklist y HANDOFF.

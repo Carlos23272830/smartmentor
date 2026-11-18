@@ -1,11 +1,11 @@
 # Pendientes del proyecto
 
-Une dos revisiones del 2026-11-14. Corte: `dev` en `502b5a1` (PR 1 a PR 47 fusionados):
+Une dos revisiones del 2026-11-14. Último corte: 2026-11-17, `dev` en `18c3222` (PR 1 a PR 96 fusionados):
 
 - **Producto y piloto:** pantallas, decisiones del dueño y cierre.
 - **Evaluación y código de IA:** la revisión del repositorio frente a la entrega final (piezas de IA, experimentos y resultados). Sus IDs empiezan por `R-`.
 
-Pruebas sobre `dev`: interfaz, 746 en verde (Ruff y mypy limpios); servicio de IA, 463 en verde y 10 omitidas; API, 447 unitarias en verde. Las 214 de integración de la API necesitan PostgreSQL y pasan en la CI.
+Pruebas sobre `dev` (2026-11-17): interfaz, 1083 en verde (Ruff y mypy limpios); servicio de IA, 563 en verde y 13 omitidas; API, 526 unitarias en verde. Las de integración de la API necesitan PostgreSQL y pasan en la CI.
 
 Este archivo resume, no reemplaza. El detalle con fecha y hora está en [`HOJA_DE_RUTA.md`](HOJA_DE_RUTA.md), [`BUGS.md`](BUGS.md), [`FIGMA.md`](FIGMA.md) y [`HANDOFF.md`](../../HANDOFF.md).
 
@@ -34,12 +34,12 @@ Los códigos de pantalla (E1, D5b, AD4…) son los de Figma v3 (archivo maestro 
 
 ## Ruta crítica hacia la entrega final
 
-La entrega final pide «un recorrido integral por el proceso, observando los resultados en el tiempo, así como los experimentos y las técnicas aplicadas». Hoy solo está ejecutado E1. El orden sugerido:
+La entrega final pide «un recorrido integral por el proceso, observando los resultados en el tiempo, así como los experimentos y las técnicas aplicadas». **Estado al 2026-11-17:** los pasos 1 y 2 están hechos, el 3 pasó a la siguiente fase y del 4 solo falta publicar el release y el documento final. El orden sugerido era:
 
-1. **Código, 1 o 2 días:** R-001 (filtro de videos), R-003 (eventos de la interfaz) y T-010 / T-011 (recorrer la final y el badge en el navegador).
-2. **Experimentos sin terceros:** E2, E3, E6, E7 y E8, con dos integrantes del equipo como anotadores (reportado como tal), y la línea base (R-006).
+1. ✔ **Código, 1 o 2 días:** R-001 (filtro de videos), R-003 (eventos de la interfaz) y T-010 / T-011 (recorrer la final y el badge en el navegador).
+2. ✔ **Experimentos sin terceros:** E2, E3, E6, E7 y E8, y la línea base (R-006). Se hicieron con jueces-agente en lugar de integrantes del equipo (R-005); la calibración humana pasa a la siguiente fase.
 3. ~~En paralelo, para E9: T-031, T-040, F-007, T-043 y la convocatoria~~ **Migrado a la siguiente fase** (el piloto no se alcanza; ver «Migrados a la siguiente fase»).
-4. **Cierre:** T-051, T-052 y el documento final.
+4. ◐ **Cierre:** T-051 ✔ (brief v2, PR 90 y 91); T-052 ◐ (notas del release en `dev` con el PR 95; falta que el dueño del repositorio promueva a `main`, cree la etiqueta y publique el Release); documento final ☐ (sin fila ni responsable: ver el [checklist](../checklist.md)).
 
 ## Pendiente o en curso
 
