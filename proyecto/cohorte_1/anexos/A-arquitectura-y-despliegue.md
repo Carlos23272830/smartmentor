@@ -456,7 +456,7 @@ Mitigaciones previstas o disponibles:
 
 ## 11. Seguridad de despliegue pendiente (T-050)
 
-T-050, «Endurecimiento antes de usar datos reales», figura como **siguiente fase** y es obligatorio antes de E9 (`proyecto/seguimiento/PENDIENTES.md`, `HANDOFF.md`, «Deuda técnica»).
+T-050, «Endurecimiento antes de usar datos reales», figura como **siguiente fase** y es obligatorio antes de E9 (`proyecto/seguimiento/TRAZABILIDAD.md`, `HANDOFF.md`, «Deuda técnica»).
 
 | Pendiente | Detalle verificado | Qué hay que hacer |
 | --- | --- | --- |

@@ -10,7 +10,7 @@ Texto del GitHub Release de `v1.0-cohorte1`, con el formato de la sección 13 de
 
 SmartMentor genera rutas de aprendizaje personalizadas a partir de un syllabus. El instructor carga el syllabus y, si quiere, apuntes o lecturas. La IA extrae los temas y sus prerrequisitos, y el instructor los revisa y publica. Al publicar, la IA genera las explicaciones con RAG, busca videos y crea los bancos de preguntas. El aprendiz hace un diagnóstico, recibe una ruta con los temas que necesita, estudia, presenta quizzes y la evaluación final, y obtiene un badge.
 
-Esta versión cierra la cohorte 1. El flujo completo funciona de punta a punta con el LLM real (Gemini), en un stack de cinco servicios con Docker Compose y una base compartida en Neon. El detalle de lo planteado frente a lo logrado está en el [brief v2](brief.md), y la lista de cambios en el [CHANGELOG](../../CHANGELOG.md).
+Esta versión cierra la cohorte 1. El flujo completo funciona de punta a punta con el LLM real (Gemini), en un stack de ocho servicios con Docker Compose y una base compartida en Neon. El detalle de lo planteado frente a lo logrado está en el [brief de la cohorte 1](brief.md), y la lista de cambios en el [CHANGELOG](../../CHANGELOG.md).
 
 ## Funcionalidades
 
@@ -48,7 +48,7 @@ Los experimentos se hicieron con **jueces-agente** (Claude Opus y Sonnet), a cie
 
 - Resultados de los experimentos: [`docs/evaluation/results/`](../../docs/evaluation/results/resumen-r005-2026-11-16.md).
 - Métricas de la cohorte 1 con la base real: [`metrics-cohort1-2026-11-15.md`](../../docs/evaluation/results/metrics-cohort1-2026-11-15.md) y el cuaderno [`notebooks/metrics_cohort1.ipynb`](../../notebooks/metrics_cohort1.ipynb).
-- Brief v2: [`proyecto/cohorte_1/brief.md`](brief.md).
+- Brief de la cohorte 1: [`proyecto/cohorte_1/brief.md`](brief.md).
 - Seguimiento: [`proyecto/cohorte_1/seguimiento/TRAZABILIDAD.md`](seguimiento/TRAZABILIDAD.md).
 
 ## Pasos para publicarlo (dueño del repositorio)

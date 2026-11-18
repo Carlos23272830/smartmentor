@@ -7,7 +7,7 @@ Dónde está cada cosa:
 - Tareas con fecha y hora, bugs, huecos de Figma y subidas: [`proyecto/cohorte_1/seguimiento/`](proyecto/cohorte_1/seguimiento/README.md), empezando por la [hoja de ruta](proyecto/cohorte_1/seguimiento/HOJA_DE_RUTA.md).
 - Avance frente al brief y responsables: [`proyecto/cohorte_1/checklist.md`](proyecto/cohorte_1/checklist.md).
 - Fases y decisiones: el [plan v3](PLAN_IMPLEMENTACION_V3.md).
-- Lo planteado frente a lo logrado: el [brief v2](proyecto/cohorte_1/brief.md). Resultados de los experimentos: [`docs/evaluation/results/`](docs/evaluation/results/resumen-r005-2026-11-16.md). Notas de la versión: [`CHANGELOG.md`](CHANGELOG.md) y [`proyecto/cohorte_1/release.md`](proyecto/cohorte_1/release.md).
+- Lo planteado frente a lo logrado: el [brief de la cohorte 1](proyecto/cohorte_1/brief.md). Resultados de los experimentos: [`docs/evaluation/results/`](docs/evaluation/results/resumen-r005-2026-11-16.md). Notas de la versión: [`CHANGELOG.md`](CHANGELOG.md) y [`proyecto/cohorte_1/release.md`](proyecto/cohorte_1/release.md).
 
 ## Qué funciona
 
@@ -60,7 +60,7 @@ Dónde está cada cosa:
 ## Próximos pasos sugeridos
 
 1. Publicar el release `v1.0-cohorte1` (dueño del repositorio, T-052).
-2. Escribir el documento final con los resultados de `docs/evaluation/results/` y el brief v2.
+2. Escribir el documento final con los resultados de `docs/evaluation/results/` y el brief de la cohorte 1.
 3. Calibrar los jueces-agente con una persona en E3, E6 y E7.
 4. Para la siguiente fase: endurecimiento (T-050), textos legales, despliegue y el piloto con 15 a 30 aprendices (E4, E9 y E10).
 5. Mejorar la calidad de las preguntas (B-062) y construir la explicación alterna de E7b (B-049).
@@ -74,6 +74,6 @@ Checklist del brief:
 - [ ] Notebook de métricas reproducible con los datos del piloto.
 - [ ] Datos anonimizados y anotaciones en `data/`.
 - [ ] Accesos transferidos (GitHub, despliegue, claves de API, Figma, Keycloak).
-- [x] Brief actualizado con métricas y lecciones aprendidas ([brief v2](proyecto/cohorte_1/brief.md)).
+- [x] Brief actualizado con métricas y lecciones aprendidas ([brief de la cohorte 1](proyecto/cohorte_1/brief.md)).
 
 Para pasar los datos de un PC a otro: `database/scripts/backup.sh` en el origen, copiar los `.dump` y `restore.sh` en el destino (aplicación y Keycloak). El `.env` no viaja con git y tiene credenciales: cópialo por un canal seguro o regenéralo con `scripts/gen-secrets.sh`.

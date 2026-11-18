@@ -162,22 +162,23 @@ flowchart LR
         Y["YouTube Data API"]
     end
     U --> APP --> API
-    APP -. "login" .-> KC
-    API --> KC
-    API --> PG
-    API --> AI
-    AI --> PG
-    W --> PG
+    APP -- "login OIDC" --> KC
+    API -- "valida tokens" --> KC
+    API -- "SQL" --> PG
+    API -. "HTTP, AI_SERVICE_MODE=http" .-> AI
+    AI -- "SQL" --> PG
+    W -- "toma ai_jobs" --> PG
     W --> G
     AI --> G
     W --> Y
+    KC --> PG
     LB --> PG
 ```
 
-- **Ocho servicios** en `docker-compose.yml`: `postgres`, `liquibase` (job), `api`, `ai`, `ai-worker`, `keycloak`, `app` y `mailpit` (perfil `mail`).
+- **Ocho servicios** en `docker-compose.yml` (la API usa por defecto un servicio de IA simulado, `AI_SERVICE_MODE=fake`; con `http` llama al servicio `ai`): `postgres`, `liquibase` (job), `api`, `ai`, `ai-worker`, `keycloak`, `app` y `mailpit` (perfil `mail`).
 - **Despliegue local** con `scripts/local-up.sh`, probado en **Windows (WSL2) y Linux**; el script declara macOS, que no se probó.
 - **Base de datos:** PostgreSQL 17 con pgvector, local por integrante o compartida en Neon. Esquema con Liquibase, usuarios de mínimo privilegio, respaldo y restauración con scripts (`database/scripts/`) y un respaldo del equipo versionado en `database/respaldos-equipo/`.
-- **CI** en GitHub Actions: Ruff, mypy y pytest en los tres servicios, Liquibase, realm de Keycloak, prompts, documentación, gitleaks y Trivy.
+- **CI** en GitHub Actions (`ci.yml`, 11 trabajos; `audit` e `images` son informativos y los demás bloquean): Ruff, mypy y pytest en los tres servicios, Liquibase, realm de Keycloak, prompts, documentación, gitleaks y Trivy. **No existe despliegue continuo ni un archivo de producción del compose.**
 - **Destino del piloto:** sin decidir. El [ADR 0020](../../docs/adr/0020-deployment-target.md) propone primero la red de la organización responsable con el mismo compose.
 
 Detalle de contenedores, puertos, autenticación, directorios y despliegue: [anexo A](anexos/A-arquitectura-y-despliegue.md) y [runbook](../../docs/deploy/runbook.md).
@@ -250,6 +251,8 @@ El brief base planeaba 8 semanas. La cohorte avanzó por fases técnicas, del 20
 | F9 | Herramientas de evaluación y experimentos | ✔ herramientas · ◐ experimentos con jueces-agente · ⏭ piloto |
 | F10 y F11 | Revisión final, brief y traspaso | ◐ Este documento |
 
+**Fase 10 sin cumplir:** el plan v3 prometía una revisión final con `docs/revision-final.md`, prueba de carga ligera con 20 usuarios y recorrido caso por caso de los casos de uso. No hay registro de ellas en el repositorio. Sí hay evidencia de despliegue en **Windows y Linux** por parte del equipo y, desde esta entrega, el [runbook](../../docs/deploy/runbook.md).
+
 **Desvío principal:** el hito de la semana 4 («flujo completo») se cumplió más tarde de lo planeado y el piloto no alcanzó a ejecutarse. Siguiendo la regla del brief base («recortar alcance antes que mover el piloto sin datos»), la cohorte cerró con experimentos sobre datos de prueba y dejó el piloto preparado para la siguiente. Los detalles de cada fase están en las [bitácoras](bitacora/) y la [hoja de ruta](seguimiento/HOJA_DE_RUTA.md).
 
 ## 12. Gestión del proyecto
@@ -317,6 +320,8 @@ El brief base planeaba 8 semanas. La cohorte avanzó por fases técnicas, del 20
 | Dependencias | Vulnerabilidades en `pillow` y `certifi` (B-009) | Subida a Streamlit 1.67, revisando el comportamiento de los widgets |
 | Fidelidad al prototipo | 96 pantallas con decenas de diferencias visuales (G-001) | Revisión pantalla por pantalla con registro de diferencias (V-001 en adelante) |
 | Calidad de las preguntas | Distractores triviales, formato roto y la correcta casi siempre en la primera opción (B-062) | Prompt v2 y v3, limpieza de formato y mezcla en el código |
+
+**Hallazgos de despliegue** (del [anexo A](anexos/A-arquitectura-y-despliegue.md)): `postgres`, `api`, `keycloak` y `app` publican su puerto en todas las interfaces de la máquina (solo `ai` y `mailpit` van a `127.0.0.1`), y varios ADR (0008, 0009, 0010, 0014, 0019 y 0020) figuran como «Propuesto» aunque el código ya los implementa. El [anexo C](anexos/C-agentes-prompts-y-modelos.md) lista además ocho diferencias entre documentos y código por reajustar.
 
 **Deuda técnica** (detalle en [`HANDOFF.md`](../../HANDOFF.md)): secretos que estuvieron en el historial de git, el cliente de desarrollo `smartmentor-dev-tools`, Keycloak en `start-dev`, renovación del token por redirección, `GET /jobs/{id}` sin `next_action` (B-012), widgets de Streamlit con estado entre pasos (B-009), cobertura sin umbral (T-061) y la base compartida en un plan gratuito.
 

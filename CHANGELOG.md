@@ -18,7 +18,7 @@ Cierre de la cohorte 1. Las notas del GitHub Release, con las métricas, están 
 - **Visual:** diferencias con Figma corregidas en el aprendiz y el staff (V-088 a V-101).
 - **Métricas:** cuaderno de la cohorte 1 sobre la base real (R-006) y el rol de métricas lee `interaction_events` y `assessment_items`.
 - **Base compartida en Neon** para todo el equipo, con el esquema hasta el changeset `v2.0.1-010`.
-- **Brief v2** ([`proyecto/cohorte_1/brief.md`](proyecto/cohorte_1/brief.md)): lo planteado frente a lo logrado (T-051).
+- **Brief de la cohorte 1** ([`proyecto/cohorte_1/brief.md`](proyecto/cohorte_1/brief.md)): lo planteado frente a lo logrado (T-051).
 - **Pasan a la siguiente fase:** el piloto con usuarios reales y lo que depende de él (E4, E9, E10, T-031, T-040, T-042, T-043, T-050, F-007) y la explicación alterna de E7b (B-049).
 
 ### Plan v3 (2026-11-07 a 2026-11-14)

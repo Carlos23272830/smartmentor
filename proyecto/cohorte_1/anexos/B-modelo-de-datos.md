@@ -37,7 +37,7 @@ Fuentes: [`database/liquibase/changelog/db.changelog-master.xml`](../../../datab
 | --- | --- | --- |
 | [`HANDOFF.md`](../../../HANDOFF.md), [`CHANGELOG.md`](../../../CHANGELOG.md), [`README.md`](../../../README.md) | 39 tablas (34 `_audit`) | Es la foto de la `v2.0.0`. No se actualizó cuando la `v2.0.1` agregó `course_materials` |
 | [`database/README.md`](../../../database/README.md) | 39 + 34 en el encabezado de la sección, y una nota que lleva a 40 + 35 | Conserva el texto de la `v2.0.0` y suma la nota «Cambios de la v2.0.1» |
-| [`proyecto/brief-v2.md`](../../brief-v2.md) | 40 tablas y 35 `_audit` | Coincide con la base verificada |
+| [`proyecto/cohorte_1/brief.md`](../brief.md) | 40 tablas y 35 `_audit` | Coincide con la base verificada |
 | Base local (catálogo) | 40 de negocio + 35 `_audit` | Es la realidad aplicada |
 | Lectura de «42 de negocio» | No se reproduce | El catálogo da 40. Una cuenta de 42 solo sale al sumar las 2 tablas de control de Liquibase, que no son de negocio |
 
@@ -526,11 +526,11 @@ Ninguno de los tres usuarios de servicio puede alterar el esquema ni toca las ta
 
 | Tema | Estado | Fuente |
 | --- | --- | --- |
-| `estimated_minutes` (T-057) | La columna existe en `topics` y la casilla de D2b la guarda desde 2026-11-17, pero los 17 temas de los cursos ya publicados no tienen minutos (la API solo deja editar temas en borrador o en revisión). La métrica de minutos ahorrados queda sin datos | [`PENDIENTES.md`](../../seguimiento/PENDIENTES.md), [`HANDOFF.md`](../../../HANDOFF.md) |
-| `analysis_included` | Columna de `enrollments`; la API la marca cuando el aprendiz acepta el consentimiento `pilot_research`. Los aprendices de prueba no lo aceptaron. Pasa con el piloto a la siguiente fase | [`PENDIENTES.md`](../../seguimiento/PENDIENTES.md) (T-057) |
-| `pilot_arm` | Columna de `enrollments`: sin piloto no hay brazos (tabla `pilots`, estados `draft` a `closed`). Pasa a la siguiente fase | [`PENDIENTES.md`](../../seguimiento/PENDIENTES.md) (T-057) |
-| Discriminación de ítems y otras métricas psicométricas | El esquema las soporta (`item_annotations`, `human_gradings`, `v_item_validity`, permiso de lectura de `assessment_items` por `v2.0.1-010`), pero la base real no tiene datos suficientes (`item_annotations` ya tiene datos desde E3): faltan calidad de preguntas, psicometría, videos, d de Cohen y m27 | [`PENDIENTES.md`](../../seguimiento/PENDIENTES.md) (R-006, T-057) |
-| Cuaderno de métricas | Corrió en solo lectura sobre 9 inscripciones de 3 personas; resultados indicativos | [`PENDIENTES.md`](../../seguimiento/PENDIENTES.md) (R-006) |
+| `estimated_minutes` (T-057) | La columna existe en `topics` y la casilla de D2b la guarda desde 2026-11-17, pero los 17 temas de los cursos ya publicados no tienen minutos (la API solo deja editar temas en borrador o en revisión). La métrica de minutos ahorrados queda sin datos | [`TRAZABILIDAD.md`](../seguimiento/TRAZABILIDAD.md), [`HANDOFF.md`](../../../HANDOFF.md) |
+| `analysis_included` | Columna de `enrollments`; la API la marca cuando el aprendiz acepta el consentimiento `pilot_research`. Los aprendices de prueba no lo aceptaron. Pasa con el piloto a la siguiente fase | [`TRAZABILIDAD.md`](../seguimiento/TRAZABILIDAD.md) (T-057) |
+| `pilot_arm` | Columna de `enrollments`: sin piloto no hay brazos (tabla `pilots`, estados `draft` a `closed`). Pasa a la siguiente fase | [`TRAZABILIDAD.md`](../seguimiento/TRAZABILIDAD.md) (T-057) |
+| Discriminación de ítems y otras métricas psicométricas | El esquema las soporta (`item_annotations`, `human_gradings`, `v_item_validity`, permiso de lectura de `assessment_items` por `v2.0.1-010`), pero la base real no tiene datos suficientes (`item_annotations` ya tiene datos desde E3): faltan calidad de preguntas, psicometría, videos, d de Cohen y m27 | [`TRAZABILIDAD.md`](../seguimiento/TRAZABILIDAD.md) (R-006, T-057) |
+| Cuaderno de métricas | Corrió en solo lectura sobre 9 inscripciones de 3 personas; resultados indicativos | [`TRAZABILIDAD.md`](../seguimiento/TRAZABILIDAD.md) (R-006) |
 | Destino de despliegue | Propuesta del ADR 0020; sin base de producción | [`HANDOFF.md`](../../../HANDOFF.md) |
 | Sin multi-organización | Una instalación es un contexto; servir a varias organizaciones es una decisión de otra cohorte | [ADR 0021](../../../docs/adr/0021-neutral-roles-and-label-glossary.md) |
 | Documentación desactualizada | `HANDOFF.md`, `CHANGELOG.md` y `README.md` dicen 39 tablas; `database/README.md` dice «versión actual v2.0.0» | Sección 1.2 |
