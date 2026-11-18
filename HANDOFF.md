@@ -12,7 +12,7 @@ Dónde está cada cosa:
 ## Qué funciona
 
 - **Entorno:** `scripts/local-up.sh` levanta todo con Docker Compose: PostgreSQL 17 + pgvector (o una base externa como Neon), Liquibase, la API, el servicio `ai/` y su trabajador, Keycloak, la interfaz y Mailpit. Ver [`README.md`](README.md).
-- **Base de datos v2.0.0:** 39 tablas con auditoría y rollback, roles `learner`, `instructor` y `admin`, y usuarios de mínimo privilegio por servicio: `smartmentor_api`, `smartmentor_ai` y `smartmentor_metrics` ([ADR 0019](docs/adr/0019-least-privilege-db-users.md)). Ver [`database/README.md`](database/README.md).
+- **Base de datos v2.0.x:** 40 tablas de negocio y de IA más 35 de auditoría, con rollback, roles `learner`, `instructor` y `admin`, y usuarios de mínimo privilegio por servicio: `smartmentor_api`, `smartmentor_ai` y `smartmentor_metrics` ([ADR 0019](docs/adr/0019-least-privilege-db-users.md)). Ver [`database/README.md`](database/README.md).
 - **API v2** ([contrato](docs/contracts/api-v2.md) y [OpenAPI](docs/contracts/openapi-api.json)): aprendiz, instructor, administrador, piloto, métricas y log del LLM. Las reglas de negocio están en la API, no en la interfaz ([ADR 0017](docs/adr/0017-frontend-rebuilt-from-figma-v3.md)). Hay unas 660 pruebas y la CI está en verde (`audit` incluido).
 - **Servicio `ai/`:** trabajos asíncronos con lease y reintentos ([ADR 0010](docs/adr/0010-async-jobs-postgres-pull-ingestion.md)), prompts versionados ([`prompts/catalog.yaml`](prompts/catalog.yaml)), presupuestos en USD y registro de cada llamada. Hace todo esto:
   - estructurar el syllabus;

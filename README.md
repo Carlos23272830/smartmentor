@@ -8,7 +8,7 @@ Plataforma de cursos adaptativos generados con IA: a partir de un syllabus gener
 
 | Componente | Estado |
 | --- | --- |
-| Base de datos (PostgreSQL 17 + pgvector, Liquibase `v2.0.x`: 39 tablas, usuarios de desarrollo y auditoría) | Listo |
+| Base de datos (PostgreSQL 17 + pgvector, Liquibase `v2.0.x`: 40 tablas, usuarios de desarrollo y auditoría) | Listo |
 | API de negocio (FastAPI): identidad, cursos, rutas, diagnóstico, intentos, badge, encuesta, contenido, evaluación humana, piloto y observabilidad | Listo |
 | Servicio de IA (`ai/`: API + worker, proveedor `fake` o `gemini`, presupuesto, registro de llamadas, RAG, banco de ítems, videos) | Listo; probado con Gemini real solo en la estructuración del syllabus |
 | Keycloak (realm v3 versionado, roles `learner`/`instructor`/`admin`, OTP para instructor y administrador, correo con Mailpit) | Listo |
