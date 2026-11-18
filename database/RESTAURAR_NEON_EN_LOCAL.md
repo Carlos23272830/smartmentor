@@ -2,32 +2,34 @@
 
 Prompt listo para pegarle a tu Claude (o para seguir a mano) cuando quieras dejar tu base local de SmartMentor con los datos de Neon. El respaldo lo generó una persona del equipo con `database/scripts/neon-to-local.sh pull`; tú **solo restauras**, sin conectarte a Neon.
 
-**El respaldo no está en el repositorio.** `database/backups/` está ignorado por git a propósito: el volcado de Keycloak trae hashes de contraseñas y llaves, y el repositorio es público. Se comparte por un canal privado del equipo, como dos archivos:
+**Dónde está el respaldo.** Está versionado en este repositorio, en [database/respaldos-equipo/](respaldos-equipo/), como dos archivos:
 
 - `neon_20261117_224227.tar.gz` (5,4 MB)
 - `neon_20261117_224227.tar.gz.sha256`
 
 SHA-256 esperado del `.tar.gz`: `5f3145e2b7bf3941b11da345078dc0042b0ddea6de76071c0bffc70a423297a9`
 
-Las contraseñas de los roles de la base y de Keycloak son las mismas para todo el equipo y también se piden por el canal privado: no están en este documento ni en el repositorio.
+> **Aviso.** Es una copia de la base compartida de **desarrollo** (datos de prueba de agentes y recorridos), subida a `dev` por decisión explícita del dueño del proyecto. Contiene syllabus y lecturas usados en las pruebas, correos de cuentas de prueba y de personas del equipo, y el realm de Keycloak de desarrollo, con sus llaves. Según el dueño del proyecto, no son datos del piloto. No es una práctica a repetir: para respaldos de entornos con usuarios reales no se versionan.
+
+La carpeta `database/backups/` sigue ignorada por git; los respaldos que generes con `neon-to-local.sh pull` quedan allí y no se suben.
+
+Las contraseñas de los roles de la base y de Keycloak son las mismas para todo el equipo y se piden por el canal privado: no están en este documento ni en el repositorio.
 
 Para generar un respaldo nuevo, o para el detalle del script, ver [database/README.md](README.md#bajar-neon-a-la-base-local-compartir-un-respaldo-con-el-equipo).
 
 ## Prompt
 
 ```text
-OBJETIVO: restaurar en MI base de datos local de SmartMentor un respaldo que YA FUE GENERADO por una persona del equipo desde Neon. Tú NO generas ningún respaldo y NO te conectas a Neon: solo restauras ese respaldo en la base local barriéndola. Trabaja en el repo smartmentor (docs en español, código en inglés), de punta a punta, validando cada paso. Avísame ANTES de cualquier paso destructivo que no esté en esta lista.
+OBJETIVO: restaurar en MI base de datos local de SmartMentor un respaldo que YA FUE GENERADO por una persona del equipo desde Neon y está versionado en el repo. Tú NO generas ningún respaldo y NO te conectas a Neon: solo restauras ese respaldo en la base local barriéndola. Trabaja en el repo smartmentor (docs en español, código en inglés), de punta a punta, validando cada paso. Avísame ANTES de cualquier paso destructivo que no esté en esta lista.
 
 REGLAS DE SEGURIDAD
 - Nunca imprimas ni copies contraseñas ni el contenido del .env (enmascara valores de PASSWORD/URL/SECRET).
-- No hagas push ni PR, no toques stage/main, no subas el respaldo ni el .env al repo (es público; el volcado de Keycloak trae hashes de contraseñas y llaves).
+- No hagas push ni PR, no toques stage/main, no subas el .env ni nuevos respaldos al repo.
 - NO ejecutes `neon-to-local.sh pull`, bootstrap.sh con ADMIN_DATABASE_URL, ni nada contra Neon. No uses `docker compose down -v` ni borres volúmenes o database/data.
 
 PASO 0 · LOS ARCHIVOS DEL RESPALDO (primero esto)
-El respaldo NO viene con git pull: database/backups/ está fuera del repo a propósito. Me llega por un canal privado como DOS archivos:
-  neon_20261117_224227.tar.gz   y   neon_20261117_224227.tar.gz.sha256
+El respaldo ya está en el repo, versionado en database/respaldos-equipo/ (neon_20261117_224227.tar.gz y su .sha256). Si no aparece tras actualizar dev, DETENTE y dime que falta actualizar la rama; no lo generes tú. Cópialos a database/backups/ de este repo (esa carpeta está ignorada por git) y sigue desde ahí.
 SHA-256 esperado del .tar.gz: 5f3145e2b7bf3941b11da345078dc0042b0ddea6de76071c0bffc70a423297a9
-Pregúntame en qué carpeta de mi equipo los guardé (p. ej. Descargas). Si todavía no los tengo, DETENTE y dime que se los pida al equipo; no sigas ni los generes tú. Cuando los tenga: cópialos a database/backups/ de ESTE repo.
 
 PASO 1 · REQUISITOS
 Docker y docker compose funcionando (Windows/macOS: con WSL2). Actualiza la rama dev (`git fetch origin` y `git pull`; no descartes cambios míos sin commitear). Debe existir database/scripts/neon-to-local.sh; si no existe en mi copia, avísame que falta actualizar dev y detente; no improvises otro método.
