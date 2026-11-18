@@ -1532,7 +1532,7 @@ El brief aísla la IA en su propia capa (`ai/`: generación, RAG, motor de ruta 
 
 # 35. Seguridad
 
-Implementada en SmartMentor según el [ADR 0004](../docs/adr/0004-authentication-keycloak-bearer.md). El detalle de la decisión está en D-03 de `proyecto/decisiones-pendientes.md`.
+Implementada en SmartMentor según el [ADR 0004](../docs/adr/0004-authentication-keycloak-bearer.md). El detalle de la decisión está en D-03 de `docs/cohorte_1/decisiones.md`.
 
 - **Identidad delegada** a un proveedor OpenID Connect (Keycloak). La aplicación **no almacena contraseñas** y la tabla `users` no tiene `password_hash`; guarda solo `identity_provider` e `identity_subject`. Si se llegara a guardar contraseñas (no es el plan): hash `argon2id` con sal, nunca cifrado reversible como AES.
 - **Bearer tokens:** cada petición protegida envía `Authorization: Bearer <access_token>`. La API valida la firma con las llaves públicas del proveedor (JWKS, solo RS256) y verifica `iss`, `aud` y `exp`. Responde `401` si el token falta o no es válido, `403` si el rol no basta y `503` si no alcanza al proveedor. El motivo exacto del rechazo va al log, no al cliente.

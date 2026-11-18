@@ -32,4 +32,4 @@ Los ADR nuevos se escriben con la [plantilla](_template.md). Estados:
 | [0020](0020-deployment-target.md) | Destino de despliegue (cierra D-06) | Propuesto (DEF-16) |
 | [0021](0021-neutral-roles-and-label-glossary.md) | Roles neutros (`learner`, `instructor`, `admin`) y glosario de etiquetas | Aceptado (DEF-23) |
 
-Las decisiones aún abiertas están en [`proyecto/decisiones-pendientes.md`](../../proyecto/decisiones-pendientes.md); la fuente de los ADR 0007 a 0021 es el [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md).
+Las decisiones aún abiertas están en [`docs/cohorte_1/decisiones.md`](../cohorte_1/decisiones.md); la fuente de los ADR 0007 a 0021 es el [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md).

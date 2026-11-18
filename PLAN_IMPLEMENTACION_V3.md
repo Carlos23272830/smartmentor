@@ -116,7 +116,7 @@ Decisiones tomadas al revisar la primera versión de este plan. Quedan incorpora
 | Capa de IA | `ai/README.md` | Solo el README (3 líneas) |
 | Prompts, datos, notebooks, pruebas | `prompts/`, `data/`, `notebooks/`, `tests/` | Solo README |
 | ADR | `docs/adr/0001…0006` | PostgreSQL, Liquibase, API por dominio, autenticación, Keycloak, Streamlit |
-| Sin versionar | `design/03-prototipo-alta-fidelidad/{archivo_completo.json, smartmentor_prototipo_v3.json, smartmentor_figma/}`, `design/04-prueba-mago-de-oz/{mago_de_oz.md, *.ipynb, .ipynb_checkpoints/}`, `proyecto/flujo-por-usuario.md`, `proyecto/mpc-figma.json` | `git status` del inicio de la sesión |
+| Sin versionar | `design/03-prototipo-alta-fidelidad/{archivo_completo.json, smartmentor_prototipo_v3.json, smartmentor_figma/}`, `design/04-prueba-mago-de-oz/{mago_de_oz.md, *.ipynb, .ipynb_checkpoints/}`, `docs/cohorte_1/flujo-por-usuario.md`, `proyecto/mpc-figma.json` | `git status` del inicio de la sesión |
 
 ### 1.2 Qué es cada exportación de Figma (hallazgo importante)
 
@@ -166,9 +166,9 @@ Criterio del dueño: el prototipo de Streamlit, la API y la base fueron un avanc
 | `design/03-prototipo-alta-fidelidad/` | `README.md`, `index.html`, JSON y PNG | Refactorizar el README e `index.html`; decidir qué se versiona (DEF-17) | El inventario actual es de la v2. Los JSON pesan 41 MB y traen URL firmadas de miniaturas |
 | `design/04-prueba-mago-de-oz/` | `README.md`, `mago_de_oz.md`, notebooks v1 y v2, `.ipynb_checkpoints/` | **No tocar** | Evidencia de la prueba (instrucción del dueño). `.ipynb_checkpoints/` se debe agregar a `.gitignore` sin borrarlo. Ver 3.6 |
 | `design/05-prueba-de-usabilidad/` | `guion-de-tareas.md`, `cuestionario-sus.md`, `resultados.md` | Refactorizar el guion | Las tareas deben cubrir las pantallas v3. El SUS no cambia |
-| Checklist | `proyecto/checklist.md` | Refactorizar | Secciones nuevas (IA como servicio, datos personales, piloto) y avance recalculado |
+| Checklist | `proyecto/cohorte_1/checklist.md` | Refactorizar | Secciones nuevas (IA como servicio, datos personales, piloto) y avance recalculado |
 | Brief | `proyecto/brief.md` | No tocar, salvo la propuesta de ampliar el OE3 (decisión del director) | Es el documento que manda |
-| Flujo por usuario | `proyecto/flujo-por-usuario.md` (sin versionar) | Conservar y versionar | Es coherente con el brief y sirve para trazar P1, P2 y P3 |
+| Flujo por usuario | `docs/cohorte_1/flujo-por-usuario.md` (sin versionar) | Conservar y versionar | Es coherente con el brief y sirve para trazar P1, P2 y P3 |
 | Configuración del MCP de Figma | `proyecto/mpc-figma.json` (sin versionar) | No versionar | Es configuración local del editor (solo trae la URL del servidor) |
 
 ### 1.4 Alcance de este plan
@@ -961,15 +961,15 @@ No se recortan: consentimiento, extracción y revisión del syllabus, diagnósti
 
 ## 7. Plan fase a fase
 
-Convenciones para todas las fases: una rama `feature/<tema>` por ajuste (lista en 16.1) que sale de `dev` una vez integrada la línea base, commits en español con Conventional Commits y el trailer de autoría que indique la sesión, pull request revisado hacia `dev` como **tope** (nunca `stage` ni `main`) y `push` solo a ramas `feature/*` (autorizado el 2026-11-07); la fusión a `dev` sigue la política de 16.3. Cada fase termina con `api/scripts/dev.sh all`, `ai/scripts/dev.sh all` o `app/scripts/dev.sh all` en verde según corresponda, y con `HANDOFF.md` y `proyecto/checklist.md` actualizados.
+Convenciones para todas las fases: una rama `feature/<tema>` por ajuste (lista en 16.1) que sale de `dev` una vez integrada la línea base, commits en español con Conventional Commits y el trailer de autoría que indique la sesión, pull request revisado hacia `dev` como **tope** (nunca `stage` ni `main`) y `push` solo a ramas `feature/*` (autorizado el 2026-11-07); la fusión a `dev` sigue la política de 16.3. Cada fase termina con `api/scripts/dev.sh all`, `ai/scripts/dev.sh all` o `app/scripts/dev.sh all` en verde según corresponda, y con `HANDOFF.md` y `proyecto/cohorte_1/checklist.md` actualizados.
 
 ### Fase 0 · Decisiones, línea base en `dev` y congelamiento del alcance
 
 | Aspecto | Detalle |
 | --- | --- |
 | Objetivo | Cerrar las definiciones bloqueantes de la sección 9, congelar el alcance y llevar a `dev` el estado actual del proyecto como línea base |
-| Entregables | Sección 9 con la respuesta del dueño; `proyecto/decisiones-pendientes.md` y `proyecto/checklist.md` actualizados (hecho en esta revisión, a confirmar); especificación de Figma v3 en `design/03-prototipo-alta-fidelidad/v3/` (hecha); `GIT_VERSIONING_STRATEGY.md` con `dev` y `stage`; borrador del `.env.example` (Anexo D); `dev` con la línea base |
-| Tareas | 1. El dueño y el director leen este plan (0.1, 0.2 y las secciones 13 a 17). 2. Las DEF quedaron respondidas el 2026-11-07 (R-11) y las no mencionadas toman su valor por defecto; queda confirmar la sección 18.4. 3. **Línea base:** el dueño integra a `dev`, con pull request, primero `feature/phase-0-prototypes` y luego `feature/plan-v3-decisiones` (hoy `dev`, `stage` y `main` solo tienen el brief). 4. Registrar cada respuesta en `proyecto/decisiones-pendientes.md`. 5. Verificar fuera de esta sesión los datos que el plan no pudo comprobar (modelos y tarifas vigentes, condiciones de YouTube; sección 17) |
+| Entregables | Sección 9 con la respuesta del dueño; `docs/cohorte_1/decisiones.md` y `proyecto/cohorte_1/checklist.md` actualizados (hecho en esta revisión, a confirmar); especificación de Figma v3 en `design/03-prototipo-alta-fidelidad/v3/` (hecha); `GIT_VERSIONING_STRATEGY.md` con `dev` y `stage`; borrador del `.env.example` (Anexo D); `dev` con la línea base |
+| Tareas | 1. El dueño y el director leen este plan (0.1, 0.2 y las secciones 13 a 17). 2. Las DEF quedaron respondidas el 2026-11-07 (R-11) y las no mencionadas toman su valor por defecto; queda confirmar la sección 18.4. 3. **Línea base:** el dueño integra a `dev`, con pull request, primero `feature/phase-0-prototypes` y luego `feature/plan-v3-decisiones` (hoy `dev`, `stage` y `main` solo tienen el brief). 4. Registrar cada respuesta en `docs/cohorte_1/decisiones.md`. 5. Verificar fuera de esta sesión los datos que el plan no pudo comprobar (modelos y tarifas vigentes, condiciones de YouTube; sección 17) |
 | Entrada | Este plan leído |
 | Salida verificable | `git log origin/dev` contiene `c9fc9a2` y este plan; las DEF bloqueantes tienen respuesta escrita; el director aprueba el plan |
 | Riesgos | Decisiones demoradas: se usa el valor por defecto de la sección 9 y se anota. Conflictos al integrar la línea base: se resuelven en el pull request, no con reescritura de historia |
@@ -1263,10 +1263,10 @@ B = bloqueante (sin respuesta no empieza la fase). A = asumible con el valor por
 | `README.md` | Refactorizar | Estado, servicios (`ai` en 8030), estructura, puesta en marcha | F8, F11 |
 | `HANDOFF.md` | Refactorizar | Qué funciona tras cada fase; deuda nueva (supresión, banco, presupuesto) | Cada fase |
 | `CHANGELOG.md` | Refactorizar | Entrada por fase, con el `!` de los cambios incompatibles | Cada fase |
-| `proyecto/checklist.md` | Refactorizar | Secciones nuevas (servicio de IA, datos personales, piloto, evaluación humana); tareas de v3; avance recalculado con `proyecto/scripts/avance.sh --actualizar` | F0 y cada fase |
-| `proyecto/decisiones-pendientes.md` | Refactorizar | D-01, D-02, D-04, D-05, D-06 cerradas con su ADR; DEF nuevas | F0, F2, F4, F5 |
+| `proyecto/cohorte_1/checklist.md` | Refactorizar | Secciones nuevas (servicio de IA, datos personales, piloto, evaluación humana); tareas de v3; avance recalculado con `proyecto/cohorte_1/scripts/avance.sh --actualizar` | F0 y cada fase |
+| `docs/cohorte_1/decisiones.md` | Refactorizar | D-01, D-02, D-04, D-05, D-06 cerradas con su ADR; DEF nuevas | F0, F2, F4, F5 |
 | `proyecto/brief.md` | **No tocar hasta la Fase 10**; entonces versión 2 con control de cambios, aprobada por el director. La anterior queda con la etiqueta `brief-v1` | Sección 15, vocabulario (13), OE3 (DEF-19), métricas y lecciones | F10 |
-| `proyecto/flujo-por-usuario.md` | Conservar y versionar | Agregar pasos de v3 (hoja de vida, consentimiento, intentos extra) | F1 |
+| `docs/cohorte_1/flujo-por-usuario.md` | Conservar y versionar | Agregar pasos de v3 (hoja de vida, consentimiento, intentos extra) | F1 |
 | `docs/adr/README.md` y ADR 0007 a 0021 | Nuevos | Sección 5.6 | F1 a F9 |
 | `docs/adr/0004` y `0006` | Conservar | Nota «complementado por» 0014 y 0017 | F7, F8 |
 | `api/README.md` | Refactorizar | Endpoints, roles, integración con `ai/` | F3 |
@@ -1535,7 +1535,7 @@ Tipo: **D** = decisión del dueño o del director, **V** = verificación que no 
 | P-08 | Crear y poner en `.env` las claves de LLM y de YouTube, con presupuesto aprobado | D | F4 | Sí para F4 con LLM real |
 | P-09 | Revisión de ética y de datos personales con jurídica: base legal del piloto, textos de A3, A3b y A3c (hoy mencionan fechas vencidas y a la universidad; pasan a `ORGANIZATION_NAME`) | D | F3 y F9 | Sí para el piloto (DEF-05) |
 | P-10 | Capacidad real del equipo: el plan supone tres frentes en paralelo; con uno solo, 54–68 jornadas | D | F0 | No, cambia el calendario |
-| P-11 | Archivos sin versionar del dueño (`design/03…/index.html`, `design/04…/README.md`, `proyecto/flujo-por-usuario.md`, `proyecto/mpc-figma.json`): **no importan ahora**; entran a la rama de la fase que los usa (`flujo-por-usuario.md` en F1, el resto cuando se toque su carpeta). No se tocaron | T | F1 | No |
+| P-11 | Archivos sin versionar del dueño (`design/03…/index.html`, `design/04…/README.md`, `docs/cohorte_1/flujo-por-usuario.md`, `proyecto/mpc-figma.json`): **no importan ahora**; entran a la rama de la fase que los usa (`flujo-por-usuario.md` en F1, el resto cuando se toque su carpeta). No se tocaron | T | F1 | No |
 | P-12 | Archivos pesados de Figma y `.ipynb_checkpoints/`: **no importan ahora**; se agregan a `.gitignore` en la Fase 0 salvo que el dueño decida versionar las capturas (DEF-17) | T | F0 | No |
 | P-13 | La variable de Figma `error/acento` (923) se infirió (no se usa en ninguna pantalla); confirmar el valor con el dueño del diseño | V | F7 | No |
 | P-14 | El archivo de Figma en vivo podría tener cambios posteriores al 2026-10-20 (el JSON exportado es de esa fecha) | V | F7 | No |
@@ -1719,14 +1719,14 @@ Ejecutar todo a la vez no es posible en bloque, porque cada fase usa lo que fija
 
 1. Cada agente trabaja en su rama `feature/*` y en su propio `git worktree`; nunca en `stage` ni `main`, y solo hace `push` a su propia rama `feature/*`, nunca con fuerza.
 2. Cada agente es dueño de sus carpetas (`database/` para F2, `api/` para F3, `ai/` y `prompts/` para F4 y F5, `app/` para F7, `keycloak/`, `.github/` y compose para F8). Fuera de ellas solo lee.
-3. Los archivos compartidos (`docker-compose.yml`, `.env.example`, `HANDOFF.md`, `CHANGELOG.md`, `proyecto/checklist.md`, `docs/adr/README.md`) los consolida **un solo agente integrador**; los demás dejan sus cambios en su bitácora.
+3. Los archivos compartidos (`docker-compose.yml`, `.env.example`, `HANDOFF.md`, `CHANGELOG.md`, `proyecto/cohorte_1/checklist.md`, `docs/adr/README.md`) los consolida **un solo agente integrador**; los demás dejan sus cambios en su bitácora.
 4. Los agentes no leen ni imprimen `.env`; prueban con `FakeLlmProvider`, `FakeAiService`, `smartmentor_test` y Mailpit. Las corridas con servicios reales las lanza el dueño con sus credenciales.
 5. El modelo de cada agente sale de la sección 8; nunca Fable.
 6. Cada agente corre `dev.sh all` de su servicio antes de dar una tarea por cerrada y registra el resultado, incluso si falla.
 
 ### 19.3 Bitácora para el brief v2
 
-Cada agente escribe `proyecto/bitacora/F<NN>-<tema>.md` mientras trabaja, no al final. El contenido alimenta la Fase 10.
+Cada agente escribe `docs/cohorte_1/bitacora/F<NN>-<tema>.md` mientras trabaja, no al final. El contenido alimenta la Fase 10.
 
 | Sección | Qué anota |
 | --- | --- |
@@ -1769,7 +1769,7 @@ Regla del dueño (2026-11-07, R-13): se olvida todo lo de v2 y anteriores; **tod
 
 | Residuo de v2 | Dónde está | Qué pasa con él | Fase |
 | --- | --- | --- | --- |
-| Claves de Figma `wIzBv0tOtRaoVmldEXPyff` y `5oCXyjG1qaqc4XJNnDd8bN` | `design/03…/README.md`, `design/03…/index.html`, `app/README.md`, `proyecto/checklist.md`, `CHANGELOG.md` | Se reemplazan por `atp2fZdSolEoaww3n9jRLg`. `index.html` y el checklist ya están corregidos; el README de `design/03` lo reescribe la rama `feature/design-use-cases-v3`. Las entradas históricas del `CHANGELOG.md` no se reescriben | F1, F7 |
+| Claves de Figma `wIzBv0tOtRaoVmldEXPyff` y `5oCXyjG1qaqc4XJNnDd8bN` | `design/03…/README.md`, `design/03…/index.html`, `app/README.md`, `proyecto/cohorte_1/checklist.md`, `CHANGELOG.md` | Se reemplazan por `atp2fZdSolEoaww3n9jRLg`. `index.html` y el checklist ya están corregidos; el README de `design/03` lo reescribe la rama `feature/design-use-cases-v3`. Las entradas históricas del `CHANGELOG.md` no se reescriben | F1, F7 |
 | Prototipo de Streamlit de la Fase 0 (`app/src`: páginas `student`, `teacher`, `admin`, datos de ejemplo) | `app/src/pages/*`, `app/src/clients/sample_data.py` | Se rehace desde Figma v3; solo se conserva el andamiaje técnico (1.3) | F7 |
 | Dominios y CRUD de la API con `student` y `teacher` | `api/app/domains/*`, 35 archivos en total con esos términos | Se reemplazan por el modelo `v2.0.0` de la base y los casos de uso v3 | F3 |
 | Esquema `v1.0.x` de Liquibase y semillas `student`, `teacher` | `database/liquibase/changelog/v1.0.*` | Se retira con el re-base `v2.0.0` (etiqueta `schema-v1-final`) | F2 |
@@ -1901,7 +1901,7 @@ Se actualiza cada vez que un agente termina o se consolida una rama. Estados: �
 | Ingesta por consulta | La API escribe el resultado de un trabajo de IA cuando alguien consulta su estado o lo encuentra el barrido |
 | Re-base | Reemplazar el historial de Liquibase por una versión inicial nueva en bases vacías |
 | P0, P1, P2 | Prioridad: imprescindible para el hito, deseable antes del piloto, recortable |
-| P1, P2, P3 del aporte | Diagnóstico, motor de ruta y calidad de la IA (`proyecto/flujo-por-usuario.md`); no confundir con las prioridades |
+| P1, P2, P3 del aporte | Diagnóstico, motor de ruta y calidad de la IA (`docs/cohorte_1/flujo-por-usuario.md`); no confundir con las prioridades |
 | QWK | Kappa ponderado cuadrático (acuerdo LLM frente a humano) |
 | κ | Kappa de Cohen (acuerdo entre dos expertos) |
 | U1x | Pantallas de carga de la IA en Figma (U1a a U1d) |

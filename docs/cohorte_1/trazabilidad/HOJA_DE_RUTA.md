@@ -1,6 +1,6 @@
 # Hoja de ruta
 
-Lo que falta para llegar al hito del brief (el flujo corre de punta a punta con el LLM real) y al piloto. Arranca del estado de `dev` en `d8de841` (2026-11-12). Estados e IDs en el [README](README.md#estados). Las fases F0–F11 son las del [plan v3](../../PLAN_IMPLEMENTACION_V3.md#7-plan-fase-a-fase).
+Lo que falta para llegar al hito del brief (el flujo corre de punta a punta con el LLM real) y al piloto. Arranca del estado de `dev` en `d8de841` (2026-11-12). Estados e IDs en el [README](TRAZABILIDAD.md#cómo-se-lleva-este-registro). Las fases F0–F11 son las del [plan v3](../../../PLAN_IMPLEMENTACION_V3.md#7-plan-fase-a-fase).
 
 **Última actualización:** 2026-11-14
 
@@ -18,7 +18,7 @@ Lo que falta para llegar al hito del brief (el flujo corre de punta a punta con 
 
 **Fase actual: F6 (integración de punta a punta, el hito del brief), en paralelo con lo que le queda a F7 (la interfaz con la API real).** Revisado el 2026-11-12 14:59.
 
-Fuentes: el [tablero del plan](../../PLAN_IMPLEMENTACION_V3.md#21-tablero-de-avance-del-plan) (actualizado el 2026-11-07 y el 2026-11-10), cuyos commits de evidencia se comprobaron con `git merge-base --is-ancestor` y **todos están en `dev`**; los PR 1 a 5; y este seguimiento. «Sin verificar» quiere decir que no se ejecutó ni se encontró una evidencia escrita.
+Fuentes: el [tablero del plan](../../../PLAN_IMPLEMENTACION_V3.md#21-tablero-de-avance-del-plan) (actualizado el 2026-11-07 y el 2026-11-10), cuyos commits de evidencia se comprobaron con `git merge-base --is-ancestor` y **todos están en `dev`**; los PR 1 a 5; y este seguimiento. «Sin verificar» quiere decir que no se ejecutó ni se encontró una evidencia escrita.
 
 | Fase | Qué es | Estado | Evidencia | Lo que falta | Tareas |
 | --- | --- | --- | --- | --- | --- |
@@ -31,9 +31,9 @@ Fuentes: el [tablero del plan](../../PLAN_IMPLEMENTACION_V3.md#21-tablero-de-ava
 | F6 | Integración de punta a punta (**hito**) | ✔ **Hecha** (2026-11-16) | Syllabus real a temas (2026-11-10); 4 aprendices simulados con Gemini real (2026-11-12, [Evidencia de F6](#evidencia-de-f6-2026-11-12)). **Recorrido completo por la interfaz con el syllabus real del curso 2**, del syllabus al badge (T-032), y recorridos reales del aprendiz y del staff (T-010 / T-011), 2026-11-15 y 16 | El syllabus del curso piloto (T-031) pasó a la siguiente fase | T-010, T-011, T-032 |
 | F7 | Interfaz v3 | ✔ **En `dev`** · revalidación del equipo pendiente | Las 96 pantallas tienen página y leen la API real; revisión visual frente a Figma (T-034, 2026-11-14) y diferencias V-033 a V-101 corregidas o aceptadas; pantallas sin ver revisadas (T-062). Interfaz con 1083 pruebas (2026-11-17) | Que el equipo cruce cada pantalla en el navegador (G-001: 74 de 96 validadas por agente) | T-010 a T-024, T-033, T-034, T-062 |
 | F8 | Keycloak, infraestructura y CI | ✔ En `dev` · salida sin verificar | `995dbd9`: realm v3, compose y `.github/workflows/ci.yml` | `docker compose up` en un PC limpio en menos de 10 minutos (sin verificar). Contraseña SMTP de Keycloak (P-19). Endurecimiento antes de datos reales | T-050 |
-| F9 | Evaluación y piloto | ◐ Experimentos hechos · piloto en la siguiente fase | Métricas y notebook con la base real (R-006). Experimentos E2, E3, E5, E6 y E7 con jueces-agente y E8 con el log real (R-005, 2026-11-15 y 16; [resumen](../../docs/evaluation/results/resumen-r005-2026-11-16.md)) | Calibración humana de los jueces, usabilidad (SUS), piloto con personas reales y textos legales: pasan a la siguiente fase (ver «Migrados» en [`PENDIENTES.md`](PENDIENTES.md)) | T-040 a T-043, R-005 |
+| F9 | Evaluación y piloto | ◐ Experimentos hechos · piloto en la siguiente fase | Métricas y notebook con la base real (R-006). Experimentos E2, E3, E5, E6 y E7 con jueces-agente y E8 con el log real (R-005, 2026-11-15 y 16; [resumen](../../evaluation/results/resumen-r005-2026-11-16.md)) | Calibración humana de los jueces, usabilidad (SUS), piloto con personas reales y textos legales: pasan a la siguiente fase (ver «Migrados» en [`TRAZABILIDAD.md`](TRAZABILIDAD.md)) | T-040 a T-043, R-005 |
 | F10 | Revisión final, despliegue y brief v2 | ◐ En curso | Brief v2 en `dev` (T-051, PR 90 y 91, cerrado el 2026-11-17). Documentación de seguimiento, checklist y HANDOFF al día el 2026-11-17 | Documento final. El despliegue para el piloto pasa a la siguiente fase (T-043) | T-003, T-051 |
-| F11 | Cierre y traspaso | ◐ En curso | Notas de la versión en `CHANGELOG.md` y texto del Release en [`release-v1.0-cohorte1.md`](../release-v1.0-cohorte1.md) (PR 95, 2026-11-17) | Que el dueño del repositorio promueva `dev` → `stage` → `main`, cree la etiqueta `v1.0-cohorte1` y publique el Release; traspaso de accesos | T-052 |
+| F11 | Cierre y traspaso | ◐ En curso | Notas de la versión en `CHANGELOG.md` y texto del Release en [`release-v1.0-cohorte1.md`](../release.md) (PR 95, 2026-11-17) | Que el dueño del repositorio promueva `dev` → `stage` → `main`, cree la etiqueta `v1.0-cohorte1` y publique el Release; traspaso de accesos | T-052 |
 
 Resumen al 2026-11-17: **hechas 9** (F0 a F8 en lo técnico; F0 y F1 esperan la aprobación del director y F8 la prueba en un PC limpio) y **en curso 3** (F9 con el piloto en la siguiente fase, F10 con el documento final y F11 con la publicación del release). El resumen anterior, del 2026-11-14, contaba 6 hechas, 3 en curso y 2 pendientes.
 
@@ -43,7 +43,7 @@ Resumen al 2026-11-17: **hechas 9** (F0 a F8 en lo técnico; F0 y F1 esperan la 
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | T-001 | Crear la carpeta de seguimiento (esta hoja, bitácora, bugs, Figma, subidas y mejoras) | — | — | ✔ En `dev` (PR 6, `42b14df`) | 2026-11-12 13:57 | 2026-11-12 14:00 | `feature/seguimiento-trazabilidad` · `ee2ee75` |
 | T-002 | Llevar a `dev` el arreglo del bloqueo API ↔ `ai/` ([B-001](BUGS.md)) | F6 | — | ✔ En `dev` (PR 6, `42b14df`) | 2026-11-12 14:01 | 2026-11-12 14:01 | `feature/seguimiento-trazabilidad` · `4ea823f` (también en `fix/bloqueo-trabajos-ia-a-dev` · `0699da7`, sin subir) |
-| T-003 | Poner al día `proyecto/checklist.md`, `HANDOFF.md`, `app/README.md` y `CHANGELOG.md` ([B-002](BUGS.md)) | F10 | T-002 | ✔ En `dev` (PR 7): el checklist marca solo lo que tiene evidencia (72 de 120, 60 %; antes 28 %), el HANDOFF está reescrito, y se actualizaron el estado de `app/README.md` y el CHANGELOG del plan v3 | 2026-11-13 10:40 | 2026-11-13 10:40 | `feature/hoja-de-ruta-f6-f7` |
+| T-003 | Poner al día `proyecto/cohorte_1/checklist.md`, `HANDOFF.md`, `app/README.md` y `CHANGELOG.md` ([B-002](BUGS.md)) | F10 | T-002 | ✔ En `dev` (PR 7): el checklist marca solo lo que tiene evidencia (72 de 120, 60 %; antes 28 %), el HANDOFF está reescrito, y se actualizaron el estado de `app/README.md` y el CHANGELOG del plan v3 | 2026-11-13 10:40 | 2026-11-13 10:40 | `feature/hoja-de-ruta-f6-f7` |
 
 ## Etapa 1 · Conectar con la API real las pantallas que faltan
 
@@ -62,7 +62,7 @@ Se sigue el patrón del PR 3: cambios **aditivos** en la API, un adaptador por p
 | T-015c | Métricas globales: catálogo de 29 métricas con meta y estado calculados en la API (decisión del dueño) | AD3 | — | ✔ En `dev` (PR 6, `42b14df`) | 2026-11-12 14:51 | 2026-11-12 14:56 | `feature/seguimiento-trazabilidad` · `d47df63` |
 | T-015d | Piloto y vista previa de la ruta fija: el piloto se busca con `GET /pilots` ([B-006](BUGS.md)), y se agregan la ruta, los consentimientos, los temas con ítems y la vista previa con nombres | AD4, AD4b | — | ✔ En `dev` (PR 6, `42b14df`) | 2026-11-12 14:28 | 2026-11-12 14:33 | `feature/seguimiento-trazabilidad` · `d47df63` |
 | T-015e | Cursos, rutas e inscripciones: nombre del aprendiz y consentimiento al piloto en la API; dueño del curso desde `owner_user_id` | AD5 | — | ✔ En `dev` (PR 6, `42b14df`) | 2026-11-12 14:38 | 2026-11-12 14:42 | `feature/seguimiento-trazabilidad` · `d47df63` |
-| T-015f | Catálogo de prompts: revisar si lee la API o `prompts/catalog.yaml` | C4 | — | ✔ Revisado: no hay ruta en la API y C4 es una copia de `prompts/catalog.yaml`, con los 13 prompts, versiones y nombres iguales. Falta una prueba que avise si se desincronizan ([M-008](MEJORAS.md)) | 2026-11-13 10:22 | 2026-11-13 10:22 | sin cambios de código |
+| T-015f | Catálogo de prompts: revisar si lee la API o `prompts/catalog.yaml` | C4 | — | ✔ Revisado: no hay ruta en la API y C4 es una copia de `prompts/catalog.yaml`, con los 13 prompts, versiones y nombres iguales. Falta una prueba que avise si se desincronizan ([M-008](TRAZABILIDAD.md#mejoras-propuestas)) | 2026-11-13 10:22 | 2026-11-13 10:22 | sin cambios de código |
 | T-016 | Vista previa de la ruta fija | AD4b, E5b | T-015 | ◐ AD4b hecho en T-015d. E5b (la ruta fija que ve el aprendiz) el PR 5 ya está en `dev`; solo se puede ver con un aprendiz del grupo de control del piloto | 2026-11-12 14:28 | | |
 | T-017 | Revisar si las demás pantallas del instructor ya leen la API real: nuevo curso, syllabus, grafo y panel de ruta | D1b–D2d, D3b | — | ✔ Leen la API real. Con el cliente de la app y datos reales de los cursos 2, 4 y 5 se leyeron bien temas, grafo, panel de la ruta y Mis cursos (10 de 10). El dueño ya creó un curso desde un syllabus y lo publicó por la UI (D1b, D1c, D2). No se probó guardar la configuración de la ruta (D3b) para no cambiar los cursos compartidos | 2026-11-13 10:22 | 2026-11-13 10:22 | sin cambios de código |
 
@@ -86,7 +86,7 @@ Antes de codificarlos se le avisa al dueño (ver [FIGMA.md](FIGMA.md)).
 | T-031 | Conseguir el syllabus real del curso (Carlos Villada) | Dueño | ⛔ Dueño |
 | T-032 | Corrida completa: syllabus → temas → contenido → diagnóstico → ruta → quiz → final → badge, con costo y latencia anotados | T-002, T-010, T-011, T-030, T-031 | ◐ Hecha por la API con 3 cursos y 4 aprendices (2026-11-12, [evidencia](#evidencia-de-f6-2026-11-12)). Falta con el syllabus real (T-031) y recorriendo la UI del aprendiz (T-010, T-011) |
 | T-033 | Verificar en el navegador que la nota del LLM aparece después de guardar (cambio 6 del PR 3) | Autorización para levantar la app | ☐ Se puede hacer: el stack está arriba |
-| T-034 | Revisión visual de todas las pantallas frente a Figma ([M-005](MEJORAS.md)) | Autorización para levantar la app | ◐ Revisadas E1, E6, A6, A7, D1 a D5f y AD1 a AD5 (2026-11-13 13:35); encontró B-014 y V-001 a V-032 ([FIGMA.md](FIGMA.md#revisión-visual-t-034)). Las del aprendiz siguen: el PR 5 ya está en `dev` |
+| T-034 | Revisión visual de todas las pantallas frente a Figma ([M-005](TRAZABILIDAD.md#mejoras-propuestas)) | Autorización para levantar la app | ◐ Revisadas E1, E6, A6, A7, D1 a D5f y AD1 a AD5 (2026-11-13 13:35); encontró B-014 y V-001 a V-032 ([FIGMA.md](FIGMA.md#revisión-visual-t-034)). Las del aprendiz siguen: el PR 5 ya está en `dev` |
 
 ### Evidencia de F6 (2026-11-12)
 
@@ -133,4 +133,4 @@ Lectura:
 
 ## Pendientes que solo puede resolver el dueño
 
-Están en la [sección 21 del plan](../../PLAN_IMPLEMENTACION_V3.md#21-tablero-de-avance-del-plan). Los que hoy bloquean esta hoja son T-030, T-031, T-040, T-043 y la autorización para levantar la app y correr las pruebas.
+Están en la [sección 21 del plan](../../../PLAN_IMPLEMENTACION_V3.md#21-tablero-de-avance-del-plan). Los que hoy bloquean esta hoja son T-030, T-031, T-040, T-043 y la autorización para levantar la app y correr las pruebas.

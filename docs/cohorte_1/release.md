@@ -1,6 +1,6 @@
 # Cohorte 1
 
-Texto del GitHub Release de `v1.0-cohorte1`, con el formato de la sección 13 de [`GIT_VERSIONING_STRATEGY.md`](../GIT_VERSIONING_STRATEGY.md). Al final están los pasos para publicarlo (T-052).
+Texto del GitHub Release de `v1.0-cohorte1`, con el formato de la sección 13 de [`GIT_VERSIONING_STRATEGY.md`](../../GIT_VERSIONING_STRATEGY.md). Al final están los pasos para publicarlo (T-052).
 
 ## Versión
 
@@ -10,7 +10,7 @@ Texto del GitHub Release de `v1.0-cohorte1`, con el formato de la sección 13 de
 
 SmartMentor genera rutas de aprendizaje personalizadas a partir de un syllabus. El instructor carga el syllabus y, si quiere, apuntes o lecturas. La IA extrae los temas y sus prerrequisitos, y el instructor los revisa y publica. Al publicar, la IA genera las explicaciones con RAG, busca videos y crea los bancos de preguntas. El aprendiz hace un diagnóstico, recibe una ruta con los temas que necesita, estudia, presenta quizzes y la evaluación final, y obtiene un badge.
 
-Esta versión cierra la cohorte 1. El flujo completo funciona de punta a punta con el LLM real (Gemini), en un stack de cinco servicios con Docker Compose y una base compartida en Neon. El detalle de lo planteado frente a lo logrado está en el [brief v2](brief-v2.md), y la lista de cambios en el [CHANGELOG](../CHANGELOG.md).
+Esta versión cierra la cohorte 1. El flujo completo funciona de punta a punta con el LLM real (Gemini), en un stack de ocho servicios con Docker Compose y una base compartida en Neon. El detalle de lo planteado frente a lo logrado está en el [brief de la cohorte 1](../../proyecto/cohorte_1/brief.md), y la lista de cambios en el [CHANGELOG](../../CHANGELOG.md).
 
 ## Funcionalidades
 
@@ -23,7 +23,7 @@ Esta versión cierra la cohorte 1. El flujo completo funciona de punta a punta c
 
 ## Métricas
 
-Los experimentos se hicieron con **jueces-agente** (Claude Opus y Sonnet), a ciegas y sobre datos de prueba. **Los jueces no son expertos humanos: los resultados son indicativos.** Resumen en [`resumen-r005-2026-11-16.md`](../docs/evaluation/results/resumen-r005-2026-11-16.md).
+Los experimentos se hicieron con **jueces-agente** (Claude Opus y Sonnet), a ciegas y sobre datos de prueba. **Los jueces no son expertos humanos: los resultados son indicativos.** Resumen en [`resumen-r005-2026-11-16.md`](../evaluation/results/resumen-r005-2026-11-16.md).
 
 | Experimento | Resultado | Meta | Cumple |
 | --- | --- | --- | --- |
@@ -46,14 +46,14 @@ Los experimentos se hicieron con **jueces-agente** (Claude Opus y Sonnet), a cie
 
 ## Informe
 
-- Resultados de los experimentos: [`docs/evaluation/results/`](../docs/evaluation/results/resumen-r005-2026-11-16.md).
-- Métricas de la cohorte 1 con la base real: [`metrics-cohort1-2026-11-15.md`](../docs/evaluation/results/metrics-cohort1-2026-11-15.md) y el cuaderno [`notebooks/metrics_cohort1.ipynb`](../notebooks/metrics_cohort1.ipynb).
-- Brief v2: [`proyecto/brief-v2.md`](brief-v2.md).
-- Seguimiento: [`proyecto/seguimiento/PENDIENTES.md`](seguimiento/PENDIENTES.md).
+- Resultados de los experimentos: [`docs/evaluation/results/`](../evaluation/results/resumen-r005-2026-11-16.md).
+- Métricas de la cohorte 1 con la base real: [`metrics-cohort1-2026-11-15.md`](../evaluation/results/metrics-cohort1-2026-11-15.md) y el cuaderno [`notebooks/metrics_cohort1.ipynb`](../../notebooks/metrics_cohort1.ipynb).
+- Brief de la cohorte 1: [`proyecto/cohorte_1/brief.md`](../../proyecto/cohorte_1/brief.md).
+- Seguimiento: [`docs/cohorte_1/trazabilidad/TRAZABILIDAD.md`](trazabilidad/TRAZABILIDAD.md).
 
 ## Pasos para publicarlo (dueño del repositorio)
 
-Según la [estrategia de versiones](../GIT_VERSIONING_STRATEGY.md), la etiqueta va sobre `main` y las promociones las hace el dueño del repositorio:
+Según la [estrategia de versiones](../../GIT_VERSIONING_STRATEGY.md), la etiqueta va sobre `main` y las promociones las hace el dueño del repositorio:
 
 1. Abrir y fusionar un PR de `dev` a `stage`.
 2. Abrir y fusionar un PR de `stage` a `main`.
@@ -69,7 +69,7 @@ Según la [estrategia de versiones](../GIT_VERSIONING_STRATEGY.md), la etiqueta 
 4. Crear el GitHub Release con este texto, sin la sección «Pasos para publicarlo»:
 
    ```bash
-   gh release create v1.0-cohorte1 --title "Cohorte 1 - Versión 1.0" --notes-file proyecto/release-v1.0-cohorte1.md
+   gh release create v1.0-cohorte1 --title "Cohorte 1 - Versión 1.0" --notes-file docs/cohorte_1/release.md
    ```
 
-5. En `proyecto/seguimiento/PENDIENTES.md`, pasar T-052 a «Realizado».
+5. En `docs/cohorte_1/trazabilidad/TRAZABILIDAD.md`, pasar T-052 a «Realizado».

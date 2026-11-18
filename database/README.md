@@ -5,7 +5,7 @@ Gestión de la base de datos de SmartMentor: **PostgreSQL 17 + pgvector 0.8.7**,
 - Decisiones: [ADR 0001 (PostgreSQL + pgvector)](../docs/adr/0001-postgres-pgvector.md), [ADR 0002 (Liquibase)](../docs/adr/0002-liquibase-schema-versioning.md), [ADR 0007 (re-base v2.0.0)](../docs/adr/0007-schema-rebase-v2.md), [ADR 0009 (propiedad de los datos)](../docs/adr/0009-data-ownership-api-and-ai.md), [ADR 0012 (embeddings 768)](../docs/adr/0012-embedding-model-and-dimension.md), [ADR 0019 (usuarios de mínimo privilegio)](../docs/adr/0019-least-privilege-db-users.md) y [ADR 0021 (roles neutros)](../docs/adr/0021-neutral-roles-and-label-glossary.md).
 - Operación de Liquibase (escenarios y comandos): [`liquibase/README.md`](liquibase/README.md).
 - Plan de origen: [`PLAN_IMPLEMENTACION_V3.md`](../PLAN_IMPLEMENTACION_V3.md), sección 5.2.
-- Decisiones abiertas que afectan el modelo: [`proyecto/decisiones-pendientes.md`](../proyecto/decisiones-pendientes.md).
+- Decisiones abiertas que afectan el modelo: [`docs/cohorte_1/decisiones.md`](../docs/cohorte_1/decisiones.md).
 
 ## Estructura
 
@@ -222,9 +222,9 @@ database/scripts/neon-to-local.sh restore [CARPETA] [--yes] # copia la base loca
 database/scripts/neon-to-local.sh sync                      # pull + restore
 ```
 
-`restore` hace antes una copia de la base local con `backup.sh`, detiene `api`, `ai`, `ai-worker` y `keycloak`, recrea las bases con `bootstrap.sh` y restaura con los dueños de siempre. No levanta los servicios: apunta el `.env` a la base local (`DATABASE_HOST=postgres`, `DATABASE_SSL=false`, `DATABASE_JDBC_PARAMS` vacío y `KC_DB_URL` local) y ejecuta `docker compose up -d`.
+`restore` hace antes una copia de la base local con `backup.sh`, detiene `api`, `ai`, `ai-worker` y `keycloak`, recrea las bases con `bootstrap.sh` y restaura con los dueños de siempre. No levanta los servicios: apunta el `.env` a la base local (`DATABASE_HOST=postgres`, `DATABASE_SSL=false`, `DATABASE_JDBC_PARAMS` vacío ) y ejecuta `docker compose up -d`.
 
-**Cómo montarlo cada integrante:** quien genera el respaldo empaqueta la carpeta (`tar czf neon_<fecha>.tar.gz -C database/backups neon_<fecha>` y `sha256sum`) y la comparte por un canal privado del equipo (unidad compartida, no el repositorio). Cada integrante verifica el `sha256`, la extrae en `database/backups/` y ejecuta `database/scripts/neon-to-local.sh restore database/backups/neon_<fecha>`. El volcado de Keycloak trae hashes de contraseñas y llaves: **nunca lo subas al repositorio** (es público; `database/backups/` está ignorado por git).
+**Cómo montarlo cada integrante:** quien genera el respaldo empaqueta la carpeta (`tar czf neon_<fecha>.tar.gz -C database/backups neon_<fecha>` y `sha256sum`) y la comparte con el equipo. El respaldo de desarrollo de esta cohorte está versionado en `database/respaldos-equipo/` por decisión del dueño (ver [`RESTAURAR_NEON_EN_LOCAL.md`](RESTAURAR_NEON_EN_LOCAL.md)); un respaldo con datos reales nunca debe subirse al repositorio. Cada integrante verifica el `sha256`, la extrae en `database/backups/` y ejecuta `database/scripts/neon-to-local.sh restore database/backups/neon_<fecha>`. El volcado de Keycloak trae hashes de contraseñas y llaves: **nunca lo subas al repositorio** (es público; `database/backups/` está ignorado por git).
 
 
 **Cada integrante, después:** copia el `.env` compartido por un canal privado y ejecuta `scripts/local-up.sh`. Primera conexión tras una suspensión del cómputo gratuito de Neon: puede tardar unos segundos.
@@ -622,4 +622,4 @@ erDiagram
 
 ### Cómo se probó
 
-Ver la sección «Validación» de [`proyecto/bitacora/F02-database.md`](../proyecto/bitacora/F02-database.md): `liquibase validate`, `update`, `update-testing-rollback`, auditoría de las 34 tablas, `CHECK`, permisos de los usuarios y `reset-app-schema.sh`.
+Ver la sección «Validación» de [`docs/cohorte_1/bitacora/F02-database.md`](../docs/cohorte_1/bitacora/F02-database.md): `liquibase validate`, `update`, `update-testing-rollback`, auditoría de las 34 tablas, `CHECK`, permisos de los usuarios y `reset-app-schema.sh`.

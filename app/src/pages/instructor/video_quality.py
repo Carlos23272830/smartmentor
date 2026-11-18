@@ -2,7 +2,7 @@
 
 El índice (0 a 100), el estado y el mínimo de calificaciones salen de la API; antes de ese mínimo
 aparece «Midiendo». La API mide si el video fue útil, no una nota de 1 a 5 ni el efecto en el quiz
-(F-012 en `proyecto/seguimiento/FIGMA.md`): esas columnas muestran lo que haya.
+(F-012 en `docs/cohorte_1/trazabilidad/FIGMA.md`): esas columnas muestran lo que haya.
 Para un video «En revisión» el instructor decide qué hacer. El contrato no trae una ruta propia
 para esa decisión: se usa `PATCH /video-candidates/{id}` (ver la bitácora F07c).
 """

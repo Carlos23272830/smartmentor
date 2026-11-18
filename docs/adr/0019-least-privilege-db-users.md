@@ -3,7 +3,7 @@
 * **Estado:** Propuesto. Lo cierra la Fase 2 (bootstrap y changeset de permisos), con la propiedad de los datos del [ADR 0009](0009-data-ownership-api-and-ai.md)
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
-* **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 5.2.3, 5.2.4, 5.6 (notebook de métricas) y Anexo D; [`proyecto/decisiones-pendientes.md`](../../proyecto/decisiones-pendientes.md), D-05
+* **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 5.2.3, 5.2.4, 5.6 (notebook de métricas) y Anexo D; [`docs/cohorte_1/decisiones.md`](../cohorte_1/decisiones.md), D-05
 * **Relacionados:** [ADR 0001](0001-postgres-pgvector.md), [ADR 0002](0002-liquibase-schema-versioning.md), [ADR 0005](0005-keycloak-postgres-realm-versioned.md), [ADR 0007](0007-schema-rebase-v2.md), [ADR 0018](0018-personal-data-protection.md)
 
 ---

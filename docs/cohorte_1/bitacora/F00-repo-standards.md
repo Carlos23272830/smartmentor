@@ -54,4 +54,4 @@ Ninguno. El brief no menciona herramientas de calidad. Para el brief v2, la secc
 - `.gitignore`: nada. `.env.example`, `docker-compose.yml`: nada.
 - `docs/adr/README.md` / índice: enlazar `docs/standards/definition-of-done.md` y `CONTRIBUTING.md` cuando se consolide.
 - Cuando exista `ai/`: sumar su pyproject con `extend = "../ruff.toml"`, un trabajo `ai` en `ci.yml`, una entrada en `dependabot.yml` y su ruta en `files:` de Ruff en `.pre-commit-config.yaml`.
-- Checklist: marcar «CI mínima y estándares de repositorio» (`proyecto/checklist.md`, a cargo del integrador).
+- Checklist: marcar «CI mínima y estándares de repositorio» (`proyecto/cohorte_1/checklist.md`, a cargo del integrador).

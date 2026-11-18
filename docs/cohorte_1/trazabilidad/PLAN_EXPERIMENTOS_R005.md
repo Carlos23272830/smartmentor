@@ -1,18 +1,18 @@
 # Plan de los experimentos de R-005 (fase actual)
 
-Plan acordado con el dueño el 2026-11-16 para ejecutar los experimentos que se alcanzan en esta fase de [`R-005`](PENDIENTES.md). Va junto a `PENDIENTES.md` y se actualiza con cada experimento.
+Plan acordado con el dueño el 2026-11-16 para ejecutar los experimentos que se alcanzan en esta fase de [`R-005`](TRAZABILIDAD.md). Va junto a `TRAZABILIDAD.md` y se actualiza con cada experimento.
 
 ## 1. Alcance
 
 | Experimento | Meta | Estado en este plan |
 | --- | --- | --- |
-| E1, E8 | Ya ejecutados | Fuera del plan ([`e8-2026-11-15.md`](../../docs/evaluation/results/e8-2026-11-15.md)) |
+| E1, E8 | Ya ejecutados | Fuera del plan ([`e8-2026-11-15.md`](../../evaluation/results/e8-2026-11-15.md)) |
 | **E2** Estructuración del syllabus | F1 ≥ 0,85 | **Entra** |
 | **E3** Preguntas válidas | ≥ 80 % válidas y κ ≥ 0,6 | **Entra** |
 | **E5** Fidelidad y cobertura del RAG | Fidelidad ≥ 0,8 | **Entra** (la condición con lecturas depende de que lleguen) |
-| **E6** Videos por tema | P@3 ≥ 0,7 | **Entra** (herramienta lista: [`e6-videos.md`](../../docs/evaluation/e6-videos.md)) |
+| **E6** Videos por tema | P@3 ≥ 0,7 | **Entra** (herramienta lista: [`e6-videos.md`](../../evaluation/e6-videos.md)) |
 | **E7** Juez del sistema frente a un juez de referencia | QWK ≥ 0,6 | **Entra** |
-| E4, E9, E10 | Dependen del piloto | Migrados a la siguiente fase ([`PENDIENTES.md`](PENDIENTES.md)) |
+| E4, E9, E10 | Dependen del piloto | Migrados a la siguiente fase ([`TRAZABILIDAD.md`](TRAZABILIDAD.md)) |
 
 ## 2. Decisiones del dueño (2026-11-16)
 
@@ -62,7 +62,7 @@ Los evaluadores existen como cuentas porque anotan por la aplicación (D5b y D5c
 
 **Afinado de los jueces (antes de contar nada):**
 
-1. Cada juez recibe un perfil fijo con la rúbrica de [`metrics.md`](../../docs/evaluation/metrics.md) y el formato exacto de salida (el CSV de `data/eval/gold/`).
+1. Cada juez recibe un perfil fijo con la rúbrica de [`metrics.md`](../../evaluation/metrics.md) y el formato exacto de salida (el CSV de `data/eval/gold/`).
 2. **A ciegas:** no ven el `rank` del recomendador, ni el veredicto o puntaje del sistema, ni lo que anotó el otro juez. Cada juez trabaja en su propio contexto y no se comunica con el otro.
 3. **Prueba de práctica de 5 elementos** que no se cuentan: se revisa que entiendan la rúbrica y el formato.
 4. **Auto-consistencia:** el 10 % de los elementos se repite, mezclado, para medir si el mismo juez responde igual dos veces.
@@ -75,7 +75,7 @@ Los evaluadores existen como cuentas porque anotan por la aplicación (D5b y D5c
 - Las anotaciones entran **por la aplicación** (D5b, D5c, D5e) o por la carga de la API, nunca por commit. Los CSV con datos reales no se versionan.
 - Solo flujo normal de usuario: no se borra nada, no se toca la base ni Keycloak directamente, no se usa el simulador de aprendices.
 - Tope de IA del sistema: US$ 3 (hasta 5 con aviso). Se mide con `GET /api/v1/llm-call-logs/summary` antes y después de cada experimento y se detiene al 90 % del tope.
-- Cada experimento deja un resultado en `docs/evaluation/results/` (como el de E8) y una nota en [`PENDIENTES.md`](PENDIENTES.md) y en G-001 cuando toque pantallas.
+- Cada experimento deja un resultado en `docs/evaluation/results/` (como el de E8) y una nota en [`TRAZABILIDAD.md`](TRAZABILIDAD.md) y en G-001 cuando toque pantallas.
 - Los agentes no suben a `dev` ni a `stage` ni a `main`; los cambios de código siguen el flujo de ramas y PR.
 
 ## 7. Cada experimento
@@ -135,7 +135,7 @@ Los evaluadores existen como cuentas porque anotan por la aplicación (D5b y D5c
 | 2 | **E3** y **E6** en paralelo | Resultado y métricas revisados |
 | 3 | **E2** y **E7** | Verificación de los modelos de E2 resuelta |
 | 4 | **E5** | Lecturas recibidas y costo medido |
-| 5 | Consolidar | Resultados en `PENDIENTES.md`, G-001 y la tabla de resultados |
+| 5 | Consolidar | Resultados en `TRAZABILIDAD.md`, G-001 y la tabla de resultados |
 
 ## 9. Verificación previa (2026-11-16, solo lectura)
 
@@ -145,4 +145,4 @@ Los evaluadores existen como cuentas porque anotan por la aplicación (D5b y D5c
 
 ## 10. Después
 
-Con los resultados se actualizan la fila R-005 de `PENDIENTES.md` y las métricas del cuaderno `notebooks/metrics_cohort1.ipynb`. Lo que no se alcance pasa a la siguiente fase con su motivo.
+Con los resultados se actualizan la fila R-005 de `TRAZABILIDAD.md` y las métricas del cuaderno `notebooks/metrics_cohort1.ipynb`. Lo que no se alcance pasa a la siguiente fase con su motivo.

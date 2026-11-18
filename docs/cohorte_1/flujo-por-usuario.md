@@ -1,6 +1,6 @@
 # Flujo del prototipo por tipo de usuario
 
-Cada paso indica dónde se aplica el aporte de ciencia de datos del proyecto (ver [brief.md](brief.md)):
+Cada paso indica dónde se aplica el aporte de ciencia de datos del proyecto (ver [brief.md](../../proyecto/brief.md)):
 
 - 🔵 **P1 · Modelo de diagnóstico:** estimar el nivel del estudiante por tema.
 - 🟠 **P2 · Motor de ruta:** seleccionar y secuenciar recursos según la brecha detectada.
@@ -60,7 +60,7 @@ La columna **Objetivo** indica el objetivo específico del brief (OE1 a OE5, ver
 | 3b | **Piloto (v3, AD4):** define fechas y semilla, sortea las rutas personalizada y fija, verifica consentimientos e ítems equivalentes, e inicia el piloto. | OE5 | 🟢 P3: comparación con el grupo de ruta fija (d de Cohen). |
 | 4 | **Supervisión:** consulta el estado general del sistema y el log de llamadas al LLM. | OE5 | 🟢 P3: latencia, tasa de JSON inválido y costo por estudiante-ruta. |
 
-Los pasos con letra (1b, 3b, 7b…) son de la v3 del prototipo; conservan la numeración original de los demás. El vocabulario de roles de los documentos nuevos es Aprendiz, Instructor y Administrador ([glosario](../design/01-flujo-y-casos-de-uso/glosario.md)); este archivo conserva «estudiante» y «docente» como en el brief. El brief no detalla las pantallas del admin. Los pasos 3 y 4 son una inferencia a partir del Módulo 1.
+Los pasos con letra (1b, 3b, 7b…) son de la v3 del prototipo; conservan la numeración original de los demás. El vocabulario de roles de los documentos nuevos es Aprendiz, Instructor y Administrador ([glosario](../../design/01-flujo-y-casos-de-uso/glosario.md)); este archivo conserva «estudiante» y «docente» como en el brief. El brief no detalla las pantallas del admin. Los pasos 3 y 4 son una inferencia a partir del Módulo 1.
 
 ## Resumen: dónde vive cada pieza
 
@@ -72,7 +72,7 @@ Los pasos con letra (1b, 3b, 7b…) son de la v3 del prototipo; conservan la num
 
 ## Cruce con los objetivos específicos
 
-OE1 a OE5 son los objetivos específicos del [brief](brief.md#objetivos).
+OE1 a OE5 son los objetivos específicos del [brief](../../proyecto/brief.md#objetivos).
 
 | Objetivo específico | Pasos del flujo | Pieza | Medición |
 | --- | --- | --- | --- |
