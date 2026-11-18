@@ -153,7 +153,7 @@ El [cuaderno de métricas](../docs/evaluation/results/metrics-cohort1-2026-11-15
 
 ## 8. Lo que pasa a la siguiente fase
 
-El piloto con usuarios reales no se alcanzó en esta fase. Pasan 9 puntos del seguimiento ([`PENDIENTES.md`](seguimiento/PENDIENTES.md), sección «Migrados a la siguiente fase»):
+El piloto con usuarios reales no se alcanzó en esta fase. Pasan 10 puntos del seguimiento ([`PENDIENTES.md`](seguimiento/PENDIENTES.md), sección «Migrados a la siguiente fase»):
 
 | ID | Qué | Por qué pasa |
 | --- | --- | --- |
@@ -166,6 +166,7 @@ El piloto con usuarios reales no se alcanzó en esta fase. Pasan 9 puntos del se
 | T-031 | Syllabus real del curso piloto | Los experimentos usaron los cursos ya cargados |
 | T-050 | Endurecimiento antes de usar datos reales: rotar secretos, quitar el cliente de desarrollo y Keycloak con HTTPS y OTP | Obligatorio antes de E9 |
 | T-042 | Prueba de usabilidad (guion y SUS) | Se hace con usuarios reales |
+| B-049 | Explicación alterna al reprobar un quiz («Otra forma de verlo», E7b) | El prompt y la tarea de IA ya existen; falta que la API la pida y la guarde. Sirve sobre todo con aprendices reales |
 
 ## 9. Retos y dificultades
 
