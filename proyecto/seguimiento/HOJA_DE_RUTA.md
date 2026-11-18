@@ -28,14 +28,14 @@ Fuentes: el [tablero del plan](../../PLAN_IMPLEMENTACION_V3.md#21-tablero-de-ava
 | F3 | API v2 sin IA | ✔ En `dev` · se amplía | `995dbd9` y siguientes; 641 pruebas (tablero) y 651 (PR 3) | Cambios aditivos de T-012 a T-015 (subidos en `feature/seguimiento-trazabilidad`, sin PR; CI en verde: API 660, app 621, ai 463) | T-012 a T-015 |
 | F4 | `ai/` base: trabajos, syllabus y diagnóstico | ✔ En `dev` | `9000895`; syllabus real → Gemini → temas verificado el 2026-11-10 (tablero) | — | — |
 | F5 | `ai/`: contenido, evaluación y videos | ✔ En `dev` · **probado con el LLM real** | `9000895`: 400 pruebas con simulaciones. Con Gemini real (2026-11-12): las 10 tareas corrieron en 3 cursos (ver la evidencia de F6) | — | — |
-| F6 | Integración de punta a punta (**hito**) | ◐ **En curso · casi completa** | Syllabus real a temas (2026-11-10). PR 4, PR 5, PR 6 y PR 7 en `dev`. **2026-11-12: el dueño creó un curso desde un syllabus en la UI, y 4 aprendices simulados recorrieron por la API 3 cursos con Gemini real, de la inscripción a la insignia** (costo y latencia en [Evidencia de F6](#evidencia-de-f6-2026-11-12)) | Syllabus real del curso piloto (T-031). Repetir el recorrido del aprendiz en la UI, no solo por la API (el PR 5 ya está en `dev`; falta recorrerlo en el navegador) | T-031, T-032 |
-| F7 | Interfaz v3 | ◐ **En curso** | Las 96 pantallas tienen página en `dev`; 577 pruebas de la UI (PR 3) | Que todas las pantallas lean la API real (el catálogo, el perfil, el quiz y la ruta del aprendiz ya leen la API real, PR 5; T-011, T-015f, T-016, T-017). Estados que Figma no dibuja (T-020 a T-023). **Comparación visual con Figma, nunca hecha** (T-034) | T-010 a T-024, T-033, T-034 |
+| F6 | Integración de punta a punta (**hito**) | ✔ **Hecha** (2026-11-16) | Syllabus real a temas (2026-11-10); 4 aprendices simulados con Gemini real (2026-11-12, [Evidencia de F6](#evidencia-de-f6-2026-11-12)). **Recorrido completo por la interfaz con el syllabus real del curso 2**, del syllabus al badge (T-032), y recorridos reales del aprendiz y del staff (T-010 / T-011), 2026-11-15 y 16 | El syllabus del curso piloto (T-031) pasó a la siguiente fase | T-010, T-011, T-032 |
+| F7 | Interfaz v3 | ✔ **En `dev`** · revalidación del equipo pendiente | Las 96 pantallas tienen página y leen la API real; revisión visual frente a Figma (T-034, 2026-11-14) y diferencias V-033 a V-101 corregidas o aceptadas; pantallas sin ver revisadas (T-062). Interfaz con 1083 pruebas (2026-11-17) | Que el equipo cruce cada pantalla en el navegador (G-001: 74 de 96 validadas por agente) | T-010 a T-024, T-033, T-034, T-062 |
 | F8 | Keycloak, infraestructura y CI | ✔ En `dev` · salida sin verificar | `995dbd9`: realm v3, compose y `.github/workflows/ci.yml` | `docker compose up` en un PC limpio en menos de 10 minutos (sin verificar). Contraseña SMTP de Keycloak (P-19). Endurecimiento antes de datos reales | T-050 |
-| F9 | Evaluación y piloto | ◐ Herramientas hechas · faltan personas | `97ffd44`: métricas y notebook. AD3 ya muestra el catálogo de métricas (T-015c, subido sin PR) | Anotación de expertos, calificación humana, usabilidad (SUS) y piloto con personas reales. Textos legales | T-040 a T-043 |
-| F10 | Revisión final, despliegue y brief v2 | ☐ Pendiente | — | Todo; empieza después de F9. Incluye poner al día el checklist y el HANDOFF ([B-002](BUGS.md)) | T-003, T-051 |
-| F11 | Cierre y traspaso | ☐ Pendiente | — | Etiqueta `v1.0-cohorte1`, release y traspaso | T-052 |
+| F9 | Evaluación y piloto | ◐ Experimentos hechos · piloto en la siguiente fase | Métricas y notebook con la base real (R-006). Experimentos E2, E3, E5, E6 y E7 con jueces-agente y E8 con el log real (R-005, 2026-11-15 y 16; [resumen](../../docs/evaluation/results/resumen-r005-2026-11-16.md)) | Calibración humana de los jueces, usabilidad (SUS), piloto con personas reales y textos legales: pasan a la siguiente fase (ver «Migrados» en [`PENDIENTES.md`](PENDIENTES.md)) | T-040 a T-043, R-005 |
+| F10 | Revisión final, despliegue y brief v2 | ◐ En curso | Brief v2 en `dev` (T-051, PR 90 y 91, cerrado el 2026-11-17). Documentación de seguimiento, checklist y HANDOFF al día el 2026-11-17 | Documento final. El despliegue para el piloto pasa a la siguiente fase (T-043) | T-003, T-051 |
+| F11 | Cierre y traspaso | ◐ En curso | Notas de la versión en `CHANGELOG.md` y texto del Release en [`release-v1.0-cohorte1.md`](../release-v1.0-cohorte1.md) (PR 95, 2026-11-17) | Que el dueño del repositorio promueva `dev` → `stage` → `main`, cree la etiqueta `v1.0-cohorte1` y publique el Release; traspaso de accesos | T-052 |
 
-Resumen: **hechas 6** (F0 a F5 en lo técnico; F0 y F1 esperan la aprobación del director y F5 la corrida con el LLM real), **en curso 3** (F6, F7 y F9) y **pendientes 2** (F10 y F11). Casi todo lo que bloquea F6 lo tiene que resolver el dueño: el tope de gasto de Gemini y el syllabus real.
+Resumen al 2026-11-17: **hechas 9** (F0 a F8 en lo técnico; F0 y F1 esperan la aprobación del director y F8 la prueba en un PC limpio) y **en curso 3** (F9 con el piloto en la siguiente fase, F10 con el documento final y F11 con la publicación del release). El resumen anterior, del 2026-11-14, contaba 6 hechas, 3 en curso y 2 pendientes.
 
 ## Etapa 0 · Trazabilidad y puesta al día
 
@@ -127,9 +127,9 @@ Lectura:
 
 | ID | Tarea | Estado |
 | --- | --- | --- |
-| T-050 | Endurecimiento antes de datos reales: rotar los secretos del historial, quitar `smartmentor-dev-tools`, Keycloak con HTTPS | ☐ |
-| T-051 | Brief v2 a partir de las bitácoras | ☐ |
-| T-052 | Etiqueta `v1.0-cohorte1` y release | ☐ |
+| T-050 | Endurecimiento antes de datos reales: rotar los secretos del historial, quitar `smartmentor-dev-tools`, Keycloak con HTTPS | ⏭ Siguiente fase (obligatorio antes de usar datos reales) |
+| T-051 | Brief v2 a partir de las bitácoras | ✔ En `dev` (PR 90 y 91, 2026-11-16; cerrado por Carlos Villada el 2026-11-17) |
+| T-052 | Etiqueta `v1.0-cohorte1` y release | ◐ Notas en `dev` (PR 95, 2026-11-17); falta la publicación del dueño del repositorio |
 
 ## Pendientes que solo puede resolver el dueño
 

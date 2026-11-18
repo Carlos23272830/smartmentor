@@ -59,9 +59,11 @@ _Calculado el 2026-11-13 con `proyecto/scripts/avance.sh --actualizar`._
 | --- | --- | --- |
 | **Fase 0: prototipado** | Hecha en lo técnico | Prototipo en Figma v3 y las 96 pantallas en Streamlit. Falta: aprobación del flujo por el director y prueba de usabilidad |
 | **Fundamentos** | Hecha en lo técnico | Modelo de datos v2.0.0, contratos, CI y estándares en `dev`. Falta: estado del arte y syllabus real del curso piloto |
-| **Flujo completo** | Casi completa (F6) | El 2026-11-12, con Gemini real, se creó un curso desde un syllabus y 4 aprendices simulados lo recorrieron por la API hasta la insignia. El PR 5 (aprendiz por la interfaz con la API real) ya está en `dev`. Falta: el syllabus real y recorrer el flujo del aprendiz en el navegador |
-| **Piloto** | Herramientas listas | Métricas, notebook, anotación y piloto en la API y la interfaz. Falta: personas reales, textos legales y despliegue |
-| **Cierre** | No iniciada | Documento final, brief v2, etiqueta y traspaso |
+| **Flujo completo** | Hecha (F6, 2026-11-16) | Con Gemini real y el syllabus real del curso 2 se recorrió por la interfaz todo el flujo, del syllabus al badge (T-032), además de los recorridos reales del aprendiz y del staff (T-010 / T-011) |
+| **Piloto** | Siguiente fase | Métricas, notebook y experimentos con jueces-agente hechos (R-005 y R-006). El piloto con personas reales, los textos legales y el despliegue pasan a la siguiente fase |
+| **Cierre** | En curso | Brief v2 en `dev` (T-051). Notas del release en `dev` (T-052, PR 95); falta que el dueño del repositorio cree la etiqueta `v1.0-cohorte1` y publique el Release. Pendientes: documento final y traspaso de accesos |
+
+**Actualización 2026-11-17:** el flujo completo funciona de punta a punta por la interfaz con el LLM real y el syllabus real (T-032). Se ejecutaron los experimentos E2, E3, E5, E6, E7 y E8 con jueces-agente (resultados indicativos, en `docs/evaluation/results/`). El brief v2 está en `dev` y las notas del release `v1.0-cohorte1` también. El piloto con personas reales pasa a la siguiente fase. Faltan el documento final, la etiqueta y el traspaso de accesos.
 
 **Lectura honesta del avance (2026-11-14):** la base de datos, la API, la capa de IA y la interfaz del instructor y del administrador ya funcionan con datos y LLM reales. El flujo del aprendiz con la API real ya está en `dev` (PR 5, 2026-11-14), con la CI en verde y Streamlit 1.67. Lo que falta para el hito es recorrerlo en el navegador y usar el syllabus real. Después vienen el piloto con personas, que depende de los textos legales y de dónde se despliega, y el cierre.
 
@@ -248,7 +250,7 @@ El prototipo de la Fase 0 ya tiene todas estas pantallas con datos de ejemplo ([
 - [ ] Dataset generado: syllabus estructurado, preguntas, recursos y anotaciones — **Resp.:** _por asignar_ (Responsable de IA y datos)
 - [ ] Documento final: estado del arte, metodología, arquitectura, resultados, limitaciones y trabajo futuro — **Resp.:** _por asignar_ (Líder del grupo)
 - [ ] Video demo de 3 a 5 minutos y presentación de la sustentación — **Resp.:** _por asignar_ (Líder del grupo)
-- [ ] Paquete de traspaso: versión etiquetada (`v1.0-cohorte1`), `HANDOFF.md` y este brief actualizados — **Resp.:** _por asignar_ (Líder del grupo)
+- [ ] Paquete de traspaso: versión etiquetada (`v1.0-cohorte1`), `HANDOFF.md` y este brief actualizados — **Resp.:** _por asignar_ (Líder del grupo). Avance 2026-11-17: `HANDOFF.md` y brief v2 al día, notas del release en `dev`; falta la etiqueta
 
 ## H. Decisiones técnicas pendientes
 
@@ -281,5 +283,5 @@ Fases y tareas de [`PLAN_IMPLEMENTACION_V3.md`](../PLAN_IMPLEMENTACION_V3.md) (s
 - [ ] F7: interfaz Streamlit rehecha desde Figma v3 — **Resp.:** _por asignar_ (Responsable de producto)
 - [ ] F8: Keycloak (clientes y roles renombrados), compose, `.env.example` v3 y CI — **Resp.:** eduar.troyano
 - [ ] F9: evaluación y piloto (anotación, calificación humana, usabilidad, notebook) — **Resp.:** _por asignar_ (Responsable de evaluación)
-- [ ] F10: revisión final, pruebas de despliegue y funcionamiento, reajuste de la documentación y brief v2 — **Resp.:** _por asignar_ (Líder del grupo)
-- [ ] F11: cierre, traspaso y etiqueta `v1.0-cohorte1` — **Resp.:** _por asignar_ (Líder del grupo)
+- [ ] F10: revisión final, pruebas de despliegue y funcionamiento, reajuste de la documentación y brief v2 — **Resp.:** _por asignar_ (Líder del grupo). Avance 2026-11-17: brief v2 (Carlos Villada) y documentación al día; el despliegue pasa a la siguiente fase
+- [ ] F11: cierre, traspaso y etiqueta `v1.0-cohorte1` — **Resp.:** _por asignar_ (Líder del grupo). Avance 2026-11-17: notas del release en `dev` (Alexander Amador, T-052); falta la promoción a `main`, la etiqueta y el Release
