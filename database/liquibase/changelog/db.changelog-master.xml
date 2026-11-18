@@ -50,4 +50,7 @@
     <!-- v2.0.1-009: posición del video en la búsqueda de YouTube, línea base del experimento E6. -->
     <include file="v2.0.1/009-video-candidates-search-position.xml" relativeToChangelogFile="true"/>
 
+    <!-- v2.0.1-010: el rol de métricas lee assessment_items para la equivalencia de ítems (T-057). -->
+    <include file="v2.0.1/010-metrics-read-assessment-items.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

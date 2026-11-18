@@ -58,6 +58,8 @@ NOTICE = (
     "no ven el curso hasta que lo publiques."
 )
 MAX_MATERIAL_FILES = 5
+# Mismo tope que `TopicWrite.estimated_minutes` en la API.
+MAX_TOPIC_MINUTES = 100_000
 MAX_MATERIAL_BYTES = 10 * 1024 * 1024
 MATERIALS_SKIPPED = "sr-materials-skipped"
 BLOOM_BY_LABEL: dict[str, BloomLevel] = {label: level for level, label in BLOOM_LABEL.items()}
@@ -154,6 +156,7 @@ def _edit_panel(topic: CourseTopic | None) -> None:
             f"sr-name-{tid}": topic.name if topic else "",
             f"sr-sub-{tid}": f" {SUBTOPIC_SEPARATOR} ".join(topic.subtopics) if topic else "",
             f"sr-bloom-{tid}": BLOOM_LABEL[topic.bloom_level if topic else "apply"],
+            f"sr-min-{tid}": topic.estimated_minutes if topic else None,
             f"sr-pre-{tid}": [
                 i for i in (topic.prerequisite_topic_ids if topic else []) if i in options
             ],
@@ -200,6 +203,20 @@ def _edit_panel(topic: CourseTopic | None) -> None:
         outcomes.append(_outcome(None, "", "apply"))
         st.rerun()
     bloom = st.selectbox("Nivel de Bloom", list(BLOOM_LABEL.values()), key=f"sr-bloom-{tid}")
+    # T-057: no está en Figma. Los syllabus casi nunca dicen las horas de cada tema, así que la IA
+    # deja el campo vacío; el instructor lo escribe aquí para medir los minutos ahorrados.
+    minutes = st.number_input(
+        "Minutos estimados (opcional)",
+        min_value=1,
+        max_value=MAX_TOPIC_MINUTES,
+        value=None,
+        step=5,
+        format="%d",
+        placeholder="Sin estimar",
+        help="Cuánto tarda un aprendiz en estudiar el tema. Se usa para calcular los minutos "
+        "que ahorra quien ya lo domina.",
+        key=f"sr-min-{tid}",
+    )
     prereqs = st.multiselect(
         "Prerrequisitos",
         options,
@@ -233,7 +250,7 @@ def _edit_panel(topic: CourseTopic | None) -> None:
                     part.strip() for part in subtopics.split(SUBTOPIC_SEPARATOR) if part.strip()
                 ],
                 position=topic.position if topic else len(topics) + 1,
-                estimated_minutes=topic.estimated_minutes if topic else None,
+                estimated_minutes=int(minutes) if minutes is not None else None,
                 is_mandatory=topic.is_mandatory if topic else False,
                 bloom_level=BLOOM_BY_LABEL[bloom],
                 learning_outcomes=[
