@@ -45,12 +45,12 @@ La entrega final pide «un recorrido integral por el proceso, observando los res
 
 Todo lo que falta o está en marcha: ☐ pendiente, ◐ en curso, ⛔ bloqueado y 🔼 con PR abierto. Ordenado por peso en la entrega final. La sección [General · G-001](#g-001--revisar-cada-pantalla-de-figma-frente-al-flujo-implementado) (revisión de las 96 pantallas) y la [deuda técnica](#deuda-técnica-sin-tarea) siguen abajo.
 
-**Faltan 2 de 98 puntos** (☐ pendientes 1 · ◐ en curso 1 · ⛔ bloqueados 0 · 🔼 con PR abierto 0); 86 ya están en «Realizado» y 10 pasaron a «Migrados a la siguiente fase». La columna `#` se renumera cada vez que se mueve una fila.
+**Faltan 2 de 98 puntos** (☐ pendientes 0 · ◐ en curso 2 · ⛔ bloqueados 0 · 🔼 con PR abierto 0); 86 ya están en «Realizado» y 10 pasaron a «Migrados a la siguiente fase». La columna `#` se renumera cada vez que se mueve una fila.
 
 | # | ID | Área | Pendiente | Funcionalidades | Estado | Responsable | Depende de | Peso | Recomendación (propuesta práctica) |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | T-051 | Hito y cierre | Brief v2 | • Redactarlo a partir de las bitácoras F00 a F09 | ◐ En curso | Carlos Villada | — | Medio | — |
-| 2 | T-052 | Hito y cierre | Release | • Etiqueta `v1.0-cohorte1` y notas de la versión | ☐ | — | T-051 | Medio | — |
+| 2 | T-052 | Hito y cierre | Release | • Etiqueta `v1.0-cohorte1` y notas de la versión<br>• **Avance 2026-11-17:** notas listas en `CHANGELOG.md` y texto del GitHub Release en [`release-v1.0-cohorte1.md`](../release-v1.0-cohorte1.md), con las métricas y los pasos para publicarlo<br>• **Falta (dueño del repositorio):** promover `dev` → `stage` → `main`, crear la etiqueta sobre `main` y el GitHub Release, como pide `GIT_VERSIONING_STRATEGY.md` | ◐ En curso | Alexander Amador | T-051 (el brief v2 ya está en `dev`), dueño del repositorio | Medio | Publicar con el brief v2 tal como está en `dev`; T-051 lo cierra Carlos Villada |
 
 ## Migrados a la siguiente fase
 

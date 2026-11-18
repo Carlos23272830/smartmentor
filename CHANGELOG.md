@@ -2,7 +2,24 @@
 
 Cambios por versión y cohorte.
 
-## Sin publicar (cohorte 1)
+## v1.0-cohorte1 (2026-11-17)
+
+Cierre de la cohorte 1. Las notas del GitHub Release, con las métricas, están en [`proyecto/release-v1.0-cohorte1.md`](proyecto/release-v1.0-cohorte1.md).
+
+### Cierre de la cohorte 1 (2026-11-14 a 2026-11-17, PR 40 a 94)
+
+- **Experimentos de evaluación (R-005):** E2, E3, E5, E6 y E7 con jueces-agente a ciegas, más E8 (latencia y costo) con el log real. Resultados en [`docs/evaluation/results/`](docs/evaluation/results/resumen-r005-2026-11-16.md). Herramientas `eval.syllabus_experiment` y `eval.video_experiment`, y cuentas `experimento_` para los recorridos.
+- **Calidad del banco de preguntas (B-062):** formato y mezcla de opciones en código, `topic_quiz` v2 y v3, `diagnostic_generation` v2 y `final_assessment` v2 (medidas con E3b y E3c).
+- **Apuntes y lecturas como fuentes del RAG (R-004 y R-010):** carga desde D1b y D2, retiro del RAG al quitarlos y top-k configurable (`AI_RAG_TOP_K`).
+- **Videos (B-064 y E6):** «Buscar videos de nuevo» en D5e, diagnóstico de por qué un tema tiene pocos videos y `search_position` de YouTube en cada candidato.
+- **Instructor:** «Rutas y avance» abre la ruta activa (B-058), archivar cursos con extracción fallida (B-066), `GET /courses/{id}` con el syllabus vigente (B-065), espera de 80 s configurable para cargar archivos (B-055) y minutos estimados del tema en D2b (T-057).
+- **Aprendiz:** la renovación del token conserva el formulario y repite el clic (B-040), U1b desde el clic al reintentar el quiz (B-060), textos de E7c, E9c, E13 y E11 (B-059 y B-061) y `GET /me/study-goals` sin 404.
+- **Rendimiento:** los listados de inscripciones leen en lote y no por fila (B-056 y B-063).
+- **Visual:** diferencias con Figma corregidas en el aprendiz y el staff (V-088 a V-101).
+- **Métricas:** cuaderno de la cohorte 1 sobre la base real (R-006) y el rol de métricas lee `interaction_events` y `assessment_items`.
+- **Base compartida en Neon** para todo el equipo, con el esquema hasta el changeset `v2.0.1-010`.
+- **Brief v2** ([`proyecto/brief-v2.md`](proyecto/brief-v2.md)): lo planteado frente a lo logrado (T-051).
+- **Pasan a la siguiente fase:** el piloto con usuarios reales y lo que depende de él (E4, E9, E10, T-031, T-040, T-042, T-043, T-050, F-007) y la explicación alterna de E7b (B-049).
 
 ### Plan v3 (2026-11-07 a 2026-11-14)
 
