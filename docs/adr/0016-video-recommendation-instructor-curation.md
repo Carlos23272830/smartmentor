@@ -1,6 +1,6 @@
 # ADR 0016: Recomendación de videos por tema con curaduría del instructor
 
-* **Estado:** Propuesto. Lo cierran DEF-07 (fuente y licencia de videos y transcripciones) y la Fase 5; requiere verificar las condiciones de la API de YouTube (P-06)
+* **Estado:** Propuesto (implementado en el código; falta la decisión de fuente y licencia de videos y transcripciones (DEF-07)). Lo cierran DEF-07 (fuente y licencia de videos y transcripciones) y la Fase 5; requiere verificar las condiciones de la API de YouTube (P-06)
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
 * **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 3.5 (L-08, L-09), 4 (informe de sistemas recomendadores), 5.2.1, 5.4.9, 15 (B-08) y DEF-07
@@ -42,3 +42,4 @@ La API de YouTube restringe la descarga de subtítulos; sus términos no se veri
   - Sin transcripción, la similitud se calcula con metadatos y puede ser menos precisa que lo que pide el brief.
   - Antes de calcular P@3 hay que medir el acuerdo entre dos expertos (κ).
   - El cambio frente al brief (curaduría y respaldos) se registra en el brief v2 (B-08).
+  - Nota de implementación (2026-11-18): el código conserva hasta 10 candidatos ordenados por tema; el primero es el seleccionado y dos más quedan de respaldo.

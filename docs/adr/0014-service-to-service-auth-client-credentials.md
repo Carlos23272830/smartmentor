@@ -1,6 +1,6 @@
 # ADR 0014: Autenticación entre servicios con *client credentials* y endurecimiento de Keycloak
 
-* **Estado:** Propuesto. Lo cierran la Fase 8 (realm y clientes) y la Fase 3 (reflejo de roles y segundo factor en la API). Las reglas de registro y roles ya las decidió el dueño (DEF-13 y DEF-27, 2026-11-07); falta aprobar el diseño de *client credentials*
+* **Estado:** Aceptado (implementado en el código; el dueño lo cerró el 2026-11-18). Historial de la propuesta: lo cierran la Fase 8 (realm y clientes) y la Fase 3 (reflejo de roles y segundo factor en la API). Las reglas de registro y roles ya las decidió el dueño (DEF-13 y DEF-27, 2026-11-07); falta aprobar el diseño de *client credentials*
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
 * **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 5.4.12, 5.6 (Keycloak), 18.1 (G-01 a G-07), 18.6, 18.7, DEF-13, DEF-27, DEF-28 y DEF-29

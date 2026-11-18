@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     pilot_window_text: str = "entre el 2 y el 15 de noviembre de 2026"
 
     # API real.
-    api_base_url: str = "http://api:8020"
+    api_base_url: str = "http://api:8000"
     # Segundos de espera al subir el syllabus o apuntes (B-055); el resto de llamadas espera 10 s.
     api_upload_timeout_seconds: float = Field(default=80.0, gt=0, le=600)
 

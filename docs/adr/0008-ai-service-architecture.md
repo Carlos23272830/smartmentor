@@ -1,6 +1,6 @@
 # ADR 0008: Microservicio de IA (`ai/`): arquitectura, contrato y puertos
 
-* **Estado:** Propuesto. Lo cierra la aprobación del dueño de los contratos de la Ola 0 (cambio moderado B-03 del plan) antes de la Fase 4
+* **Estado:** Aceptado (implementado en el código; el dueño lo cerró el 2026-11-18). Historial de la propuesta: lo cierra la aprobación del dueño de los contratos de la Ola 0 (cambio moderado B-03 del plan) antes de la Fase 4
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
 * **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 5.4.1 a 5.4.15 y 15.1 (B-03)

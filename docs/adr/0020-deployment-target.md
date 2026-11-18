@@ -1,6 +1,6 @@
 # ADR 0020: Destino de despliegue (cierra D-06)
 
-* **Estado:** Propuesto. Lo cierra DEF-16 (director y responsable de producto), con P-18 (quién opera el servidor), antes del piloto de la Fase 9
+* **Estado:** Propuesto (parcialmente implementado: el compose local ya existe; sigue abierto el destino del piloto). Lo cierra DEF-16 (director y responsable de producto), con P-18 (quién opera el servidor), antes del piloto de la Fase 9
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
 * **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 1.4, 7 (Fases 9 y 10), 17 (P-18) y DEF-16; [`docs/cohorte_1/decisiones.md`](../cohorte_1/decisiones.md), D-06

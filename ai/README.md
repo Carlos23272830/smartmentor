@@ -2,12 +2,12 @@
 
 Servicio de IA de SmartMentor (ADR 0008): genera y evalúa contenido con un LLM detrás de puertos intercambiables. Un servicio FastAPI aparte, con dos procesos de la misma imagen: `ai` (HTTP) y `ai-worker` (trabajos). El contrato HTTP está en [`docs/contracts/ai-service-v1.md`](../docs/contracts/ai-service-v1.md) y los códigos de error en [`docs/contracts/error-codes.md`](../docs/contracts/error-codes.md).
 
-## Estado (Fase 4)
+## Estado (Fases 4 y 5)
 
 | Pieza | Estado |
 | --- | --- |
 | Trabajos `syllabus.structure`, `diagnostic.generate_items`, `items.review`, `diagnostic.finalize` | Hechos |
-| Tareas síncronas `levels.estimate` y `path.sequence` | Hechas (`video.rank` responde `404 UNKNOWN_TASK` hasta la Fase 5) |
+| Tareas síncronas `levels.estimate` y `path.sequence` | Hechas (`video.rank` está disponible desde la Fase 5) |
 | Proveedores | `fake` (pruebas y CI), `gemini` (SDK `google-genai`), `anthropic` solo interfaz |
 | Persistencia | PostgreSQL (`ai_jobs`, `llm_call_logs`, `ai_generation_cache`; lectura de `courses`, `topics`, `learning_outcomes`, `syllabus_documents`) o memoria en pruebas |
 | Fase 5 | Contenido, bancos de quiz y final, calificación, videos y badge: se agregan como `JobHandler` en `app/container.py` (`build_handlers`) |

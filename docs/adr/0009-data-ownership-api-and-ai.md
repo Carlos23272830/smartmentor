@@ -1,6 +1,6 @@
 # ADR 0009: Propiedad de los datos: la API escribe el negocio y `ai/` sus tablas
 
-* **Estado:** Propuesto. Lo cierra DEF-12 (valor por defecto del plan) con la aprobación de los contratos de la Ola 0, antes de la Fase 2
+* **Estado:** Aceptado (implementado en el código; el dueño lo cerró el 2026-11-18). Historial de la propuesta: lo cierra DEF-12 (valor por defecto del plan) con la aprobación de los contratos de la Ola 0, antes de la Fase 2
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
 * **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 0 (punto 5 de la recomendación), 5.2.1, 5.2.4, 5.3.3 y DEF-12

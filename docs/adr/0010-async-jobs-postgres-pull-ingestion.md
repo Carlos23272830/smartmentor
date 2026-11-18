@@ -1,6 +1,6 @@
 # ADR 0010: Trabajos asíncronos en PostgreSQL sin broker e ingesta por consulta
 
-* **Estado:** Propuesto. Lo cierra la Fase 4 (`ai/` base), con la aprobación de los contratos de la Ola 0
+* **Estado:** Aceptado (implementado en el código; el dueño lo cerró el 2026-11-18). Historial de la propuesta: lo cierra la Fase 4 (`ai/` base), con la aprobación de los contratos de la Ola 0
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
 * **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 5.2.1 (`ai_jobs`), 5.3.3, 5.4.1 a 5.4.3

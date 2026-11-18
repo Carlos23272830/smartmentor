@@ -1,6 +1,6 @@
 # ADR 0013: Fragmentos RAG y fuentes en tablas de Liquibase (cierra D-04)
 
-* **Estado:** Propuesto. Lo cierran la Fase 2 (tablas) y la Fase 5 (RAG), con las fuentes y licencias de DEF-08
+* **Estado:** Propuesto (implementado en el código; falta la decisión de las fuentes y licencias (DEF-08)). Lo cierran la Fase 2 (tablas) y la Fase 5 (RAG), con las fuentes y licencias de DEF-08
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
 * **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 5.2.1, 5.4.7, 15 (B-04) y DEF-08; [`docs/cohorte_1/decisiones.md`](../cohorte_1/decisiones.md), D-04
@@ -36,3 +36,4 @@ El brief pide RAG sobre libros abiertos y apuntes del instructor, y sugiere Llam
   - El código de fragmentación y recuperación es propio; si se necesitan técnicas avanzadas (re-ranking, consultas híbridas), hay que implementarlas o incorporar LlamaIndex detrás del puerto.
   - Las fuentes reales y sus licencias las entrega el validador del curso (DEF-08, Fase 5).
   - El brief menciona LlamaIndex: el cambio se registra en el brief v2 (B-04).
+  - Nota de implementación (2026-11-18): el valor de top-k es configurable con `AI_RAG_TOP_K` (de 1 a 20, por defecto 4).

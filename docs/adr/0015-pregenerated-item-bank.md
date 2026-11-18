@@ -1,6 +1,6 @@
 # ADR 0015: Banco de ítems pre-generado y revisado
 
-* **Estado:** Propuesto. Lo cierra DEF-09 (decide el director; cambio moderado B-02 del brief) antes de la Fase 2
+* **Estado:** Propuesto (implementado en el código; falta la decisión del director (DEF-09)). Lo cierra DEF-09 (decide el director; cambio moderado B-02 del brief) antes de la Fase 2
 * **Fecha:** 2026-11-07
 * **Autor:** eduar.troyano
 * **Fuente:** [plan de implementación v3](../../PLAN_IMPLEMENTACION_V3.md), secciones 3.5 (L-02, L-03, L-10), 5.2.1, 5.4.3, 15.1 (B-02) y DEF-09
